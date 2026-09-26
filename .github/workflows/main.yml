@@ -1,0 +1,45 @@
+name: Deploy V8 Dev Pages
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download latest V8 development branch
+        run: |
+          curl -L --fail -o /tmp/dev.zip "https://github.com/konyan3150-lgtm/kyotei-ai-v8-live/archive/refs/heads/dev-prob-calibration.zip"
+          unzip -q /tmp/dev.zip -d /tmp/devsrc
+          mkdir -p site
+          cp -a /tmp/devsrc/kyotei-ai-v8-live-dev-prob-calibration/. site/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload development site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
