@@ -54,7 +54,9 @@ export function applyDay(data,payload,date){
       // Non-starting boats lack an actual course; exclude them rather than invent a course.
       if(c===null||c===0)continue;
       if(!Number.isInteger(id)||id<1000||id>9999||!Number.isInteger(c)||c<1||c>6||ids.has(id)||courses.has(c))throw Error('Invalid racer/course '+key);
-      if(place!==null&&(!Number.isInteger(place)||place<0||place>6))throw Error('Invalid finish '+key);
+      // The source uses integers above six for nonstandard finishes (e.g. 14).
+      // Preserve the start/ST, but only ranks 1..6 contribute to finish statistics.
+      if(place!==null&&(!Number.isInteger(place)||place<0))throw Error('Invalid finish '+key);
       if(st!==null&&Math.abs(st)>2)throw Error('Invalid start timing '+key);
       ids.add(id);courses.add(c);
       const r=data.racers[id]??={o:blank(),c:{},v:{},x:{}};
