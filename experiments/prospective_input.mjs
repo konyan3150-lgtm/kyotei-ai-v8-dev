@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {validate,day,nextDay} from './rebuild_aptitude.mjs';
+export const COHORT='expert-shadow-official-v1';
+export const sha256=s=>crypto.createHash('sha256').update(s).digest('hex');
+export function verifyInput(data,audit,date,bytes){
+ if(audit.status!=='verified'||audit.cohort!==COHORT||data.prospective_cohort!==COHORT||audit.snapshot_sha256!==sha256(bytes))throw Error('Unverified prospective input');
+ validate(data);
+ if(nextDay(data.through)!==day(date)||audit.through!==data.through||audit.starts!==data.starts)throw Error('History must end exactly yesterday');
+ let expected=nextDay(audit.base_through),total=audit.base_starts;
+ for(const d of audit.appended_days){if(d.date!==expected||!Number.isInteger(d.starts)||d.starts<0||!d.source_sha256?.B||!d.source_sha256?.K)throw Error('Invalid official history ledger');expected=nextDay(d.date);total+=d.starts;}
+ if(expected!==nextDay(data.through)||total!==data.starts)throw Error('History ledger mismatch');
+ return {cohort:COHORT,history_through:data.through,starts:data.starts,aptitude_sha256:audit.snapshot_sha256,base_snapshot_sha256:audit.base_snapshot_sha256};
+}
+export function verifiedInput(root,date,engineRoot){
+ const bytes=fs.readFileSync(path.join(root,'dev/racer-aptitude-prospective.json')),data=JSON.parse(bytes),audit=JSON.parse(fs.readFileSync(path.join(root,'dev/aptitude-prospective-audit.json')));
+ const proof=verifyInput(data,audit,date,bytes);
+ proof.model_sha256=sha256(fs.readFileSync(path.join(engineRoot,'v8_model_aptitude.json')));
+ proof.auxiliary_sha256=Object.fromEntries(['course-stats','venue-stats','technique-stats','odds','official-previews'].map(k=>{const p=path.join(engineRoot,'dev',k+'.json');return [k,fs.existsSync(p)?sha256(fs.readFileSync(p)):null];}));
+ return {data,proof};
+}
+export function verifyStore(store){
+ if(store.cohort!==COHORT)throw Error('Archive cohort mismatch');
+ for(const r of Object.values(store.records||{}))for(const s of [...(r.revisions||[]),r])if(s.cohort!==COHORT||s.input_provenance?.cohort!==COHORT||nextDay(s.input_provenance.history_through)!==day(s.date))throw Error('Record provenance/cohort mismatch');
+}

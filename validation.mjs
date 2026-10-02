@@ -1,4 +1,5 @@
-export const SOURCE='https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-dev/main/dev/expert-shadow-evaluation.json';
+export const SOURCES={repaired:'https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-dev/main/dev/expert-shadow-repaired-evaluation.json',legacy:'https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-dev/main/dev/expert-shadow-evaluation.json'};
+export const SOURCE=SOURCES.repaired;
 const names={normal:'通常',inside:'イン逃げ',upset:'イン崩れ・穴',exhibition:'展示変化',water:'水面'};
 const venues=['','桐生','戸田','江戸川','平和島','多摩川','浜名湖','蒲郡','常滑','津','三国','びわこ','住之江','尼崎','鳴門','丸亀','児島','宮島','徳山','下関','若松','芦屋','福岡','唐津','大村'];
 export const percentage=v=>Number.isFinite(v)?(v*100).toFixed(1)+'%':'—';
@@ -16,6 +17,7 @@ function row(body,values){const tr=element('tr');for(const v of values)tr.append
 let data=null,valueMode=false,busy=false;
 function render(){
   const d=data,s=status(d),connection=document.getElementById('connection');connection.textContent=s.text;connection.className='pill '+s.kind;
+  document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の入力で保存した参考記録です。改善の判断には使いません。':`修復済み公式履歴：${d.input_provenance?.history_through||'確認中'}まで。以前の検証とは別集計。`;
   const time=d.health?.checked_at;document.getElementById('updated').textContent=time?'収集確認：'+new Date(time).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'収集時刻は未確認';
   const counts=document.getElementById('counts');counts.replaceChildren();for(const [label,n] of [['保存',d.saved],['確定',d.settled],['結果待ち',d.pending],['中止',d.cancelled||0],['記録エラー',d.invalid||0],['変更履歴',d.realtime?.preserved_previous_snapshots||0]]){const c=element('div',null,'count');c.append(element('span',label),element('strong',String(n??0)));counts.append(c)}
   document.getElementById('six').setAttribute('aria-pressed',String(!valueMode));document.getElementById('ev').setAttribute('aria-pressed',String(valueMode));
@@ -44,12 +46,13 @@ function renderGroups(){
   for(const [k,g] of Object.entries(groups)){const label=field==='by_expert'?names[k]||k:field==='by_stadium'?venues[Number(k)]||k:k;row(body,[label,g.races+'R',percentage(g.arms?.baseline?.hit_rate),percentage(g.arms?.candidate?.hit_rate)])}
 }
 async function refresh(){
-  if(busy)return;busy=true;const button=document.getElementById('refresh');button.disabled=true;const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
-  try{const response=await fetch(SOURCE+'?t='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('データを取得できませんでした');data=validate(await response.json());render();document.getElementById('error').hidden=true}
+  if(busy)return;busy=true;const button=document.getElementById('refresh');button.disabled=true;const selector=document.getElementById('cohort');selector.disabled=true;const source=SOURCES[selector.value];const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+  try{const response=await fetch(source+'?t='+Date.now(),{cache:'no-store',signal:controller.signal});if(!response.ok)throw Error('データを取得できませんでした');data=validate(await response.json());render();document.getElementById('error').hidden=true}
   catch(e){const error=document.getElementById('error');error.hidden=false;error.textContent=(data?'更新に失敗しました。前回のデータを表示しています。':'データを取得できません。時間を置いて「更新」を押してください。');const connection=document.getElementById('connection');connection.textContent='接続を確認してください';connection.className='pill warn'}
-  finally{clearTimeout(timer);busy=false;button.disabled=false}
+  finally{clearTimeout(timer);busy=false;button.disabled=false;selector.disabled=false}
 }
 if(typeof document!=='undefined'){
   document.getElementById('refresh').addEventListener('click',refresh);document.getElementById('six').addEventListener('click',()=>{valueMode=false;if(data)render()});document.getElementById('ev').addEventListener('click',()=>{valueMode=true;if(data)render()});document.getElementById('group').addEventListener('change',renderGroups);
+  document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
   refresh();setInterval(refresh,180000);
 }

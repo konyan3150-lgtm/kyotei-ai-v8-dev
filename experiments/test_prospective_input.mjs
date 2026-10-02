@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {verifyInput,verifyStore,sha256,COHORT} from './prospective_input.mjs';
+const data={through:'2026-10-01',starts:0,racers_count:0,racers:{},global_course:{},prospective_cohort:COHORT};const bytes=JSON.stringify(data);
+const audit={status:'verified',cohort:COHORT,snapshot_sha256:sha256(bytes),through:data.through,starts:0,base_through:data.through,base_starts:0,appended_days:[]};
+assert.equal(verifyInput(data,audit,'20261002',bytes).cohort,COHORT);
+assert.throws(()=>verifyInput(data,audit,'20261003',bytes),/yesterday/);
+assert.throws(()=>verifyInput(data,audit,'20261001',bytes),/yesterday/);
+assert.throws(()=>verifyInput(data,audit,'20261002',bytes+' '),/Unverified/);
+assert.throws(()=>verifyStore({records:{}}),/cohort/);
+assert.throws(()=>verifyStore({cohort:COHORT,records:{x:{date:'20261002',cohort:COHORT,input_provenance:{cohort:COHORT,history_through:'2026-10-02'}}}}),/provenance/);
+verifyStore({cohort:COHORT,records:{x:{date:'20261002',cohort:COHORT,input_provenance:{cohort:COHORT,history_through:'2026-10-01'}}}});
+console.log('Prospective gates passed: cohort separation, exact previous-day history, tamper rejection.');
