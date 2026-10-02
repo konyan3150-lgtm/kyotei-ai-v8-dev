@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
+import {evTickets,drift,EV_POLICY} from './ev_drift.mjs';
 
 export const POLICY = Object.freeze({version:'expert-shadow-v1', insideLogBoost:0.10, upsetLogPenalty:0.10, tickets:6, stake:100});
 const closeMs = r => Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
@@ -37,7 +38,8 @@ export function snapshot({race,rows,expert,makeBets,date,stadium,number,now=new 
   const changed=adjust(rows,expert),baseline=allCombinations(rows),candidate=allCombinations(changed);
   const oddsTime=Date.parse(odds?.fetched_at),fresh=Number.isFinite(oddsTime)&&oddsTime<=saved&&saved-oddsTime<=10*60000;
   for(const x of baseline){const [a,b,c]=x.combo.split('-');x.odds=fresh?Number(odds?.trifecta?.[a]?.[b]?.[c]||0):null;if(!(x.odds>0))x.odds=null}
-  return {policy:POLICY.version,date,stadium:String(stadium),race:String(number),saved_at:now.toISOString(),closed_at:race.closed_at,
+  const valueArms=Object.fromEntries([['baseline',baseline],['candidate',candidate]].map(([arm,distribution])=>[arm,evTickets(distribution,baseline,fresh?odds.fetched_at:null,now.toISOString())]));
+  return {policy:POLICY.version,value_arms:valueArms,date,stadium:String(stadium),race:String(number),saved_at:now.toISOString(),closed_at:race.closed_at,
     expert:{version:expert.version,active:expert.active,weights:expert.weights,used_in_shadow_candidate:true,used_in_production:false},
     rank_probabilities:rows.map(r=>({lane:String(r.k),p:r.p})),baseline_distribution:baseline,candidate_distribution:candidate,
     baseline_picks:makeBets(rows,6,'hit').map(x=>x.combo),candidate_picks:makeBets(changed,6,'hit').map(x=>x.combo),
@@ -59,7 +61,14 @@ export function settle(record,result) {
     metrics[arm]={hit:picks.includes(combo),investment:picks.length*100,payout:picks.includes(combo)?amount:0,
       log_loss:-Math.log(p),brier:record[`${arm}_distribution`].reduce((sum,x)=>sum+(x.prob-(x.combo===combo?1:0))**2,0)};
   }
-  record.outcome={result:combo,amount,settled_at:new Date().toISOString(),metrics};return true;
+  const valueMetrics={};
+  for(const arm of ['baseline','candidate']){
+    const value=record.value_arms?.[arm];
+    if(value?.status!=='shadow_estimate_uncalibrated')continue;
+    const winning=value.items.find(x=>x.combo===combo);
+    valueMetrics[arm]={hit:!!winning,investment:value.investment,payout:winning?amount*winning.stake/100:0,tickets:value.items.length};
+  }
+  record.outcome={result:combo,amount,settled_at:new Date().toISOString(),metrics,value_metrics:valueMetrics};return true;
 }
 
 export function evaluate(records) {
@@ -69,7 +78,14 @@ export function evaluate(records) {
     arms[arm]={races:data.length,hits:data.filter(x=>x.hit).length,investment,payout,roi:investment?payout/investment:null,
       log_loss:data.length?data.reduce((s,x)=>s+x.log_loss,0)/data.length:null,brier:data.length?data.reduce((s,x)=>s+x.brier,0)/data.length:null};
   }
-  return {policy:POLICY,saved:Object.keys(records).length,settled:rs.length,pending:Object.keys(records).length-rs.length,arms,
+  const valueArms={};
+  const eligible=rs.filter(r=>r.outcome.value_metrics?.baseline&&r.outcome.value_metrics?.candidate);
+  for(const arm of ['baseline','candidate']){
+    const data=eligible.map(r=>r.outcome.value_metrics[arm]),bought=data.filter(x=>x.investment>0),investment=data.reduce((s,x)=>s+x.investment,0),payout=data.reduce((s,x)=>s+x.payout,0);
+    valueArms[arm]={eligible_races:data.length,bought_races:bought.length,skipped_races:data.length-bought.length,hits:bought.filter(x=>x.hit).length,
+      hit_rate:bought.length?bought.filter(x=>x.hit).length/bought.length:null,investment,payout,roi:investment?payout/investment:null};
+  }
+  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),saved:Object.keys(records).length,settled:rs.length,pending:Object.keys(records).length-rs.length,arms,
     paired_hit_difference:rs.reduce((s,r)=>s+Number(r.outcome.metrics.candidate.hit)-Number(r.outcome.metrics.baseline.hit),0),
     interpretation:'Prospective paired shadow evaluation. No historical reconstruction or production promotion.'};
 }
