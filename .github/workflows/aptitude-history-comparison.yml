@@ -1,0 +1,70 @@
+name: Compare fixed and rolling official aptitude history
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/aptitude-history-comparison.yml", "experiments/prepare_official_comparison.py", "experiments/compare_official_history.mjs", "experiments/test_prepare_official_comparison.py", "experiments/test_compare_official_history.mjs"]
+permissions:
+  contents: write
+concurrency:
+  group: aptitude-history-comparison
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TZ: Asia/Tokyo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: python -m pip install lhafile==0.3.1
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-aptitude-20250730-20261001-v1
+      - name: Test program fields, settlement and chronology helpers
+        run: |
+          python -m unittest discover -s experiments -p test_prepare_official_comparison.py
+          node experiments/test_compare_official_history.mjs
+          node experiments/test_historical_outcome.mjs
+          node experiments/test_rebuild_aptitude.mjs
+      - name: Freeze model, engine and authentic baseline
+        run: |
+          mkdir -p /tmp/frozen-aptitude-engine/scripts /tmp/official-aptitude-cache
+          for file in scripts/update_server_predictions.mjs scripts/racer_aptitude_features.mjs v8_model_aptitude.json; do
+            curl -fL --retry 3 "https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/8286a9783a7799aacade7d0f0de72e8636a681ac/$file" -o "/tmp/frozen-aptitude-engine/$file"
+          done
+          curl -fL --retry 3 https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/f9934034bfcb651b226a160e01bbd813ca7b1e0d/racer-aptitude.json -o /tmp/official-aptitude-cache/baseline.json
+      - name: Prepare source-hash-verified official program and settlement data
+        run: python experiments/prepare_official_comparison.py
+      - name: Compare previous-day histories and validate final repaired aggregate
+        run: node experiments/compare_official_history.mjs
+      - name: Save comparison, paired predictions and report in DEV
+        run: |
+          git add dev/aptitude-history-comparison.json dev/aptitude-history-comparison-pairs.jsonl.gz experiments/HISTORY_COMPARISON_REPORT.md
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save chronological official-history comparison in DEV"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-history-comparison-${{ github.run_id }}
+          path: |
+            dev/aptitude-history-comparison.json
+            dev/aptitude-history-comparison-pairs.jsonl.gz
+            experiments/HISTORY_COMPARISON_REPORT.md
+          if-no-files-found: ignore
