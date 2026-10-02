@@ -8,6 +8,10 @@ on:
       - main
     paths:
       - ".github/workflows/main.yml"
+      - "validation.html"
+      - "validation.css"
+      - "validation.mjs"
+      - "tests/validation-browser.cjs"
   schedule:
     - cron: "*/15 * * * *"
 
@@ -29,12 +33,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
       - name: Download latest V8 development branch
         run: |
           curl -L --fail -o /tmp/dev.zip "https://github.com/konyan3150-lgtm/kyotei-ai-v8-live/archive/refs/heads/dev-prob-calibration.zip"
           unzip -q /tmp/dev.zip -d /tmp/devsrc
           mkdir -p site
           cp -a /tmp/devsrc/kyotei-ai-v8-live-dev-prob-calibration/. site/
+
+      - name: Add development validation screen
+        run: |
+          cp validation.html validation.css validation.mjs site/
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          p = Path('site/index.html')
+          s = p.read_text()
+          marker = '<div class="pickerpanel">'
+          link = '<p style="margin:6px 0 12px;text-align:right"><a href="validation.html" style="color:#a8caff;font-size:13px;text-decoration:none">開発検証・収集状況 ↗</a></p>'
+          if marker not in s:
+              raise RuntimeError('Development homepage insertion point missing')
+          p.write_text(s.replace(marker, link + marker, 1))
+          PYTHON
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check mobile validation page and interactions
+        run: |
+          npm install --no-save --ignore-scripts playwright
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8765 --directory site > /tmp/validation-server.log 2>&1 &
+          node tests/validation-browser.cjs
+
+      - name: Preserve UI check screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-ui-check
+          path: ui-screenshots/
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
