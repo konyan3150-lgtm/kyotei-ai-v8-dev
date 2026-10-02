@@ -12,7 +12,7 @@ concurrency:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,13 +21,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install lhafile==0.3.1
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-aptitude-20250730-20261001-v1
       - name: Check audit parser and comparisons
         run: python -m unittest discover -s experiments -p test_audit_official_aptitude.py
       - name: Compare all recovered dates with official sources
         run: python experiments/audit_official_aptitude.py --start 20250730 --end 20261001
       - name: Preserve audit report including discrepancies
+        if: always()
         run: |
-          git add dev/aptitude-official-audit.json
+          for file in dev/aptitude-official-audit.json dev/aptitude-official-audit-progress.json; do
+            if [ -f "$file" ]; then git add "$file"; fi
+          done
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -37,6 +44,15 @@ jobs:
             if git push origin HEAD:main; then exit 0; fi
           done
           exit 1
+      - name: Preserve source cache and checkpoints on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-audit-recovery-${{ github.run_id }}
+          path: |
+            /tmp/official-aptitude-cache
+            dev/aptitude-official-audit-progress.json
+          retention-days: 7
       - name: Report review requirement
         run: |
           python - <<'PY'

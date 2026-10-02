@@ -77,7 +77,7 @@ def archive(day, kind, cache):
 def compare_day(day, payload, btext, ktext):
     _, program = parse_official(btext, 'B')
     raw, official = parse_official(ktext, 'K')
-    counts = Counter(); errors = []; code_pairs = Counter(); api = {}
+    counts = Counter({'api_starts':0,'compared_starts':0,'finish_agreements':0,'st_agreements':0}); errors = []; code_pairs = Counter(); api = {}
     def error(kind, key, expected=None, actual=None):
         counts[kind] += 1
         if len(errors) < 20: errors.append({'kind':kind,'key':list(key),'official':expected,'api':actual})
@@ -125,16 +125,25 @@ def audit_day(day, cache):
     return out
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--start',default='20250730');p.add_argument('--end',default='20261001');p.add_argument('--output',default='dev/aptitude-official-audit.json');p.add_argument('--cache',default='/tmp/official-aptitude-cache');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--start',default='20250730');p.add_argument('--end',default='20261001');p.add_argument('--output',default='dev/aptitude-official-audit.json');p.add_argument('--cache',default='/tmp/official-aptitude-cache');p.add_argument('--workers',type=int,default=8);args=p.parse_args()
     first,last=date.fromisoformat(f'{args.start[:4]}-{args.start[4:6]}-{args.start[6:]}'),date.fromisoformat(f'{args.end[:4]}-{args.end[4:6]}-{args.end[6:]}')
     days=[(first+timedelta(days=i)).strftime('%Y%m%d') for i in range((last-first).days+1)]
     reports=[]; failures=[]
+    progress=Path(args.output.replace('.json','-progress.json'))
+    fingerprint=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    prior=json.loads(progress.read_text()) if progress.exists() else {}
+    completed={r['date']:r for r in prior.get('days',[])} if prior.get('script_sha256')==fingerprint else {}
     def run(d):
+        if d in completed:return completed[d]
         try: return audit_day(d,Path(args.cache))
         except Exception as e: return {'date':d,'source_error':str(e)}
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=max(1,min(8,args.workers))) as pool:
         for i,r in enumerate(pool.map(run,days)):
             (failures if 'source_error' in r else reports).append(r)
+            progress.parent.mkdir(parents=True,exist_ok=True)
+            temp=progress.with_suffix('.tmp')
+            temp.write_text(json.dumps({'status':'in_progress','script_sha256':fingerprint,'completed_days':len(reports),'days':reports,'source_failures':failures},ensure_ascii=False))
+            temp.replace(progress)
             if i%30==0: print(f'checked {i+1}/{len(days)} days; unavailable={len(failures)}',flush=True)
     totals=Counter(); pairs=Counter()
     for r in reports: totals.update(r['counts']);pairs.update(r['nonstandard_code_pairs'])
@@ -142,9 +151,10 @@ def main():
     mismatches=sum(totals[k] for k in mismatch_keys)
     ledger=json.loads(Path('dev/racer-aptitude-clean.json').read_text())['recovery']['days'] if Path('dev/racer-aptitude-clean.json').exists() else []
     ledger_map={r['date']:r for r in ledger}
-    ledger_errors=[r['date'] for r in reports if ledger and ledger_map.get(r['date'],{}).get('starts') != r['counts']['api_starts']]
+    ledger_errors=[r['date'] for r in reports if ledger and ledger_map.get(r['date'],{}).get('starts') != r['counts'].get('api_starts',0)]
     out={'status':'passed' if not failures and not mismatches and not ledger_errors else 'needs_review','start':args.start,'end':args.end,'requested_days':len(days),'audited_days':len(reports),'source_failures':failures,'counts':dict(totals),'mismatches':mismatches,'ledger_start_count_mismatch_days':ledger_errors,'nonstandard_code_pairs':dict(pairs),'days':reports,'checked_at':datetime.now(timezone.utc).isoformat(),'production_changed':False,'limitations':['Compares actual starts with a valid course; non-starting withdrawals are excluded.','Normal ranks 1..6 are checked exactly; nonstandard finish codes are checked as non-completed and their official/API pairs are reported.','Source SHA256 hashes preserve provenance; this does not establish predictive improvement.']}
     target=Path(args.output);target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
+    saved=json.loads(progress.read_text());saved['status']='completed';saved['audit_status']=out['status'];progress.write_text(json.dumps(saved,ensure_ascii=False)+'\n')
     print(json.dumps({k:v for k,v in out.items() if k!='days'},ensure_ascii=False))
 
 if __name__=='__main__': main()

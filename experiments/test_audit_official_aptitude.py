@@ -1,5 +1,8 @@
 import unittest
-from audit_official_aptitude import compare_day, parse_official
+import json,os,sys,tempfile
+from pathlib import Path
+from unittest.mock import patch
+from audit_official_aptitude import compare_day, parse_official, main
 
 B='08BBGN\n 1R TEST\n1 5038 NAME23愛知52A1 \n'
 K='08KBGN\n 1R TEST H1800m 晴 風 西 2m 波 1cm\n 01 1 5038 NAME 34 39 6.96 1 0.12 1.51.7\n'
@@ -29,5 +32,20 @@ class AuditTest(unittest.TestCase):
     def test_null_st(self):
         p=payload();p['results'][0]['boats'][0]['racer_start_timing']=None
         r=compare_day('20250730',p,B,K.replace('0.12','..'));self.assertEqual(r['errors'],[])
+    def test_zero_start_day(self):
+        r=compare_day('20250730',{'results':[]},'','')
+        self.assertEqual(r['counts']['api_starts'],0);self.assertEqual(r['counts']['compared_starts'],0);self.assertEqual(r['errors'],[])
+    def test_zero_start_day_full_summary(self):
+        r=compare_day('20250730',{'results':[]},'','')
+        old=os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            try:
+                os.chdir(tmp);Path('dev').mkdir()
+                Path('dev/racer-aptitude-clean.json').write_text(json.dumps({'recovery':{'days':[{'date':'20250730','starts':0}]}}))
+                with patch('audit_official_aptitude.audit_day',return_value=r),patch.object(sys,'argv',['audit','--start','20250730','--end','20250730']):main()
+                out=json.loads(Path('dev/aptitude-official-audit.json').read_text())
+                self.assertEqual(out['status'],'passed');self.assertEqual(out['ledger_start_count_mismatch_days'],[])
+                self.assertEqual(json.loads(Path('dev/aptitude-official-audit-progress.json').read_text())['status'],'completed')
+            finally:os.chdir(old)
 
 if __name__=='__main__':unittest.main()
