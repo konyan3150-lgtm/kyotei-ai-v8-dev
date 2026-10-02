@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {parseCsv,applyOriginal,health} from './exhibition_health.mjs';
+assert.deepEqual(parseCsv('a,b\n"x,y","q""r"\n'),[['a','b'],['x,y','q"r']]);
+assert.throws(()=>parseCsv('"incomplete'));
+const fields=['レースコード','計測項目1','計測項目2','計測項目3',...Array.from({length:6},(_,i)=>[`艇${i+1}_値1`,`艇${i+1}_値2`,`艇${i+1}_値3`]).flat()];
+const cells=['202610030101','一周','回り足','直線',...Array.from({length:6},(_,i)=>i===0?['37.2','5.5','6.8']:['','','']).flat()];
+const csv=fields.join(',')+'\n'+cells.join(',')+'\n';
+const race={date:'2026-10-03',closed_at:'2026-10-03 12:00:00'},program={programs:{stadiums:{1:{races:{1:race}}}}};
+const result=applyOriginal(program,csv,'20261003','2026-10-03T02:55:00Z');assert.equal(result.values,3);assert.equal(result.races,1);
+assert.equal(race.preview.racers[1].lap_time,37.2);assert.equal(race.preview.racers[1].turn_time,5.5);assert.equal(race.preview.racers[2],undefined);
+assert.equal(applyOriginal(program,csv,'20261003','2026-10-03T03:00:00Z').values,0);
+assert.equal(applyOriginal(program,csv,'20261004','2026-10-03T02:55:00Z').values,0);
+assert.equal(health({a:{closed_at:race.closed_at}},{now:new Date('2026-10-03T03:31:00Z'),eligibleKeys:['missing']}).status,'needs_attention');
+assert.equal(health({a:{closed_at:race.closed_at,outcome:{}}},{now:new Date('2026-10-03T05:31:00Z')}).overdue_results.length,0);
+assert.equal(health({a:{closed_at:race.closed_at,cancelled:{}}},{now:new Date('2026-10-03T05:31:00Z')}).overdue_results.length,0);
+assert.equal(health({},{originalStatus:'fetch_or_parse_error'}).status,'needs_attention');
+console.log('Exhibition/health tests passed: quoted CSV, missing values, race/date/time gates, coverage and overdue result exclusion.');
