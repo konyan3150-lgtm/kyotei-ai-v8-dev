@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {evTickets,drift,EV_POLICY} from './ev_drift.mjs';
 import {observedInputs,preserveRevision,markCancelled,realtimeSummary,applyPreclosePreview} from './realtime_shadow.mjs';
 import {diagnostics,auditRecord} from './shadow_diagnostics.mjs';
+import {applyOriginal,health} from './exhibition_health.mjs';
 
 export const POLICY = Object.freeze({version:'expert-shadow-v1', insideLogBoost:0.10, upsetLogPenalty:0.10, tickets:6, stake:100});
 const closeMs = r => Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
@@ -107,17 +108,25 @@ export async function run() {
   const previews=read(path.join(engineRoot,'dev/official-previews.json'));
   let program;
   try{program=await get(`https://boatraceopenapi.github.io/api/v1/${date.slice(0,4)}/${date}.json`)}catch(e){if(!e.message.includes('HTTP 404'))throw e}
+  let originalStatus='unavailable';
+  if(program){
+    const url=`https://boatracecsv.github.io/data/previews/original_exhibition/${date.slice(0,4)}/${date.slice(4,6)}/${date.slice(6,8)}.csv`;
+    try{const response=await fetch(url,{signal:AbortSignal.timeout(20000)});if(response.ok){const text=await response.text();originalStatus=applyOriginal(program,text,date,new Date().toISOString()).status}else originalStatus=`HTTP_${response.status}`}
+    catch(e){originalStatus='fetch_or_parse_error'}
+  }
   const now=new Date();
+  const eligibleKeys=[];
   for(const [sid,v] of Object.entries(program?.programs?.stadiums||{}))for(const [n,race] of Object.entries(v.races||{})){
     const k=`${date}_${Number(sid)}_${Number(n)}`,officialRace=String(official.date)===date?official.races?.[String(Number(sid))]?.[String(Number(n))]:null;
     if(officialRace?.cancelled===true){markCancelled(current.records[k],{cancelled:true,source:'live official-results cancellation'});continue}
     if(current.records[k]?.outcome||current.records[k]?.cancelled||!Number.isFinite(closeMs(race))||closeMs(race)<=now.getTime()||closeMs(race)-now.getTime()>20*60000)continue;
+    eligibleKeys.push(k);
     const previewRecord=String(previews.date)===date?previews.races?.[String(Number(sid))]?.[String(Number(n))]:null;
     const supplemented=applyPreclosePreview(race,previewRecord,new Date());
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;current.records[k]=preserveRevision(current.records[k],rec)}
+    if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;current.records[k]=preserveRevision(current.records[k],rec)}
   }
   for(const [d,store] of stores){
     for(const r of Object.values(store.records)){
@@ -133,7 +142,8 @@ export async function run() {
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
-  fs.writeFileSync(path.join(root,'dev/expert-shadow-evaluation.json'),JSON.stringify(evaluate(all),null,2)+'\n');
-  console.log(JSON.stringify({date,...evaluate(all)}));
+  const report={...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
+  fs.writeFileSync(path.join(root,'dev/expert-shadow-evaluation.json'),JSON.stringify(report,null,2)+'\n');
+  console.log(JSON.stringify({date,...report}));
 }
 if(import.meta.url===pathToFileURL(process.argv[1]).href)await run();
