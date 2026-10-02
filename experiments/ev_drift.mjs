@@ -3,6 +3,8 @@ export function evTickets(distribution,oddsDistribution,oddsAt,savedAt){
   const age=Date.parse(savedAt)-Date.parse(oddsAt);
   if(!Number.isFinite(age)||age<0||age>EV_POLICY.maxOddsAgeMs)return {status:'odds_unavailable_or_stale',items:[],investment:0};
   const odds=new Map(oddsDistribution.map(x=>[x.combo,x.odds]));
+  const coverage=distribution.filter(x=>Number.isFinite(odds.get(x.combo))&&odds.get(x.combo)>0).length;
+  if(!distribution.length||coverage<distribution.length)return {status:'odds_incomplete',items:[],investment:0,odds_coverage:coverage,expected_combinations:distribution.length};
   const items=distribution.map(x=>({...x,odds:odds.get(x.combo)})).filter(x=>Number.isFinite(x.prob)&&x.prob>0&&Number.isFinite(x.odds)&&x.odds>0)
     .map(x=>({combo:x.combo,prob:x.prob,odds:x.odds,estimated_ev:x.prob*x.odds,discounted_ev:x.prob*EV_POLICY.probabilityDiscount*x.odds,stake:EV_POLICY.stake}))
     .filter(x=>x.discounted_ev>=EV_POLICY.minEv).sort((a,b)=>b.discounted_ev-a.discounted_ev||a.combo.localeCompare(b.combo)).slice(0,EV_POLICY.maxTickets);
