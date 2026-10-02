@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {captureVariants,variantRevision,evaluateVariants} from './preclose_variants.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
@@ -130,7 +131,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';current.records[k]=preserveRevision(current.records[k],rec);current.records[k].last_checked_at=rec.saved_at}
+    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';current.records[k]=variantRevision(current.records[k],rec);current.records[k].last_checked_at=rec.saved_at}
   }
   for(const [d,store] of stores){
     for(const r of Object.values(store.records)){
@@ -156,7 +157,7 @@ export async function run() {
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
-  const report={cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
+  const report={variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
   fs.writeFileSync(path.join(root,'dev/expert-shadow-repaired-evaluation.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({date,cohort:COHORT,saved:report.saved,settled:report.settled,pending:report.pending,through:verified.proof.history_through,health:report.health}));
 }

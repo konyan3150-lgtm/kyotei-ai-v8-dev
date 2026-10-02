@@ -37,7 +37,15 @@ function render(){
   const item=(title,detail)=>{const n=element('div');n.append(element('strong',title),element('span',detail));ready.append(n)};
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
-  renderGroups();
+  renderVariants();renderGroups();
+}
+function renderVariants(){
+ const v=data?.variants,legacy=document.getElementById('cohort').value==='legacy',body=document.getElementById('variantsTable');body.replaceChildren();document.getElementById('variantsPanel').hidden=legacy;
+ if(legacy)return;
+ document.getElementById('variantsNote').textContent=v?`保存 ${v.captured}R・確定 ${v.settled}R。展示ST比較対象 ${v.st_eligible}R・欠け/対象外 ${v.st_missing}R。`:'新しく保存する予測から比較を始めます。';
+ const labels={st_0:'展示ST：重みなし',st_12_5:'展示ST：弱め',st_25:'展示ST：標準',st_50:'展示ST：強め',six_equal:'6点・各100円',three_equal:'3点・各200円',two_equal:'2点・各300円',confident_three_weighted:'自信度が高い時に厚張り'};
+ for(const group of ['st','budget'])for(const [k,a] of Object.entries(v?.arms?.[group]||{}))row(body,[labels[k]||k,a.races+'R',percentage(a.hit_rate),percentage(a.roi)]);
+ if(!body.children.length){const tr=element('tr'),td=element('td','新しい予測の結果が確定すると表示します','empty');td.colSpan=4;tr.append(td);body.append(tr);}
 }
 function renderGroups(){
   const field=document.getElementById('group').value,body=document.getElementById('groups');body.replaceChildren();
@@ -53,6 +61,6 @@ async function refresh(){
 }
 if(typeof document!=='undefined'){
   document.getElementById('refresh').addEventListener('click',refresh);document.getElementById('six').addEventListener('click',()=>{valueMode=false;if(data)render()});document.getElementById('ev').addEventListener('click',()=>{valueMode=true;if(data)render()});document.getElementById('group').addEventListener('change',renderGroups);
-  document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
+  document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness','variantsTable'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
   refresh();setInterval(refresh,180000);
 }
