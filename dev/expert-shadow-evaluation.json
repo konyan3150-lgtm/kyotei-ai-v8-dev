@@ -16,28 +16,28 @@
   },
   "value_arms": {
     "baseline": {
-      "eligible_races": 1,
-      "bought_races": 1,
+      "eligible_races": 2,
+      "bought_races": 2,
       "skipped_races": 0,
       "hits": 0,
       "hit_rate": 0,
-      "investment": 400,
+      "investment": 800,
       "payout": 0,
       "roi": 0
     },
     "candidate": {
-      "eligible_races": 1,
-      "bought_races": 1,
+      "eligible_races": 2,
+      "bought_races": 2,
       "skipped_races": 0,
       "hits": 0,
       "hit_rate": 0,
-      "investment": 400,
+      "investment": 800,
       "payout": 0,
       "roi": 0
     }
   },
   "drift": {
-    "reference_races": 5,
+    "reference_races": 6,
     "recent_races": 0,
     "reference_required": 200,
     "recent_required": 50,
@@ -49,7 +49,7 @@
     "races_with_revisions": 2,
     "preserved_previous_snapshots": 2,
     "change_reasons": {
-      "first_capture": 4,
+      "first_capture": 5,
       "model_scores_changed": 2,
       "expert_changed": 2,
       "odds_changed": 2,
@@ -61,16 +61,16 @@
   },
   "diagnostics": {
     "integrity": {
-      "saved": 5,
-      "valid": 5,
+      "saved": 6,
+      "valid": 6,
       "invalid": 0,
       "errors": []
     },
     "reliability": {
       "baseline": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 3,
-        "ece": 0.08268917235582272,
+        "races": 4,
+        "ece": 0.08307528453863751,
         "status": "insufficient_sample",
         "bins": [
           {
@@ -83,8 +83,8 @@
           {
             "lower": 0.05,
             "upper": 0.1,
-            "races": 3,
-            "predicted_probability": 0.08268917235582272,
+            "races": 4,
+            "predicted_probability": 0.08307528453863751,
             "observed_hit_rate": 0
           },
           {
@@ -119,8 +119,8 @@
       },
       "candidate": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 3,
-        "ece": 0.08268492338460323,
+        "races": 4,
+        "ece": 0.08328310652438636,
         "status": "insufficient_sample",
         "bins": [
           {
@@ -133,8 +133,8 @@
           {
             "lower": 0.05,
             "upper": 0.1,
-            "races": 3,
-            "predicted_probability": 0.08268492338460323,
+            "races": 4,
+            "predicted_probability": 0.08328310652438636,
             "observed_hit_rate": 0
           },
           {
@@ -191,9 +191,55 @@
             "brier": 0.9800850803873576
           }
         }
+      },
+      "20261003": {
+        "races": 1,
+        "arms": {
+          "baseline": {
+            "races": 1,
+            "hit_rate": 0,
+            "investment": 600,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 4.294359895766672,
+            "brier": 1.006132119242876
+          },
+          "candidate": {
+            "races": 1,
+            "hit_rate": 0,
+            "investment": 600,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 4.319903403206296,
+            "brier": 1.0073986831616617
+          }
+        }
       }
     },
     "by_stadium": {
+      "23": {
+        "races": 1,
+        "arms": {
+          "baseline": {
+            "races": 1,
+            "hit_rate": 0,
+            "investment": 600,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 4.294359895766672,
+            "brier": 1.006132119242876
+          },
+          "candidate": {
+            "races": 1,
+            "hit_rate": 0,
+            "investment": 600,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 4.319903403206296,
+            "brier": 1.0073986831616617
+          }
+        }
+      },
       "24": {
         "races": 3,
         "arms": {
@@ -243,74 +289,74 @@
         }
       },
       "normal": {
-        "races": 2,
+        "races": 3,
         "arms": {
           "baseline": {
-            "races": 2,
+            "races": 3,
             "hit_rate": 0,
-            "investment": 1200,
+            "investment": 1800,
             "payout": 0,
             "roi": 0,
-            "log_loss": 5.57896751881805,
-            "brier": 1.024442861893219
+            "log_loss": 5.150764977800924,
+            "brier": 1.0183392810097713
           },
           "candidate": {
-            "races": 2,
+            "races": 3,
             "hit_rate": 0,
-            "investment": 1200,
+            "investment": 1800,
             "payout": 0,
             "roi": 0,
-            "log_loss": 5.567233652831175,
-            "brier": 1.0240381425557168
+            "log_loss": 5.151456902956215,
+            "brier": 1.0184916560910318
           }
         }
       }
     },
     "paired_intervals": {
       "status": "insufficient_sample",
-      "dates": 1,
-      "races": 3,
+      "dates": 2,
+      "races": 4,
       "required_dates": 5,
       "required_races": 100,
       "intervals": null
     },
     "promotion": "No automatic production promotion. Future chronological holdout evaluation is still required."
   },
-  "saved": 5,
-  "settled": 3,
+  "saved": 6,
+  "settled": 4,
   "cancelled": 0,
   "invalid": 0,
   "pending": 2,
   "arms": {
     "baseline": {
-      "races": 3,
+      "races": 4,
       "hits": 1,
-      "investment": 1800,
+      "investment": 2400,
       "payout": 1730,
-      "roi": 0.9611111111111111,
-      "log_loss": 4.574176632238449,
-      "brier": 0.9805973911261585
+      "roi": 0.7208333333333333,
+      "log_loss": 4.504222448120505,
+      "brier": 0.9869810731553379
     },
     "candidate": {
-      "races": 3,
+      "races": 4,
       "hits": 1,
-      "investment": 1800,
+      "investment": 2400,
       "payout": 1730,
-      "roi": 0.9611111111111111,
-      "log_loss": 4.563024069354278,
-      "brier": 0.9800850803873576
+      "roi": 0.7208333333333333,
+      "log_loss": 4.502243902817283,
+      "brier": 0.9869134810809337
     }
   },
   "paired_hit_difference": 0,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-10-02T23:34:14.938Z",
-    "eligible_preclose_races": 2,
-    "captured_preclose_races": 2,
+    "checked_at": "2026-10-02T23:48:30.693Z",
+    "eligible_preclose_races": 1,
+    "captured_preclose_races": 1,
     "missing_preclose_records": [],
     "stale_preclose_records": [],
     "overdue_results": [],
-    "original_exhibition_status": "captured_preclose",
+    "original_exhibition_status": "no_preclose_values",
     "program_status": "available",
     "status": "ok",
     "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent."
