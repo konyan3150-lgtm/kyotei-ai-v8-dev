@@ -14,4 +14,5 @@ assert.equal(health({a:{closed_at:race.closed_at}},{now:new Date('2026-10-03T03:
 assert.equal(health({a:{closed_at:race.closed_at,outcome:{}}},{now:new Date('2026-10-03T05:31:00Z')}).overdue_results.length,0);
 assert.equal(health({a:{closed_at:race.closed_at,cancelled:{}}},{now:new Date('2026-10-03T05:31:00Z')}).overdue_results.length,0);
 assert.equal(health({},{originalStatus:'fetch_or_parse_error'}).status,'needs_attention');
+assert.equal(health({a:{closed_at:'2026-10-03 13:00:00',saved_at:'2026-10-03T02:00:00Z'}},{now:new Date('2026-10-03T02:31:00Z'),eligibleKeys:['a']}).stale_preclose_records.length,1);
 console.log('Exhibition/health tests passed: quoted CSV, missing values, race/date/time gates, coverage and overdue result exclusion.');
