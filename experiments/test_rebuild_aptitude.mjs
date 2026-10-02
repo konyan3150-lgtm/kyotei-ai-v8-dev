@@ -13,4 +13,6 @@ const duplicate=payload();duplicate.results.push(structuredClone(duplicate.resul
 assert.throws(()=>applyDay(fresh(),payload('2025-07-31'),'20250730'),/Wrong source date/);
 const invalid=payload();invalid.results[0].boats[1].racer_course_number=1;assert.throws(()=>applyDay(fresh(),invalid,'20250730'),/Invalid racer/);
 const zero=payload();zero.results[0].boats[0].racer_start_timing=0;const z=fresh();applyDay(z,zero,'20250730');assert.equal(z.racers['5038'].o[6],1);
+const nonstandard=payload();nonstandard.results[0].boats[0].racer_place_number=14;nonstandard.results[0].boats[0].racer_start_timing=-.02;const n=fresh();applyDay(n,nonstandard,'20250730');validate(n);assert.equal(n.racers['5038'].o[0],1);assert.equal(n.racers['5038'].o[1],0);assert.equal(n.racers['5038'].o[7],-.02);
+const badGlobal=structuredClone(data);badGlobal.global_course['1'][2]++;assert.throws(()=>validate(badGlobal),/Global course/);
 console.log('Aptitude recovery tests passed: contiguous dates, duplicate rejection, canonical venue, missing ST and aggregate counts.');
