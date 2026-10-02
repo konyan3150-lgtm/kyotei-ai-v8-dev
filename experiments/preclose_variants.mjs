@@ -25,7 +25,7 @@ export function captureVariants({race,rows,makeBets,capturedAt}){
  const st=rows.map(x=>race.preview?.racers?.[x.k]?.start_timing),eligible=st.every(v=>v!=null&&v!==''&&Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=2),stArms={};
  if(eligible){
   const reference=exhibitionFactors(race,rows,25);
-  for(const weight of VARIANT_POLICY.st_weights){const factor=exhibitionFactors(race,rows,weight),changed=rows.map((r,i)=>({...r,p:r.p.map(v=>v*factor[i]/reference[i])}));const picks=makeBets(changed,6,'hit').map(x=>x.combo);if(weight===25&&JSON.stringify(picks)!==JSON.stringify(baseline))throw Error('ST control differs');stArms['st_'+String(weight).replace('.','_')]=budgetTickets(picks,[100,100,100,100,100,100]);}
+  for(const weight of VARIANT_POLICY.st_weights){const factor=exhibitionFactors(race,rows,weight),changed=weight===25?rows:rows.map((r,i)=>({...r,p:r.p.map(v=>v*(factor[i]/reference[i]))}));const picks=makeBets(changed,6,'hit').map(x=>x.combo);if(weight===25&&JSON.stringify(picks)!==JSON.stringify(baseline))throw Error('ST control differs');stArms['st_'+String(weight).replace('.','_')]=budgetTickets(picks,[100,100,100,100,100,100]);}
  }
  return {policy:VARIANT_POLICY.version,captured_at:capturedAt,st:{eligible,reason:eligible?null:'requires_six_observed_nonnegative_exhibition_st',values:st.map(v=>v==null||v===''?null:Number(v)),arms:stArms},budget:{confident,top_score:ranked[0],score_gap:ranked[0]-ranked[1],arms:stakes}};
 }
