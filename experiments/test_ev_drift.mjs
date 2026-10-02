@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {evTickets,drift,psi} from './ev_drift.mjs';
+import {allCombinations,snapshot,settle,evaluate} from './expert_shadow.mjs';
+const saved='2026-10-03T02:55:00Z',oddsAt='2026-10-03T02:54:00Z';
+const distributions=[{combo:'1-2-3',prob:.1},{combo:'2-1-3',prob:.02}];
+const tickets=evTickets(distributions,[{combo:'1-2-3',odds:20},{combo:'2-1-3',odds:10}],oddsAt,saved);
+assert.equal(tickets.items.length,1);assert.equal(tickets.investment,100);
+assert.equal(tickets.items[0].estimated_ev,2);assert.ok(Math.abs(tickets.items[0].discounted_ev-1.5)<1e-12);
+assert.equal(evTickets(distributions,[],oddsAt,saved).items.length,0);
+assert.equal(evTickets(distributions,[],null,saved).status,'odds_unavailable_or_stale');
+assert.equal(evTickets(distributions,[],'2026-10-03T03:00:00Z',saved).items.length,0);
+assert.equal(evTickets(distributions,[],'2026-10-03T02:40:00Z',saved).items.length,0);
+assert.equal(psi(['a','b'],['a','b'],['a','b']),0);
+assert.ok(psi(Array(200).fill('a'),Array(50).fill('b'),['a','b'])>.2);
+assert.equal(drift({}).status,'collecting_reference');
+const rows=[1,2,3,4,5,6].map(k=>({k:String(k),p:[.6/k,.4/k,.3/k]}));
+const dist=allCombinations(rows),makeBets=rs=>allCombinations(rs).slice(0,6);
+const odds={fetched_at:oddsAt,trifecta:{}};
+for(const x of dist){const [a,b,c]=x.combo.split('-');odds.trifecta[a]??={};odds.trifecta[a][b]??={};odds.trifecta[a][b][c]=1000}
+const rec=snapshot({race:{date:'2026-10-03',closed_at:'2026-10-03 12:00:00'},rows,expert:{version:2,active:'inside',weights:{inside:.8,upset:0}},
+  makeBets,date:'20261003',stadium:'1',number:'1',now:new Date(saved),odds});
+assert.equal(rec.value_arms.baseline.investment,400);assert.equal(rec.value_arms.candidate.investment,400);
+const combo=rec.value_arms.baseline.items[0].combo;settle(rec,{combination:combo,amount:2500});
+assert.equal(rec.outcome.value_metrics.baseline.payout,2500);
+assert.equal(evaluate({x:rec}).value_arms.baseline.eligible_races,1);
+const records=Object.fromEntries(Array.from({length:250},(_,i)=>[String(i),{...rec,saved_at:new Date(Date.parse(saved)+i*60000).toISOString(),stadium:i<200?'1':'2'}]));
+const d=drift(records);assert.equal(d.reference_races,200);assert.equal(d.recent_races,50);
+assert.equal(d.status,'distribution_change_detected');assert.ok(d.metrics.venue.warning);
+const unchanged=Object.fromEntries(Object.entries(records).map(([k,r])=>[k,{...r,stadium:'1'}]));assert.equal(drift(unchanged).status,'stable');
+console.log('EV/drift tests passed: odds timestamps, discount, stakes/payouts, same eligible races, non-overlapping windows and drift signals.');
