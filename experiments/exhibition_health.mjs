@@ -37,8 +37,9 @@ export function health(records,{now=new Date(),eligibleKeys=[],originalStatus='u
     if(Number.isFinite(delay)&&delay>=30)overdue.push({key,minutes_since_close:Math.floor(delay),level:delay>=120?'high':'watch'});
   }
   const missing=eligibleKeys.filter(k=>!records[k]);
+  const stale=eligibleKeys.filter(k=>records[k]&&(now.getTime()-Date.parse(records[k].last_checked_at||records[k].saved_at))>10*60000);
   return {checked_at:now.toISOString(),eligible_preclose_races:eligibleKeys.length,captured_preclose_races:eligibleKeys.length-missing.length,
-    missing_preclose_records:missing,overdue_results:overdue,original_exhibition_status:originalStatus,program_status:programStatus,
-    status:missing.length||overdue.length||programStatus==='fetch_error'||originalStatus==='fetch_or_parse_error'||/^HTTP_5/.test(originalStatus)?'needs_attention':'ok',
+    missing_preclose_records:missing,stale_preclose_records:stale,overdue_results:overdue,original_exhibition_status:originalStatus,program_status:programStatus,
+    status:missing.length||stale.length||overdue.length||programStatus==='fetch_error'||originalStatus==='fetch_or_parse_error'||/^HTTP_5/.test(originalStatus)?'needs_attention':'ok',
     limitation:'A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent.'};
 }
