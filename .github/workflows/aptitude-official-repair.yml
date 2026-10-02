@@ -1,0 +1,67 @@
+name: Repair missing aptitude starts from verified official B and K
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/aptitude-official-repair.yml", "experiments/repair_official_aptitude.py", "experiments/test_repair_official_aptitude.py"]
+permissions:
+  contents: write
+concurrency:
+  group: aptitude-official-repair
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: python -m pip install lhafile==0.3.1
+      - uses: actions/cache@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-aptitude-20250730-20261001-v1
+      - name: Test special-status parsing and raw-record preservation
+        run: python -m unittest discover -s experiments -p test_repair_official_aptitude.py
+      - name: Rebuild separate DEV snapshot from official records
+        run: python experiments/repair_official_aptitude.py
+      - name: Independently verify aggregate consistency
+        run: |
+          node --input-type=module - <<'JS'
+          import fs from 'node:fs';
+          import {validate} from './experiments/rebuild_aptitude.mjs';
+          const x=JSON.parse(fs.readFileSync('dev/racer-aptitude-official.json'));
+          const a=JSON.parse(fs.readFileSync('dev/aptitude-official-repair-audit.json'));
+          console.log(validate(x));
+          if(a.status!=='verified'||a.verified_days!==429||a.counts.recovered_missing_starts!==1542)throw Error('Unexpected repair coverage; requires review');
+          if(x.starts!==a.total_starts||x.recovery.days.length!==429)throw Error('Repair metadata mismatch');
+          JS
+      - name: Save verified data, raw normalized records and audit
+        run: |
+          git add dev/racer-aptitude-official.json dev/racer-starts-official.csv.gz dev/aptitude-official-repair-audit.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save official-source repair and retained raw status records in DEV"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - name: Preserve diagnostics if verification fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-repair-diagnostics-${{ github.run_id }}
+          path: |
+            dev/racer-aptitude-official.json
+            dev/racer-starts-official.csv.*
+            dev/aptitude-official-repair-audit.json
+          retention-days: 7
