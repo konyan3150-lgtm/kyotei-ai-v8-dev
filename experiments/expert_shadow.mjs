@@ -126,7 +126,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;current.records[k]=preserveRevision(current.records[k],rec)}
+    if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';current.records[k]=preserveRevision(current.records[k],rec);current.records[k].last_checked_at=rec.saved_at}
   }
   for(const [d,store] of stores){
     for(const r of Object.values(store.records)){
