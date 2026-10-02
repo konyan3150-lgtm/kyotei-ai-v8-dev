@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {nextDay,applyDay,validate,BASE_COMMIT} from './rebuild_aptitude.mjs';
+const fresh=()=>({racers:{},global_course:{},starts:0,racers_count:0,through:'2025-07-29',recovery:{baseline_commit:BASE_COMMIT,days:[]}});
+const payload=(date='2025-07-30')=>({results:[{date,number:1,stadium_number:8,boats:[{racer_number:5038,racer_course_number:1,racer_place_number:1,racer_start_timing:null},{racer_number:4540,racer_course_number:2,racer_place_number:2,racer_start_timing:.12}]}]});
+assert.equal(nextDay('20260930'),'20261001');assert.equal(nextDay('2024-02-28'),'20240229');assert.throws(()=>nextDay('20260230'));
+const data=fresh();applyDay(data,payload(),'20250730');validate(data);
+assert.equal(data.starts,2);assert.equal(data.racers['5038'].o[6],0);assert.equal(data.racers['4540'].o[7],.12);assert.equal(data.racers['5038'].v['常滑'][0],1);assert.equal(data.racers['5038'].v['8'],undefined);
+assert.throws(()=>applyDay(data,payload(),'20250730'),/duplicate/);assert.throws(()=>applyDay(data,payload(),'20250801'),/Noncontiguous/);
+applyDay(data,payload('2025-07-31'),'20250731');validate(data);assert.equal(data.starts,4);assert.equal(data.racers['5038'].o[0],2);
+const broken=structuredClone(data);broken.starts--;assert.throws(()=>validate(broken),/count mismatch/);
+assert.throws(()=>applyDay(fresh(),{results:[]},'20250730'),/No verified/);
+const duplicate=payload();duplicate.results.push(structuredClone(duplicate.results[0]));assert.throws(()=>applyDay(fresh(),duplicate,'20250730'),/Duplicate race/);
+assert.throws(()=>applyDay(fresh(),payload('2025-07-31'),'20250730'),/Wrong source date/);
+const invalid=payload();invalid.results[0].boats[1].racer_course_number=1;assert.throws(()=>applyDay(fresh(),invalid,'20250730'),/Invalid racer/);
+const zero=payload();zero.results[0].boats[0].racer_start_timing=0;const z=fresh();applyDay(z,zero,'20250730');assert.equal(z.racers['5038'].o[6],1);
+console.log('Aptitude recovery tests passed: contiguous dates, duplicate rejection, canonical venue, missing ST and aggregate counts.');
