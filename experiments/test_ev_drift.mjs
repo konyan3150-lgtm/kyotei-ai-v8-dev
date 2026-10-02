@@ -7,6 +7,7 @@ const tickets=evTickets(distributions,[{combo:'1-2-3',odds:20},{combo:'2-1-3',od
 assert.equal(tickets.items.length,1);assert.equal(tickets.investment,100);
 assert.equal(tickets.items[0].estimated_ev,2);assert.ok(Math.abs(tickets.items[0].discounted_ev-1.5)<1e-12);
 assert.equal(evTickets(distributions,[],oddsAt,saved).items.length,0);
+assert.equal(evTickets(distributions,[{combo:'1-2-3',odds:20}],oddsAt,saved).status,'odds_incomplete');
 assert.equal(evTickets(distributions,[],null,saved).status,'odds_unavailable_or_stale');
 assert.equal(evTickets(distributions,[],'2026-10-03T03:00:00Z',saved).items.length,0);
 assert.equal(evTickets(distributions,[],'2026-10-03T02:40:00Z',saved).items.length,0);
