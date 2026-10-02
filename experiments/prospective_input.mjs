@@ -27,7 +27,19 @@ export function verifyStore(store){
 }
 
 export function checkedOutcome(race){
- if(!Array.isArray(race?.boats)||!race.boats.length)return {eligible:false,pending:true};
- if(race.boats.length!==6||new Set(race.boats.map(b=>b.racer_place_number)).size!==6||race.boats.some(b=>!Number.isInteger(b.racer_place_number)||b.racer_place_number<1||b.racer_place_number>6))return {eligible:false,exclude:true,reason:'special_result_or_possible_refund'};
- return historicalOutcome(race);
+ if(!Array.isArray(race?.boats)||!race.boats.length||!race.payouts?.trifecta?.length)return {eligible:false,pending:true};
+ const ranks=race.boats.map(b=>b.racer_place_number);
+ const completeNormal=race.boats.length===6&&new Set(ranks).size===6&&ranks.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
+ if(completeNormal)return historicalOutcome(race);
+ const confirmed=race.source==='verified official daily K'||ranks.some(n=>Number.isInteger(n)&&n>6);
+ if(confirmed)return {eligible:false,exclude:true,confirmed:true,reason:'confirmed_special_result_or_possible_refund'};
+ return {eligible:false,pending:true};
+}
+export function reopenUnconfirmed(store){
+ let reopened=0;
+ for(const r of Object.values(store.records||{}))if(r.excluded?.reason==='special_result_or_possible_refund'&&!r.excluded.confirmed){
+  r.settlement_reviews??=[];r.settlement_reviews.push({previous_exclusion:r.excluded,reviewed_at:new Date().toISOString(),reason:'Prior classifier did not establish completed results; retry authoritative settlement.'});
+  delete r.excluded;delete r.outcome;reopened++;
+ }
+ return reopened;
 }

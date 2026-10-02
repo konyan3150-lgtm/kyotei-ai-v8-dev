@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import {captureVariants,variantRevision,evaluateVariants} from './preclose_variants.mjs';
-import {COHORT,verifiedInput,verifyStore,checkedOutcome} from './prospective_input.mjs';
+import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
 import {pathToFileURL} from 'node:url';
@@ -104,7 +104,7 @@ export async function run() {
   const date=day(),dir=path.join(root,'dev/expert-shadow-repaired-archive');
   const verified=verifiedInput(root,date,engineRoot);fs.mkdirSync(dir,{recursive:true});
   const stores=new Map(fs.readdirSync(dir).filter(f=>/^\d{8}\.json$/.test(f)).map(f=>[f.slice(0,8),read(path.join(dir,f))]));
-  for(const store of stores.values())verifyStore(store);
+  for(const store of stores.values()){verifyStore(store);reopenUnconfirmed(store);}
   const current=stores.get(date)||{cohort:COHORT,schema:'kyotei-expert-shadow',version:1,date,records:{}};stores.set(date,current);
   const ctx={models:engine.normalizeModel(read(path.join(engineRoot,'v8_model_aptitude.json'))),aptitude:verified.data,
     course:read(path.join(engineRoot,'dev/course-stats.json')),venue:read(path.join(engineRoot,'dev/venue-stats.json')),technique:read(path.join(engineRoot,'dev/technique-stats.json'))};
@@ -151,7 +151,7 @@ export async function run() {
     }
     for(const r of pending){const result=map.get(`${Number(r.stadium)}_${Number(r.race)}`);if(result?.cancelled===true){markCancelled(r,{cancelled:true,source:'explicit cancellation'});continue;}
       const check=checkedOutcome(result);
-      if(check.exclude){r.excluded={reason:check.reason,confirmed_at:new Date().toISOString()};r.outcome={excluded:true};}
+      if(check.exclude){r.excluded={reason:check.reason,confirmed:true,confirmed_at:new Date().toISOString()};r.outcome={excluded:true};}
       else if(check.eligible)settle(r,{combination:check.combo,amount:check.amount,source:result.source||'Open API complete normal finishers'});
     }
   }

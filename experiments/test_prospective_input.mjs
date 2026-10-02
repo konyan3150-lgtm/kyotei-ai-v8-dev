@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {verifyInput,verifyStore,sha256,COHORT,checkedOutcome} from './prospective_input.mjs';
+import {verifyInput,verifyStore,sha256,COHORT,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 const data={through:'2026-10-01',starts:0,racers_count:0,racers:{},global_course:{},prospective_cohort:COHORT};const bytes=JSON.stringify(data);
 const audit={status:'verified',cohort:COHORT,snapshot_sha256:sha256(bytes),through:data.through,starts:0,base_through:data.through,base_starts:0,appended_days:[]};
 assert.equal(verifyInput(data,audit,'20261002',bytes).cohort,COHORT);
@@ -19,3 +19,8 @@ const excluded=snapshot({race:{date:'20261003',closed_at:'2026-10-03 10:00:00'},
 excluded.excluded={reason:'special_result_or_possible_refund'};excluded.outcome={excluded:true};
 const report=evaluate({x:excluded});assert.equal(report.excluded,1);assert.equal(report.invalid,0);assert.equal(report.settled,0);assert.equal(report.pending,0);
 console.log('Special-result exclusion remains outside paired diagnostics and ROI.');
+
+const placeholder={boats:[1,2,3,4,5,6].map(n=>({racer_boat_number:n,racer_place_number:null})),payouts:{trifecta:[]}};assert.equal(checkedOutcome(placeholder).pending,true);assert.equal(checkedOutcome(placeholder).exclude,undefined);
+placeholder.payouts.trifecta=[{combination:'1-2-3',amount:1200}];assert.equal(checkedOutcome(placeholder).pending,true);
+const old={records:{x:{excluded:{reason:'special_result_or_possible_refund'},outcome:{excluded:true},baseline_picks:['1-2-3']}}};assert.equal(reopenUnconfirmed(old),1);assert.equal(old.records.x.outcome,undefined);assert.equal(old.records.x.settlement_reviews.length,1);assert.deepEqual(old.records.x.baseline_picks,['1-2-3']);assert.equal(reopenUnconfirmed(old),0);
+console.log('Incomplete placeholder results stay pending; unconfirmed exclusions reopen once with preserved review history.');
