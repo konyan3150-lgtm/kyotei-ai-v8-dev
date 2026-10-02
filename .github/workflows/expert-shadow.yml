@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/expert-shadow.yml", "experiments/expert_shadow.mjs", "experiments/ev_drift.mjs", "experiments/realtime_shadow.mjs"]
+    paths: [".github/workflows/expert-shadow.yml", "experiments/expert_shadow.mjs", "experiments/ev_drift.mjs", "experiments/realtime_shadow.mjs", "experiments/shadow_diagnostics.mjs"]
   schedule:
     - cron: "*/5 * * * *"
 permissions:
@@ -27,6 +27,7 @@ jobs:
           node experiments/test_expert_shadow.mjs
           node experiments/test_ev_drift.mjs
           node experiments/test_realtime_shadow.mjs
+          node experiments/test_shadow_diagnostics.mjs
       - name: Prepare frozen prediction engine and latest auxiliary data
         run: |
           git clone --depth 1 https://github.com/konyan3150-lgtm/kyotei-ai-v8-live.git /tmp/live-data
