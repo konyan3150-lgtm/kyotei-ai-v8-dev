@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {historicalOutcome} from './historical_outcome.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {validate,day,nextDay} from './rebuild_aptitude.mjs';
@@ -23,4 +24,10 @@ export function verifiedInput(root,date,engineRoot){
 export function verifyStore(store){
  if(store.cohort!==COHORT)throw Error('Archive cohort mismatch');
  for(const r of Object.values(store.records||{}))for(const s of [...(r.revisions||[]),r])if(s.cohort!==COHORT||s.input_provenance?.cohort!==COHORT||nextDay(s.input_provenance.history_through)!==day(s.date))throw Error('Record provenance/cohort mismatch');
+}
+
+export function checkedOutcome(race){
+ if(!Array.isArray(race?.boats)||!race.boats.length)return {eligible:false,pending:true};
+ if(race.boats.length!==6||new Set(race.boats.map(b=>b.racer_place_number)).size!==6||race.boats.some(b=>!Number.isInteger(b.racer_place_number)||b.racer_place_number<1||b.racer_place_number>6))return {eligible:false,exclude:true,reason:'special_result_or_possible_refund'};
+ return historicalOutcome(race);
 }

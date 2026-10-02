@@ -5,6 +5,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 from audit_official_aptitude import archive,parse_official
 from repair_official_aptitude import accumulate,official_rows
+from prepare_official_comparison import payouts
 COHORT='expert-shadow-official-v1'
 def next_day(s):return (datetime.strptime(s.replace('-',''),'%Y%m%d')+timedelta(days=1)).strftime('%Y%m%d')
 def append_day(data,date,btext,ktext):
@@ -40,7 +41,7 @@ def main():
         bt,bsha=archive(date,'B',cache);kt,ksha=archive(date,'K',cache)
         entry,rows,excluded=append_day(data,date,bt,kt);entry['source_sha256']={'B':bsha,'K':ksha};days.append(entry);data['recovery']['days'].append(entry);changed=True
         raw=root/'aptitude-prospective-source'/f'{date}.json.gz';raw.parent.mkdir(parents=True,exist_ok=True)
-        raw.write_bytes(gzip.compress(json.dumps({'date':date,'source_sha256':entry['source_sha256'],'starts':list(rows.values()),'nonstarts':excluded},ensure_ascii=False).encode(),mtime=0))
+        raw.write_bytes(gzip.compress(json.dumps({'date':date,'source_sha256':entry['source_sha256'],'starts':list(rows.values()),'nonstarts':excluded,'payouts':[{'stadium':s,'race':n,'trifecta':v} for (s,n),v in payouts(kt).items()]},ensure_ascii=False).encode(),mtime=0))
     if changed:
         data['updated_at']=datetime.now(ZoneInfo('UTC')).isoformat();data['prospective_cohort']=COHORT
         atomic(target,json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')

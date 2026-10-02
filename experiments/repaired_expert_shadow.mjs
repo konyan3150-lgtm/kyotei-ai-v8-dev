@@ -1,6 +1,7 @@
 import fs from 'node:fs';
-import {COHORT,verifiedInput,verifyStore} from './prospective_input.mjs';
+import {COHORT,verifiedInput,verifyStore,checkedOutcome} from './prospective_input.mjs';
 import path from 'node:path';
+import {gunzipSync} from 'node:zlib';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {evTickets,drift,EV_POLICY} from './ev_drift.mjs';
@@ -77,7 +78,7 @@ export function settle(record,result) {
 
 export function evaluate(records) {
   const allRecords=Object.values(records),valid=allRecords.filter(r=>!auditRecord(r).length),invalid=allRecords.length-valid.length;
-  const rs=valid.filter(r=>r.outcome&&!r.cancelled),cancelled=allRecords.filter(r=>r.cancelled).length,arms={};
+  const rs=valid.filter(r=>r.outcome&&!r.cancelled&&!r.excluded),cancelled=allRecords.filter(r=>r.cancelled).length,arms={};
   for(const arm of ['baseline','candidate']){
     const data=rs.map(r=>r.outcome.metrics[arm]),investment=data.reduce((s,x)=>s+x.investment,0),payout=data.reduce((s,x)=>s+x.payout,0);
     arms[arm]={races:data.length,hits:data.filter(x=>x.hit).length,investment,payout,roi:investment?payout/investment:null,
@@ -90,7 +91,7 @@ export function evaluate(records) {
     valueArms[arm]={eligible_races:data.length,bought_races:bought.length,skipped_races:data.length-bought.length,hits:bought.filter(x=>x.hit).length,
       hit_rate:bought.length?bought.filter(x=>x.hit).length/bought.length:null,investment,payout,roi:investment?payout/investment:null};
   }
-  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),realtime:realtimeSummary(records),diagnostics:diagnostics(records),saved:Object.keys(records).length,settled:rs.length,cancelled,invalid,pending:valid.filter(r=>!r.outcome&&!r.cancelled).length,arms,
+  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),realtime:realtimeSummary(records),diagnostics:diagnostics(Object.fromEntries(Object.entries(records).filter(([,r])=>!r.excluded))),saved:Object.keys(records).length,excluded:allRecords.filter(r=>r.excluded).length,settled:rs.length,cancelled,invalid,pending:valid.filter(r=>!r.outcome&&!r.cancelled).length,arms,
     paired_hit_difference:rs.reduce((s,r)=>s+Number(r.outcome.metrics.candidate.hit)-Number(r.outcome.metrics.baseline.hit),0),
     interpretation:'Prospective paired shadow evaluation. No historical reconstruction or production promotion.'};
 }
@@ -136,12 +137,22 @@ export async function run() {
       if(r.outcome||r.cancelled||String(official.date)!==d||closeMs(r)>now.getTime())continue;
       const result=official.races?.[String(Number(r.stadium))]?.[String(Number(r.race))];
       if(result?.cancelled===true)markCancelled(r,{cancelled:true,source:'live official-results cancellation'});
-      else if(result?.combination)settle(r,{...result,source:'live official-results'});
+      // Published payout alone cannot establish whether tickets were refunded.
+      // Settle below only with complete finishers, using API or verified daily K.
     }
     const pending=Object.values(store.records).filter(r=>!r.outcome&&!r.cancelled&&closeMs(r)<=now.getTime());if(!pending.length)continue;
-    let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(e.message.includes('HTTP 404'))continue;throw e}
+    let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(!e.message.includes('HTTP 404'))throw e;results={results:[]}}
     const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r]));
-    for(const r of pending){const result=map.get(`${Number(r.stadium)}_${Number(r.race)}`);if(result?.cancelled===true)markCancelled(r,{cancelled:true,source:'Open API explicit cancellation'});else settle(r,result?.payouts?.trifecta?.[0])}
+    const sourcePath=path.join(root,'dev/aptitude-prospective-source',d+'.json.gz');
+    if(fs.existsSync(sourcePath)){
+      const source=JSON.parse(gunzipSync(fs.readFileSync(sourcePath)));
+      for(const p of source.payouts||[]){const boats=source.starts.filter(b=>b.stadium===p.stadium&&b.race===p.race).map(b=>({racer_boat_number:b.lane,racer_place_number:b.finish}));map.set(`${p.stadium}_${p.race}`,{boats,payouts:{trifecta:p.trifecta},source:'verified official daily K'});}
+    }
+    for(const r of pending){const result=map.get(`${Number(r.stadium)}_${Number(r.race)}`);if(result?.cancelled===true){markCancelled(r,{cancelled:true,source:'explicit cancellation'});continue;}
+      const check=checkedOutcome(result);
+      if(check.exclude){r.excluded={reason:check.reason,confirmed_at:new Date().toISOString()};r.outcome={excluded:true};}
+      else if(check.eligible)settle(r,{combination:check.combo,amount:check.amount,source:result.source||'Open API complete normal finishers'});
+    }
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
