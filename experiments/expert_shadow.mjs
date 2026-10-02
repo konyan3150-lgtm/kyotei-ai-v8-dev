@@ -1,0 +1,108 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {createRequire} from 'node:module';
+
+export const POLICY = Object.freeze({version:'expert-shadow-v1', insideLogBoost:0.10, upsetLogPenalty:0.10, tickets:6, stake:100});
+const closeMs = r => Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
+const day = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
+const read = (p,f={}) => fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')):f;
+const get = async url => {const r=await fetch(url,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(`${url}: HTTP ${r.status}`);return r.json()};
+
+export function allCombinations(rows) {
+  if(rows.length!==6 || new Set(rows.map(r=>String(r.k))).size!==6)throw Error('Six unique lanes required');
+  if(rows.some(r=>!Array.isArray(r.p)||r.p.length!==3||r.p.some(v=>!Number.isFinite(v)||v<0)))throw Error('Invalid rank probabilities');
+  const combinations=[];
+  for(const a of rows)for(const b of rows)for(const c of rows){
+    if(a.k===b.k||a.k===c.k||b.k===c.k)continue;
+    combinations.push({combo:`${a.k}-${b.k}-${c.k}`,prob:a.p[0]*b.p[1]*c.p[2]});
+  }
+  const sum=combinations.reduce((s,x)=>s+x.prob,0);
+  if(!(sum>0))throw Error('Zero distribution');
+  for(const x of combinations)x.prob/=sum;
+  return combinations.sort((a,b)=>b.prob-a.prob||a.combo.localeCompare(b.combo));
+}
+
+export function adjust(rows,expert) {
+  const inside=Number(expert.weights?.inside||0),upset=Number(expert.weights?.upset||0);
+  if(![inside,upset].every(x=>Number.isFinite(x)&&x>=0&&x<=1))throw Error('Invalid Expert weights');
+  const multiplier=Math.exp(POLICY.insideLogBoost*inside-POLICY.upsetLogPenalty*upset);
+  return rows.map(r=>({...r,p:r.p.map((p,i)=>i===0&&String(r.k)==='1'?p*multiplier:p)}));
+}
+
+export function snapshot({race,rows,expert,makeBets,date,stadium,number,now=new Date(),odds}) {
+  const close=closeMs(race),saved=now.getTime();
+  if(!Number.isFinite(close)||saved>=close||close-saved>20*60000||String(race.date||'').replaceAll('-','')!==date)return null;
+  if(race.result?.payouts?.trifecta?.length||expert.reconstructed||expert.version!==2)return null;
+  const changed=adjust(rows,expert),baseline=allCombinations(rows),candidate=allCombinations(changed);
+  const oddsTime=Date.parse(odds?.fetched_at),fresh=Number.isFinite(oddsTime)&&oddsTime<=saved&&saved-oddsTime<=10*60000;
+  for(const x of baseline){const [a,b,c]=x.combo.split('-');x.odds=fresh?Number(odds?.trifecta?.[a]?.[b]?.[c]||0):null;if(!(x.odds>0))x.odds=null}
+  return {policy:POLICY.version,date,stadium:String(stadium),race:String(number),saved_at:now.toISOString(),closed_at:race.closed_at,
+    expert:{version:expert.version,active:expert.active,weights:expert.weights,used_in_shadow_candidate:true,used_in_production:false},
+    rank_probabilities:rows.map(r=>({lane:String(r.k),p:r.p})),baseline_distribution:baseline,candidate_distribution:candidate,
+    baseline_picks:makeBets(rows,6,'hit').map(x=>x.combo),candidate_picks:makeBets(changed,6,'hit').map(x=>x.combo),
+    odds_snapshot_at:fresh?odds.fetched_at:null,stake_per_ticket:100,
+    probability_kind:'normalized rank-product scores; not yet calibrated trifecta probabilities',
+    engine_commit:'8286a9783a7799aacade7d0f0de72e8636a681ac',classifier_commit:'6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b',
+    scope:'shadow engine baseline; independently captured, not a replay of saved production predictions'};
+}
+
+export function settle(record,result) {
+  if(record.outcome||!result?.combination)return false;
+  if(Date.parse(record.saved_at)>=closeMs(record))throw Error('Post-close snapshot');
+  const combo=String(result.combination).replaceAll('>','-'),amount=Number(result.amount);
+  if(!/^([1-6])-([1-6])-([1-6])$/.test(combo)||new Set(combo.split('-')).size!==3||!Number.isFinite(amount)||amount<=0)return false;
+  const metrics={};
+  for(const arm of ['baseline','candidate']) {
+    const picks=record[`${arm}_picks`],p=record[`${arm}_distribution`].find(x=>x.combo===combo)?.prob;
+    if(!p)throw Error('Outcome absent from distribution');
+    metrics[arm]={hit:picks.includes(combo),investment:picks.length*100,payout:picks.includes(combo)?amount:0,
+      log_loss:-Math.log(p),brier:record[`${arm}_distribution`].reduce((sum,x)=>sum+(x.prob-(x.combo===combo?1:0))**2,0)};
+  }
+  record.outcome={result:combo,amount,settled_at:new Date().toISOString(),metrics};return true;
+}
+
+export function evaluate(records) {
+  const rs=Object.values(records).filter(r=>r.outcome),arms={};
+  for(const arm of ['baseline','candidate']){
+    const data=rs.map(r=>r.outcome.metrics[arm]),investment=data.reduce((s,x)=>s+x.investment,0),payout=data.reduce((s,x)=>s+x.payout,0);
+    arms[arm]={races:data.length,hits:data.filter(x=>x.hit).length,investment,payout,roi:investment?payout/investment:null,
+      log_loss:data.length?data.reduce((s,x)=>s+x.log_loss,0)/data.length:null,brier:data.length?data.reduce((s,x)=>s+x.brier,0)/data.length:null};
+  }
+  return {policy:POLICY,saved:Object.keys(records).length,settled:rs.length,pending:Object.keys(records).length-rs.length,arms,
+    paired_hit_difference:rs.reduce((s,r)=>s+Number(r.outcome.metrics.candidate.hit)-Number(r.outcome.metrics.baseline.hit),0),
+    interpretation:'Prospective paired shadow evaluation. No historical reconstruction or production promotion.'};
+}
+
+export async function run() {
+  const engineRoot=path.resolve(process.env.ENGINE_ROOT||'../research-work'),root=path.resolve(process.env.SHADOW_ROOT||'.');
+  const engine=await import(pathToFileURL(path.join(engineRoot,'scripts/update_server_predictions.mjs')));
+  const {assess}=createRequire(import.meta.url)(path.resolve(process.env.CLASSIFIER_PATH||'../dev-work/expert-classifier-v2.js'));
+  const date=day(),dir=path.join(root,'dev/expert-shadow-archive');fs.mkdirSync(dir,{recursive:true});
+  const stores=new Map(fs.readdirSync(dir).filter(f=>/^\d{8}\.json$/.test(f)).map(f=>[f.slice(0,8),read(path.join(dir,f))]));
+  const current=stores.get(date)||{schema:'kyotei-expert-shadow',version:1,date,records:{}};stores.set(date,current);
+  const ctx={models:engine.normalizeModel(read(path.join(engineRoot,'v8_model_aptitude.json'))),aptitude:read(path.join(engineRoot,'racer-aptitude.json')),
+    course:read(path.join(engineRoot,'dev/course-stats.json')),venue:read(path.join(engineRoot,'dev/venue-stats.json')),technique:read(path.join(engineRoot,'dev/technique-stats.json'))};
+  const odds=read(path.join(engineRoot,'dev/odds.json'));
+  let program;
+  try{program=await get(`https://boatraceopenapi.github.io/api/v1/${date.slice(0,4)}/${date}.json`)}catch(e){if(!e.message.includes('HTTP 404'))throw e}
+  const now=new Date();
+  for(const [sid,v] of Object.entries(program?.programs?.stadiums||{}))for(const [n,race] of Object.entries(v.races||{})){
+    const k=`${date}_${Number(sid)}_${Number(n)}`;if(current.records[k]?.outcome||!Number.isFinite(closeMs(race))||closeMs(race)<=now.getTime()||closeMs(race)-now.getTime()>20*60000)continue;
+    const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
+    const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
+      odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
+    if(rec)current.records[k]=rec;
+  }
+  for(const [d,store] of stores){
+    const pending=Object.values(store.records).filter(r=>!r.outcome&&closeMs(r)<=now.getTime());if(!pending.length)continue;
+    let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(e.message.includes('HTTP 404'))continue;throw e}
+    const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r.payouts?.trifecta?.[0]]));
+    for(const r of pending)settle(r,map.get(`${Number(r.stadium)}_${Number(r.race)}`));
+  }
+  for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
+  const all=Object.assign({},...[...stores.values()].map(s=>s.records));
+  fs.writeFileSync(path.join(root,'dev/expert-shadow-evaluation.json'),JSON.stringify(evaluate(all),null,2)+'\n');
+  console.log(JSON.stringify({date,...evaluate(all)}));
+}
+if(import.meta.url===pathToFileURL(process.argv[1]).href)await run();
