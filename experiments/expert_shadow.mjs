@@ -3,6 +3,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {evTickets,drift,EV_POLICY} from './ev_drift.mjs';
+import {observedInputs,preserveRevision,markCancelled,realtimeSummary,applyPreclosePreview} from './realtime_shadow.mjs';
 
 export const POLICY = Object.freeze({version:'expert-shadow-v1', insideLogBoost:0.10, upsetLogPenalty:0.10, tickets:6, stake:100});
 const closeMs = r => Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
@@ -39,7 +40,7 @@ export function snapshot({race,rows,expert,makeBets,date,stadium,number,now=new 
   const oddsTime=Date.parse(odds?.fetched_at),fresh=Number.isFinite(oddsTime)&&oddsTime<=saved&&saved-oddsTime<=10*60000;
   for(const x of baseline){const [a,b,c]=x.combo.split('-');x.odds=fresh?Number(odds?.trifecta?.[a]?.[b]?.[c]||0):null;if(!(x.odds>0))x.odds=null}
   const valueArms=Object.fromEntries([['baseline',baseline],['candidate',candidate]].map(([arm,distribution])=>[arm,evTickets(distribution,baseline,fresh?odds.fetched_at:null,now.toISOString())]));
-  return {policy:POLICY.version,value_arms:valueArms,date,stadium:String(stadium),race:String(number),saved_at:now.toISOString(),closed_at:race.closed_at,
+  return {policy:POLICY.version,input_state:observedInputs(race),value_arms:valueArms,date,stadium:String(stadium),race:String(number),saved_at:now.toISOString(),closed_at:race.closed_at,
     expert:{version:expert.version,active:expert.active,weights:expert.weights,used_in_shadow_candidate:true,used_in_production:false},
     rank_probabilities:rows.map(r=>({lane:String(r.k),p:r.p})),baseline_distribution:baseline,candidate_distribution:candidate,
     baseline_picks:makeBets(rows,6,'hit').map(x=>x.combo),candidate_picks:makeBets(changed,6,'hit').map(x=>x.combo),
@@ -50,7 +51,7 @@ export function snapshot({race,rows,expert,makeBets,date,stadium,number,now=new 
 }
 
 export function settle(record,result) {
-  if(record.outcome||!result?.combination)return false;
+  if(record.outcome||record.cancelled||!result?.combination)return false;
   if(Date.parse(record.saved_at)>=closeMs(record))throw Error('Post-close snapshot');
   const combo=String(result.combination).replaceAll('>','-'),amount=Number(result.amount);
   if(!/^([1-6])-([1-6])-([1-6])$/.test(combo)||new Set(combo.split('-')).size!==3||!Number.isFinite(amount)||amount<=0)return false;
@@ -72,7 +73,7 @@ export function settle(record,result) {
 }
 
 export function evaluate(records) {
-  const rs=Object.values(records).filter(r=>r.outcome),arms={};
+  const rs=Object.values(records).filter(r=>r.outcome&&!r.cancelled),cancelled=Object.values(records).filter(r=>r.cancelled).length,arms={};
   for(const arm of ['baseline','candidate']){
     const data=rs.map(r=>r.outcome.metrics[arm]),investment=data.reduce((s,x)=>s+x.investment,0),payout=data.reduce((s,x)=>s+x.payout,0);
     arms[arm]={races:data.length,hits:data.filter(x=>x.hit).length,investment,payout,roi:investment?payout/investment:null,
@@ -85,7 +86,7 @@ export function evaluate(records) {
     valueArms[arm]={eligible_races:data.length,bought_races:bought.length,skipped_races:data.length-bought.length,hits:bought.filter(x=>x.hit).length,
       hit_rate:bought.length?bought.filter(x=>x.hit).length/bought.length:null,investment,payout,roi:investment?payout/investment:null};
   }
-  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),saved:Object.keys(records).length,settled:rs.length,pending:Object.keys(records).length-rs.length,arms,
+  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),realtime:realtimeSummary(records),saved:Object.keys(records).length,settled:rs.length,cancelled,pending:Object.keys(records).length-rs.length-cancelled,arms,
     paired_hit_difference:rs.reduce((s,r)=>s+Number(r.outcome.metrics.candidate.hit)-Number(r.outcome.metrics.baseline.hit),0),
     interpretation:'Prospective paired shadow evaluation. No historical reconstruction or production promotion.'};
 }
@@ -100,21 +101,27 @@ export async function run() {
   const ctx={models:engine.normalizeModel(read(path.join(engineRoot,'v8_model_aptitude.json'))),aptitude:read(path.join(engineRoot,'racer-aptitude.json')),
     course:read(path.join(engineRoot,'dev/course-stats.json')),venue:read(path.join(engineRoot,'dev/venue-stats.json')),technique:read(path.join(engineRoot,'dev/technique-stats.json'))};
   const odds=read(path.join(engineRoot,'dev/odds.json'));
+  const official=read(path.join(engineRoot,'dev/official-results.json'));
+  const previews=read(path.join(engineRoot,'dev/official-previews.json'));
   let program;
   try{program=await get(`https://boatraceopenapi.github.io/api/v1/${date.slice(0,4)}/${date}.json`)}catch(e){if(!e.message.includes('HTTP 404'))throw e}
   const now=new Date();
   for(const [sid,v] of Object.entries(program?.programs?.stadiums||{}))for(const [n,race] of Object.entries(v.races||{})){
-    const k=`${date}_${Number(sid)}_${Number(n)}`;if(current.records[k]?.outcome||!Number.isFinite(closeMs(race))||closeMs(race)<=now.getTime()||closeMs(race)-now.getTime()>20*60000)continue;
+    const k=`${date}_${Number(sid)}_${Number(n)}`,officialRace=String(official.date)===date?official.races?.[String(Number(sid))]?.[String(Number(n))]:null;
+    if(officialRace?.cancelled===true){markCancelled(current.records[k],{cancelled:true,source:'live official-results cancellation'});continue}
+    if(current.records[k]?.outcome||current.records[k]?.cancelled||!Number.isFinite(closeMs(race))||closeMs(race)<=now.getTime()||closeMs(race)-now.getTime()>20*60000)continue;
+    const previewRecord=String(previews.date)===date?previews.races?.[String(Number(sid))]?.[String(Number(n))]:null;
+    const supplemented=applyPreclosePreview(race,previewRecord,new Date());
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec)current.records[k]=rec;
+    if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;current.records[k]=preserveRevision(current.records[k],rec)}
   }
   for(const [d,store] of stores){
-    const pending=Object.values(store.records).filter(r=>!r.outcome&&closeMs(r)<=now.getTime());if(!pending.length)continue;
+    const pending=Object.values(store.records).filter(r=>!r.outcome&&!r.cancelled&&closeMs(r)<=now.getTime());if(!pending.length)continue;
     let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(e.message.includes('HTTP 404'))continue;throw e}
-    const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r.payouts?.trifecta?.[0]]));
-    for(const r of pending)settle(r,map.get(`${Number(r.stadium)}_${Number(r.race)}`));
+    const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r]));
+    for(const r of pending){const result=map.get(`${Number(r.stadium)}_${Number(r.race)}`);if(result?.cancelled===true)markCancelled(r,{cancelled:true,source:'Open API explicit cancellation'});else settle(r,result?.payouts?.trifecta?.[0])}
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
