@@ -1,0 +1,40 @@
+name: Rebuild verified aptitude data in DEV
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/aptitude-recovery.yml", "experiments/rebuild_aptitude.mjs", "experiments/test_rebuild_aptitude.mjs"]
+  schedule:
+    - cron: "45 14 * * *"
+permissions:
+  contents: write
+concurrency:
+  group: aptitude-dev-recovery
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify recovery invariants
+        run: node experiments/test_rebuild_aptitude.mjs
+      - name: Recover through yesterday without duplicate dates
+        run: node experiments/rebuild_aptitude.mjs dev/racer-aptitude-clean.json
+      - name: Save DEV data and audit
+        run: |
+          git add dev/racer-aptitude-clean.json dev/racer-aptitude-clean-audit.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save verified aptitude recovery in DEV"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
