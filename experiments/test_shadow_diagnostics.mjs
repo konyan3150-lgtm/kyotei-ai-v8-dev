@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {auditRecord,diagnostics,pairedIntervals,reliability} from './shadow_diagnostics.mjs';
+import {allCombinations,snapshot,settle} from './expert_shadow.mjs';
+const rows=[1,2,3,4,5,6].map(k=>({k:String(k),p:[.6/k,.4/k,.3/k]})),makeBets=rs=>allCombinations(rs).slice(0,6);
+const r=snapshot({race:{date:'2026-10-03',closed_at:'2026-10-03 12:00:00'},rows,expert:{version:2,active:'normal',weights:{inside:0,upset:0}},
+  makeBets,date:'20261003',stadium:'1',number:'1',now:new Date('2026-10-03T02:55:00Z')});
+assert.deepEqual(auditRecord(r),[]);
+settle(r,{combination:r.baseline_distribution[0].combo,amount:1000});
+const rel=reliability([r],'baseline');assert.equal(rel.races,1);assert.equal(rel.bins.reduce((s,b)=>s+b.races,0),1);
+assert.equal(rel.ece,1-r.baseline_distribution[0].prob);
+assert.equal(pairedIntervals([r]).status,'insufficient_sample');
+const bad=structuredClone(r);bad.baseline_distribution[0].prob=2;
+const summary=diagnostics({good:r,bad});assert.equal(summary.integrity.invalid,1);assert.equal(summary.reliability.baseline.races,1);
+assert.equal(summary.by_expert.normal.races,1);
+const rs=Array.from({length:100},(_,i)=>({...r,date:'2026100'+(3+Math.floor(i/20))}));
+const paired=pairedIntervals(rs);assert.equal(paired.dates,5);assert.equal(paired.status,'descriptive_interval');
+for(const x of Object.values(paired.intervals))assert.deepEqual(x,{lower:0,upper:0});
+assert.deepEqual(pairedIntervals(rs),paired);
+assert.equal(diagnostics({}).reliability.baseline.ece,null);
+console.log('Diagnostics tests passed: reliability events/bins, integrity exclusions, date blocks and deterministic paired intervals.');
