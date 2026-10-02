@@ -1,0 +1,233 @@
+{
+  "cohort": "expert-shadow-official-v1",
+  "input_provenance": {
+    "cohort": "expert-shadow-official-v1",
+    "history_through": "2026-10-02",
+    "starts": 1824482,
+    "aptitude_sha256": "0f478251b636506bce985fdf5562c1f516f36064261c9d3826e119b40c662912",
+    "base_snapshot_sha256": "e571676c1484b4e7443f8344ad343d49e681f8eed14af6be0b9f089ab5a06d8a",
+    "model_sha256": "357aeb0b6e6c452f63e9fd35240252202140cdadc62e6e215b1c0b66d671bdcc",
+    "auxiliary_sha256": {
+      "course-stats": "49505ebb3f86a0e3cbfcdeb57e769f6837470dd9d804b01c3e7908554163f581",
+      "venue-stats": "e8737dbe5b882e95c92198e60fa1e83e1d38cf0753af537f986e9d7cb66dfe3e",
+      "technique-stats": "1c8fa9f7d199be9b7c013eb6ceaeec45025f9341eb4ab3fbe6ee0553a1693fec",
+      "odds": "f30293942eac55a00b64d02b96d0a554debb831b07f44d349f82990172aa89a0",
+      "official-previews": "302c687e8b2cd96fe68114e25eafe9d3e651351d07845faf5ce64a94c94bf31b"
+    }
+  },
+  "policy": {
+    "version": "expert-shadow-official-v1",
+    "insideLogBoost": 0.1,
+    "upsetLogPenalty": 0.1,
+    "tickets": 6,
+    "stake": 100
+  },
+  "ev_policy": {
+    "version": "shadow-ev-v1",
+    "probabilityDiscount": 0.75,
+    "minEv": 1.08,
+    "maxTickets": 4,
+    "stake": 100,
+    "maxOddsAgeMs": 600000
+  },
+  "value_arms": {
+    "baseline": {
+      "eligible_races": 0,
+      "bought_races": 0,
+      "skipped_races": 0,
+      "hits": 0,
+      "hit_rate": null,
+      "investment": 0,
+      "payout": 0,
+      "roi": null
+    },
+    "candidate": {
+      "eligible_races": 0,
+      "bought_races": 0,
+      "skipped_races": 0,
+      "hits": 0,
+      "hit_rate": null,
+      "investment": 0,
+      "payout": 0,
+      "roi": null
+    }
+  },
+  "drift": {
+    "reference_races": 2,
+    "recent_races": 0,
+    "reference_required": 200,
+    "recent_required": 50,
+    "policy": "first 200 fixed reference; latest 100 non-overlapping observations; PSI warning at 0.20; monitoring only",
+    "status": "collecting_reference",
+    "metrics": {}
+  },
+  "realtime": {
+    "races_with_revisions": 0,
+    "preserved_previous_snapshots": 0,
+    "change_reasons": {
+      "first_capture": 2
+    },
+    "interpretation": "Only observed pre-close changes are stored. Final paired scoring uses the last valid snapshot; cancelled races are excluded."
+  },
+  "diagnostics": {
+    "integrity": {
+      "saved": 2,
+      "valid": 2,
+      "invalid": 0,
+      "errors": []
+    },
+    "reliability": {
+      "baseline": {
+        "event": "highest-score trifecta combination hits; one observation per race",
+        "races": 0,
+        "ece": null,
+        "status": "insufficient_sample",
+        "bins": [
+          {
+            "lower": 0,
+            "upper": 0.05,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.05,
+            "upper": 0.1,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.5,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 1,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          }
+        ]
+      },
+      "candidate": {
+        "event": "highest-score trifecta combination hits; one observation per race",
+        "races": 0,
+        "ece": null,
+        "status": "insufficient_sample",
+        "bins": [
+          {
+            "lower": 0,
+            "upper": 0.05,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.05,
+            "upper": 0.1,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.1,
+            "upper": 0.2,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.2,
+            "upper": 0.3,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.3,
+            "upper": 0.5,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          },
+          {
+            "lower": 0.5,
+            "upper": 1,
+            "races": 0,
+            "predicted_probability": null,
+            "observed_hit_rate": null
+          }
+        ]
+      }
+    },
+    "by_date": {},
+    "by_stadium": {},
+    "by_expert": {},
+    "paired_intervals": {
+      "status": "insufficient_sample",
+      "dates": 0,
+      "races": 0,
+      "required_dates": 5,
+      "required_races": 100,
+      "intervals": null
+    },
+    "promotion": "No automatic production promotion. Future chronological holdout evaluation is still required."
+  },
+  "saved": 2,
+  "settled": 0,
+  "cancelled": 0,
+  "invalid": 0,
+  "pending": 2,
+  "arms": {
+    "baseline": {
+      "races": 0,
+      "hits": 0,
+      "investment": 0,
+      "payout": 0,
+      "roi": null,
+      "log_loss": null,
+      "brier": null
+    },
+    "candidate": {
+      "races": 0,
+      "hits": 0,
+      "investment": 0,
+      "payout": 0,
+      "roi": null,
+      "log_loss": null,
+      "brier": null
+    }
+  },
+  "paired_hit_difference": 0,
+  "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
+  "health": {
+    "checked_at": "2026-10-02T23:27:59.420Z",
+    "eligible_preclose_races": 2,
+    "captured_preclose_races": 2,
+    "missing_preclose_records": [],
+    "stale_preclose_records": [],
+    "overdue_results": [],
+    "original_exhibition_status": "captured_preclose",
+    "program_status": "available",
+    "status": "ok",
+    "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent."
+  }
+}
