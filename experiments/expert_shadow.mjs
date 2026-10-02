@@ -4,6 +4,7 @@ import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {evTickets,drift,EV_POLICY} from './ev_drift.mjs';
 import {observedInputs,preserveRevision,markCancelled,realtimeSummary,applyPreclosePreview} from './realtime_shadow.mjs';
+import {diagnostics,auditRecord} from './shadow_diagnostics.mjs';
 
 export const POLICY = Object.freeze({version:'expert-shadow-v1', insideLogBoost:0.10, upsetLogPenalty:0.10, tickets:6, stake:100});
 const closeMs = r => Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
@@ -69,11 +70,12 @@ export function settle(record,result) {
     const winning=value.items.find(x=>x.combo===combo);
     valueMetrics[arm]={hit:!!winning,investment:value.investment,payout:winning?amount*winning.stake/100:0,tickets:value.items.length};
   }
-  record.outcome={result:combo,amount,settled_at:new Date().toISOString(),metrics,value_metrics:valueMetrics};return true;
+  record.outcome={result:combo,amount,source:result.source||'Open API trifecta result',settled_at:new Date().toISOString(),metrics,value_metrics:valueMetrics};return true;
 }
 
 export function evaluate(records) {
-  const rs=Object.values(records).filter(r=>r.outcome&&!r.cancelled),cancelled=Object.values(records).filter(r=>r.cancelled).length,arms={};
+  const allRecords=Object.values(records),valid=allRecords.filter(r=>!auditRecord(r).length),invalid=allRecords.length-valid.length;
+  const rs=valid.filter(r=>r.outcome&&!r.cancelled),cancelled=allRecords.filter(r=>r.cancelled).length,arms={};
   for(const arm of ['baseline','candidate']){
     const data=rs.map(r=>r.outcome.metrics[arm]),investment=data.reduce((s,x)=>s+x.investment,0),payout=data.reduce((s,x)=>s+x.payout,0);
     arms[arm]={races:data.length,hits:data.filter(x=>x.hit).length,investment,payout,roi:investment?payout/investment:null,
@@ -86,7 +88,7 @@ export function evaluate(records) {
     valueArms[arm]={eligible_races:data.length,bought_races:bought.length,skipped_races:data.length-bought.length,hits:bought.filter(x=>x.hit).length,
       hit_rate:bought.length?bought.filter(x=>x.hit).length/bought.length:null,investment,payout,roi:investment?payout/investment:null};
   }
-  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),realtime:realtimeSummary(records),saved:Object.keys(records).length,settled:rs.length,cancelled,pending:Object.keys(records).length-rs.length-cancelled,arms,
+  return {policy:POLICY,ev_policy:EV_POLICY,value_arms:valueArms,drift:drift(records),realtime:realtimeSummary(records),diagnostics:diagnostics(records),saved:Object.keys(records).length,settled:rs.length,cancelled,invalid,pending:valid.filter(r=>!r.outcome&&!r.cancelled).length,arms,
     paired_hit_difference:rs.reduce((s,r)=>s+Number(r.outcome.metrics.candidate.hit)-Number(r.outcome.metrics.baseline.hit),0),
     interpretation:'Prospective paired shadow evaluation. No historical reconstruction or production promotion.'};
 }
@@ -118,6 +120,12 @@ export async function run() {
     if(rec){rec.official_preview_at=supplemented?previewRecord.fetched_at:null;current.records[k]=preserveRevision(current.records[k],rec)}
   }
   for(const [d,store] of stores){
+    for(const r of Object.values(store.records)){
+      if(r.outcome||r.cancelled||String(official.date)!==d||closeMs(r)>now.getTime())continue;
+      const result=official.races?.[String(Number(r.stadium))]?.[String(Number(r.race))];
+      if(result?.cancelled===true)markCancelled(r,{cancelled:true,source:'live official-results cancellation'});
+      else if(result?.combination)settle(r,{...result,source:'live official-results'});
+    }
     const pending=Object.values(store.records).filter(r=>!r.outcome&&!r.cancelled&&closeMs(r)<=now.getTime());if(!pending.length)continue;
     let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(e.message.includes('HTTP 404'))continue;throw e}
     const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r]));
