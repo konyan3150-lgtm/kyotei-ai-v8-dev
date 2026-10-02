@@ -1,0 +1,47 @@
+name: Collect paired Expert shadow predictions
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/expert-shadow.yml", "experiments/expert_shadow.mjs"]
+  schedule:
+    - cron: "*/5 * * * *"
+permissions:
+  contents: write
+concurrency:
+  group: expert-shadow
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Test shadow gates
+        run: node experiments/test_expert_shadow.mjs
+      - name: Prepare frozen prediction engine and latest auxiliary data
+        run: |
+          git clone --depth 1 https://github.com/konyan3150-lgtm/kyotei-ai-v8-live.git /tmp/live-data
+          git -C /tmp/live-data fetch --depth 1 origin 8286a9783a7799aacade7d0f0de72e8636a681ac
+          git -C /tmp/live-data show 8286a9783a7799aacade7d0f0de72e8636a681ac:scripts/update_server_predictions.mjs > /tmp/live-data/scripts/update_server_predictions.mjs
+          git -C /tmp/live-data show 8286a9783a7799aacade7d0f0de72e8636a681ac:scripts/racer_aptitude_features.mjs > /tmp/live-data/scripts/racer_aptitude_features.mjs
+          git -C /tmp/live-data show 8286a9783a7799aacade7d0f0de72e8636a681ac:v8_model_aptitude.json > /tmp/live-data/v8_model_aptitude.json
+          curl -L --fail -o /tmp/expert-classifier-v2.js https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b/expert-classifier-v2.js
+      - name: Collect shadow pairs and settle outcomes
+        env:
+          ENGINE_ROOT: /tmp/live-data
+          CLASSIFIER_PATH: /tmp/expert-classifier-v2.js
+          SHADOW_ROOT: ${{ github.workspace }}
+        run: node experiments/expert_shadow.mjs
+      - name: Preserve experimental records
+        run: |
+          git add dev/expert-shadow-archive/ dev/expert-shadow-evaluation.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save prospective paired Expert shadow predictions"
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
