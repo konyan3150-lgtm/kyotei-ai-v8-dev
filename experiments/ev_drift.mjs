@@ -21,7 +21,7 @@ export function psi(reference,recent,categories){
   return a.reduce((s,p,i)=>s+(b[i]-p)*Math.log(b[i]/p),0);
 }
 export function drift(records){
-  const all=Object.values(records).filter(r=>r.baseline_distribution?.length===120&&r.saved_at)
+  const all=Object.values(records).filter(r=>!r.cancelled&&r.baseline_distribution?.length===120&&r.saved_at)
     .sort((a,b)=>a.saved_at.localeCompare(b.saved_at));
   const reference=all.slice(0,200),recent=all.slice(200).slice(-100);
   const base={reference_races:reference.length,recent_races:recent.length,reference_required:200,recent_required:50,
