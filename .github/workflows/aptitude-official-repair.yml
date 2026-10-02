@@ -45,7 +45,7 @@ jobs:
           JS
       - name: Save verified data, raw normalized records and audit
         run: |
-          git add dev/racer-aptitude-official.json dev/racer-starts-official.csv.gz dev/aptitude-official-repair-audit.json
+          git add dev/racer-aptitude-official.json dev/racer-starts-official.csv.gz dev/racer-nonstarts-official.jsonl.gz dev/aptitude-official-repair-audit.json
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

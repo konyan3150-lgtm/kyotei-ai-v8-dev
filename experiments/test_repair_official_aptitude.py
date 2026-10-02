@@ -19,6 +19,9 @@ class RepairTest(unittest.TestCase):
     def test_duplicate(self):
         row=' 01 1 5038 NAME 34 39 6.96 1 0.12      .  . \n'
         with self.assertRaises(ValueError):official_rows(HEADER+row+row)
+    def test_late_without_actual_course(self):
+        rows,excluded,n=official_rows(HEADER+' L0 2 4319 NAME 38 33 6.95       L .        .  . \n')
+        self.assertEqual(n,1);self.assertEqual(rows,{});self.assertEqual(excluded[0]['reason'],'late_without_actual_course')
     def test_aggregation_masks_late(self):
         data={'racers':{},'global_course':{}}
         row={'racer_id':5038,'venue':'常滑','course':1,'finish':None,**timing('L1.99','L0')}

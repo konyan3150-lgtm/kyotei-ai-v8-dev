@@ -37,7 +37,9 @@ def official_rows(text):
         raw_count+=1;key=(sid,rn,int(m[2]));d=ROW.match(line)
         if not d:
             if m[1] in ('K0','K1'):
-                withdrawals.append({'key':key,'id':int(m[3]),'status':m[1]});continue
+                withdrawals.append({'key':key,'id':int(m[3]),'status':m[1],'reason':'withdrawal','raw_line':line});continue
+            if m[1] in ('L0','L1') and re.search(r'\d\.\d{2}\s+L(?:\s+\.|\d?\.\d{2})\s+',line):
+                withdrawals.append({'key':key,'id':int(m[3]),'status':m[1],'reason':'late_without_actual_course','raw_line':line});continue
             raise ValueError('Unparsed actual/result row: '+repr(line))
         if key in rows:raise ValueError('Duplicate official start '+str(key))
         rank=int(d[1]) if d[1].isdigit() else None
@@ -94,7 +96,7 @@ def main():
         with urllib.request.urlopen(f'https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/{BASE}/racer-aptitude.json',timeout=35) as r:baseline_path.write_bytes(r.read())
     data=json.loads(baseline_path.read_text());base_starts=data['starts']
     if base_starts!=1435463 or data['through']!='2025-07-29':raise ValueError('Wrong baseline')
-    totals=Counter();days=[];examples=[];late=0
+    totals=Counter();days=[];examples=[];late=0;excluded_records=[]
     output=root/'racer-starts-official.csv.gz';temp=output.with_suffix('.tmp')
     fields=['date','stadium','venue','race','lane','racer_id','course','finish','finish_status','st','raw_st','official_numeric_st','st_quality']
     with gzip.open(temp,'wt',encoding='utf-8',newline='') as handle:
@@ -103,6 +105,9 @@ def main():
             day=prior['date'];btext,bsha=archive(day,'B',cache);ktext,ksha=archive(day,'K',cache)
             if {'B':bsha,'K':ksha}!=prior['official_sha256']:raise ValueError('Official source changed '+day)
             _,program=parse_official(btext,'B');official,withdrawals,raw_count=official_rows(ktext)
+            for excluded in withdrawals:
+                if program.get(tuple(excluded['key']))!=excluded['id']:raise ValueError('Excluded-row registration mismatch')
+                excluded_records.append({'date':day,**excluded})
             payload=json.loads((cache/'API'/f'{day}.json').read_text());api=api_rows(payload)
             if set(api)-set(official):raise ValueError('API start still lacks official parsing '+day)
             missing=set(official)-set(api)
@@ -123,6 +128,8 @@ def main():
             days.append(entry);totals.update({k:entry[k] for k in ['starts','races','api_starts','recovered_missing_starts','withdrawals_excluded']})
             if len(days)%60==0:print({'verified_days':len(days),'official_starts':totals['starts'],'added_missing':totals['recovered_missing_starts']},flush=True)
     verify_csv(temp,totals['starts'],late);temp.replace(output)
+    with gzip.open(root/'racer-nonstarts-official.jsonl.gz','wt',encoding='utf-8') as handle:
+        for row in excluded_records:handle.write(json.dumps(row,ensure_ascii=False)+'\n')
     data['starts']=base_starts+totals['starts'];data['racers_count']=len(data['racers']);end=days[-1]['date'];data['through']=f'{end[:4]}-{end[4:6]}-{end[6:]}';data['history_end']=end
     data['updated_at']=datetime.now(timezone.utc).isoformat();data['recovery']={'baseline_commit':BASE,'baseline_starts':base_starts,'baseline_through':'2025-07-29','days':days,'source':'BOAT RACE official daily B/K','production_promoted':False,'st_policy':'L-coded values retained raw and excluded from ordinary ST aggregates; F timings retain signed values'}
     target=root/'racer-aptitude-official.json';target.write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')
