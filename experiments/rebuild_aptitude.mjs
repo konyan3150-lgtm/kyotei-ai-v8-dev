@@ -16,7 +16,7 @@ export function nextDay(value){const s=day(value),d=new Date(`${s.slice(0,4)}-${
 const numeric=v=>v===null||v===undefined||String(v).trim()===''?null:Number.isFinite(Number(v))?Number(v):null;
 function add(a,place,st){a[0]++;if(place>=1&&place<=6){a[1]++;a[2]+=place===1?1:0;a[3]+=place<=2?1:0;a[4]+=place<=3?1:0;a[5]+=place;}if(st!==null){a[6]++;a[7]+=st;a[8]+=st*st;}}
 export function validate(data){
-  let total=0;
+  let total=0;const courses={};
   for(const [id,r] of Object.entries(data.racers||{})){
     if(!/^\d{4}$/.test(id))throw Error('Invalid racer ID '+id);
     for(const a of [r.o,...Object.values(r.c||{}),...Object.values(r.v||{}),...Object.values(r.x||{})]){
@@ -27,8 +27,13 @@ export function validate(data){
       for(let i=0;i<9;i++){const sum=Object.values(r[group]||{}).reduce((s,a)=>s+a[i],0);if(Math.abs(sum-r.o[i])>Math.max(.02,Math.abs(r.o[i])*1e-7))throw Error('Group count mismatch '+id+' '+group+' '+i);}
     }
     total+=r.o[0];
+    for(const [c,a] of Object.entries(r.c||{})){const sum=courses[c]??=blank();for(let i=0;i<9;i++)sum[i]+=a[i];}
   }
   const courseTotal=Object.values(data.global_course||{}).reduce((s,a)=>s+a[0],0);
+  for(const c of new Set([...Object.keys(courses),...Object.keys(data.global_course||{})]))for(let i=0;i<9;i++){
+    const actual=data.global_course[c]?.[i],expected=courses[c]?.[i];
+    if(!Number.isFinite(actual)||!Number.isFinite(expected)||Math.abs(actual-expected)>Math.max(.02,Math.abs(expected)*1e-7))throw Error('Global course aggregate mismatch '+c+' '+i);
+  }
   if(total!==data.starts||total!==courseTotal||data.racers_count!==Object.keys(data.racers||{}).length)throw Error('Metadata / aggregate count mismatch');
   return {starts:total,racers:data.racers_count,through:day(data.through)};
 }
