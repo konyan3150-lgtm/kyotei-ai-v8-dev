@@ -1,0 +1,48 @@
+name: Audit recovered aptitude against official B and K files
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/aptitude-official-audit.yml", "experiments/audit_official_aptitude.py", "experiments/test_audit_official_aptitude.py"]
+permissions:
+  contents: write
+concurrency:
+  group: aptitude-official-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install lhafile==0.3.1
+      - name: Check audit parser and comparisons
+        run: python -m unittest discover -s experiments -p test_audit_official_aptitude.py
+      - name: Compare all recovered dates with official sources
+        run: python experiments/audit_official_aptitude.py --start 20250730 --end 20261001
+      - name: Preserve audit report including discrepancies
+        run: |
+          git add dev/aptitude-official-audit.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save official-source aptitude comparison audit"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - name: Report review requirement
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('dev/aptitude-official-audit.json'))
+          if x['status']!='passed':
+              print('::warning::Official audit requires review; no data or model promoted. See saved discrepancy report.')
+          print({k:x[k] for k in ['status','audited_days','mismatches','ledger_start_count_mismatch_days']})
+          PY
