@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs", "experiments/prospective_calibration.mjs", "experiments/test_prospective_calibration.mjs"]
+    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/official_result_fallback.mjs", "experiments/test_official_result_fallback.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs", "experiments/prospective_calibration.mjs", "experiments/test_prospective_calibration.mjs"]
   schedule:
     - cron: "*/5 * * * *"
 permissions:
@@ -29,6 +29,7 @@ jobs:
       - name: Test shadow gates
         run: |
           python -m unittest discover -s experiments -p test_refresh_prospective_aptitude.py
+          node experiments/test_official_result_fallback.mjs
           node experiments/test_prospective_input.mjs
           node experiments/test_preclose_variants.mjs
           node experiments/test_prospective_calibration.mjs
@@ -56,7 +57,8 @@ jobs:
         run: node experiments/repaired_expert_shadow.mjs
       - name: Preserve experimental records
         run: |
-          git add dev/expert-shadow-repaired-archive/ dev/expert-shadow-repaired-evaluation.json dev/racer-aptitude-prospective.json dev/aptitude-prospective-audit.json dev/aptitude-prospective-source/
+          mkdir -p dev/official-result-fallback
+          git add dev/official-result-fallback/ dev/expert-shadow-repaired-archive/ dev/expert-shadow-repaired-evaluation.json dev/racer-aptitude-prospective.json dev/aptitude-prospective-audit.json dev/aptitude-prospective-source/
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

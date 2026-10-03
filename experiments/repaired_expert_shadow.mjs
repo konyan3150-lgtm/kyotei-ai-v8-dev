@@ -1,3 +1,4 @@
+import {officialFallback} from './official_result_fallback.mjs';
 import fs from 'node:fs';
 import {calibrationReadiness} from './prospective_calibration.mjs';
 import {captureVariants,variantRevision,evaluateVariants} from './preclose_variants.mjs';
@@ -134,6 +135,7 @@ export async function run() {
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
     if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';current.records[k]=variantRevision(current.records[k],rec);current.records[k].last_checked_at=rec.saved_at}
   }
+  let fallbackAttempts=0;
   for(const [d,store] of stores){
     for(const r of Object.values(store.records)){
       if(r.outcome||r.cancelled||String(official.date)!==d||closeMs(r)>now.getTime())continue;
@@ -143,7 +145,7 @@ export async function run() {
       // Settle below only with complete finishers, using API or verified daily K.
     }
     const pending=Object.values(store.records).filter(r=>!r.outcome&&!r.cancelled&&closeMs(r)<=now.getTime());if(!pending.length)continue;
-    let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){if(!e.message.includes('HTTP 404'))throw e;results={results:[]}}
+    let results;try{results=await get(`https://boatraceopenapi.github.io/results/v3/${d.slice(0,4)}/${d}.json`)}catch(e){console.warn('Results API unavailable:',e.message);results={results:[]}}
     const map=new Map((results.results||[]).map(r=>[`${Number(r.stadium_number)}_${Number(r.number)}`,r]));
     const sourcePath=path.join(root,'dev/aptitude-prospective-source',d+'.json.gz');
     if(fs.existsSync(sourcePath)){
@@ -151,9 +153,14 @@ export async function run() {
       for(const p of source.payouts||[]){const boats=source.starts.filter(b=>b.stadium===p.stadium&&b.race===p.race).map(b=>({racer_boat_number:b.lane,racer_place_number:b.finish}));map.set(`${p.stadium}_${p.race}`,{boats,payouts:{trifecta:p.trifecta},source:'verified official daily K'});}
     }
     for(const r of pending){const result=map.get(`${Number(r.stadium)}_${Number(r.race)}`);if(result?.cancelled===true){markCancelled(r,{cancelled:true,source:'explicit cancellation'});continue;}
-      const check=checkedOutcome(result);
+      let resolved=result,check=checkedOutcome(resolved);
+      if(check.pending&&fallbackAttempts<12){
+        fallbackAttempts++;
+        try{resolved=await officialFallback(root,{date:d,stadium:r.stadium,race:r.race},String(official.date)===d?official.races?.[String(Number(r.stadium))]?.[String(Number(r.race))]:null);check=checkedOutcome(resolved);r.result_verification=resolved.verification;delete r.result_fetch_error;}
+        catch(e){r.result_fetch_error={at:new Date().toISOString(),reason:e.message};}
+      }
       if(check.exclude){r.excluded={reason:check.reason,confirmed:true,confirmed_at:new Date().toISOString()};r.outcome={excluded:true};}
-      else if(check.eligible)settle(r,{combination:check.combo,amount:check.amount,source:result.source||'Open API complete normal finishers'});
+      else if(check.eligible)settle(r,{combination:check.combo,amount:check.amount,source:resolved.source||'Open API complete normal finishers'});
     }
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');

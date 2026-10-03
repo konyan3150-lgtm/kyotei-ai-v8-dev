@@ -27,6 +27,7 @@ export function verifyStore(store){
 }
 
 export function checkedOutcome(race){
+ if(race?.source==='verified official individual result'&&race.official_special===true)return {eligible:false,exclude:true,confirmed:true,reason:'confirmed_official_special_or_refund'};
  if(!Array.isArray(race?.boats)||!race.boats.length||!race.payouts?.trifecta?.length)return {eligible:false,pending:true};
  const ranks=race.boats.map(b=>b.racer_place_number);
  const completeNormal=race.boats.length===6&&new Set(ranks).size===6&&ranks.every(n=>Number.isInteger(n)&&n>=1&&n<=6);

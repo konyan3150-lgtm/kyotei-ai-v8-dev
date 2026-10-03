@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {parseOfficialResult} from './official_result_fallback.mjs';
+import {checkedOutcome} from './prospective_input.mjs';
+const html=fs.readFileSync(new URL('./fixtures/official-result-20261003-23-1.html',import.meta.url),'utf8'),request={date:'20261003',stadium:23,race:1};
+const r=parseOfficialResult(html,request);assert.deepEqual(checkedOutcome(r),{eligible:true,combo:'2-1-4',amount:3480,winner:'2'});
+assert.throws(()=>parseOfficialResult(html,{...request,race:2}),/identity/);
+assert.throws(()=>parseOfficialResult(html,{...request,date:'20261002'}),/identity/);
+assert.throws(()=>parseOfficialResult(html.replace('返還','不明'),request),/incomplete_tables/);
+assert.throws(()=>parseOfficialResult(html.replace('１</td>','不明</td>'),request),/unknown_finish/);
+assert.throws(()=>parseOfficialResult(html.replace('&yen;3,480','&yen;---'),request),/invalid_payout/);
+const special=parseOfficialResult(html.replace('６</td>','F</td>'),request);assert.equal(checkedOutcome(special).exclude,true);
+assert.equal(checkedOutcome({boats:Array.from({length:6},()=>({racer_place_number:null})),payouts:{trifecta:[]}}).pending,true);
+const refunded=parseOfficialResult(html.replace('<th>返還</th>', '<th>返還</th>').replace('<div class="numberSet1_row">\n                                   </div>', '<div class="numberSet1_row"><span class="numberSet1_number is-type6">6</span></div>'),request);assert.deepEqual(refunded.refund_boats,[6]);assert.equal(checkedOutcome(refunded).exclude,true);
+console.log('official fallback parser gates passed');
