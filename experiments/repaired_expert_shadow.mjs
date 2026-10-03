@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {calibrationReadiness} from './prospective_calibration.mjs';
 import {captureVariants,variantRevision,evaluateVariants} from './preclose_variants.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
@@ -157,7 +158,7 @@ export async function run() {
   }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
-  const report={variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
+  const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
   fs.writeFileSync(path.join(root,'dev/expert-shadow-repaired-evaluation.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({date,cohort:COHORT,saved:report.saved,settled:report.settled,pending:report.pending,through:verified.proof.history_through,health:report.health}));
 }

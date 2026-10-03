@@ -6,7 +6,8 @@ export const percentage=v=>Number.isFinite(v)?(v*100).toFixed(1)+'%':'—';
 export const money=v=>Number.isFinite(v)?'¥'+v.toLocaleString('ja-JP'):'—';
 export function hitRate(arm,value=false){const n=value?arm?.bought_races:arm?.races;return n>0?arm.hits/n:null}
 export function status(d,now=Date.now()){
-  const age=(now-Date.parse(d.health?.checked_at))/60000;
+  const checked=Date.parse(d.health?.checked_at),age=(now-checked)/60000;
+  if(!Number.isFinite(checked)||age< -1)return {text:'収集時刻を確認してください',kind:'warn'};
   if((d.invalid||0)>0||d.health?.status==='needs_attention')return {text:'確認が必要',kind:'warn'};
   if(Number.isFinite(age)&&age>20)return {text:'更新が遅れています',kind:'warn'};
   return {text:'収集中・比較は検証段階',kind:'good'};
@@ -35,6 +36,7 @@ function render(){
   const orig=d.health?.original_exhibition_status;info('周回・回り足・直線展示',orig==='captured_preclose'?'締切前の追加展示を取得':orig==='no_preclose_values'?'今回の対象に追加値なし':orig==='fetch_or_parse_error'?'取得または読み取りに失敗':orig?.startsWith('HTTP_')?'取得元からデータを受信できません':'未確認');
   const ready=document.getElementById('readiness');ready.replaceChildren();
   const item=(title,detail)=>{const n=element('div');n.append(element('strong',title),element('span',detail));ready.append(n)};
+  const cal=d.calibration;if(cal)item('期待値用の確率校正',cal.status==='shadow_evaluation_only'?'後の期間で校正の効果を比較中。本番には未反映。':`準備中：学習 ${cal.train_dates?.length||0}/20日・${cal.train_races||0}/500R、評価 ${cal.test_dates?.length||0}/5日・${cal.test_races||0}/150R`);
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
   renderVariants();renderGroups();
@@ -62,5 +64,5 @@ async function refresh(){
 if(typeof document!=='undefined'){
   document.getElementById('refresh').addEventListener('click',refresh);document.getElementById('six').addEventListener('click',()=>{valueMode=false;if(data)render()});document.getElementById('ev').addEventListener('click',()=>{valueMode=true;if(data)render()});document.getElementById('group').addEventListener('change',renderGroups);
   document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness','variantsTable'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
-  refresh();setInterval(refresh,180000);
+  refresh();setInterval(refresh,180000);setInterval(()=>{if(data&&document.getElementById('error').hidden){const s=status(data);const el=document.getElementById('connection');el.textContent=s.text;el.className='pill '+s.kind;}},30000);
 }

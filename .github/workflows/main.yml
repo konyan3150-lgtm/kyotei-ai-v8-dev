@@ -12,6 +12,8 @@ on:
       - "validation.css"
       - "validation.mjs"
       - "tests/validation-browser.cjs"
+      - "tests/prediction-integrity.cjs"
+      - "overrides/server-sync.js"
   schedule:
     - cron: "*/15 * * * *"
 
@@ -47,10 +49,12 @@ jobs:
       - name: Add development validation screen
         run: |
           cp validation.html validation.css validation.mjs site/
+          cp overrides/server-sync.js site/server-sync.js
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
           s = p.read_text()
+          s = s.replace('server-sync.js?', 'server-sync.js?dev-integrity-20261003&')
           marker = '<div class="pickerpanel">'
           link = '<p style="margin:6px 0 12px;text-align:right"><a href="validation.html" style="color:#a8caff;font-size:13px;text-decoration:none">開発検証・収集状況 ↗</a></p>'
           if marker not in s:
@@ -64,6 +68,7 @@ jobs:
 
       - name: Check mobile validation page and interactions
         run: |
+          node tests/prediction-integrity.cjs site/server-sync.js
           npm install --no-save --ignore-scripts playwright
           npx playwright install --with-deps chromium
           python3 -m http.server 8765 --directory site > /tmp/validation-server.log 2>&1 &

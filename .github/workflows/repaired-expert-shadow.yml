@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs"]
+    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs", "experiments/prospective_calibration.mjs", "experiments/test_prospective_calibration.mjs"]
   schedule:
     - cron: "*/5 * * * *"
 permissions:
@@ -31,6 +31,7 @@ jobs:
           python -m unittest discover -s experiments -p test_refresh_prospective_aptitude.py
           node experiments/test_prospective_input.mjs
           node experiments/test_preclose_variants.mjs
+          node experiments/test_prospective_calibration.mjs
           node experiments/test_expert_shadow.mjs
           node experiments/test_ev_drift.mjs
           node experiments/test_realtime_shadow.mjs
