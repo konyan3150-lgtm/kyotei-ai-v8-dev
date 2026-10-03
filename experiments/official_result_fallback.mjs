@@ -26,7 +26,7 @@ export function parseOfficialResult(html,{date,stadium,race}) {
  if(!refundBody||!refundBody.includes('numberSet1'))throw Error('refund_unconfirmed');
  const refundBoats=[...refundBody.matchAll(/numberSet1_number[^>]*>\s*([1-6])\s*<\/span>/g)].map(m=>Number(m[1]));
  // Unexpected nonempty refund contents must not silently become no refunds.
- if(clean(refundBody).replace(/[1-6\s]/g,''))throw Error('unknown_refund_content');
+ if(clean(refundBody).replace(/[1-6\s]/g,'')||clean(refundBody).replace(/\s/g,'')!==refundBoats.join(''))throw Error('unknown_refund_content');
  const trifecta=[];
  const section=[...payout.matchAll(/<tbody[^>]*>([^]*?)<\/tbody>/g)].find(m=>clean(m[1]).includes('3連単'))?.[1];
  if(!section)throw Error('trifecta_unconfirmed');

@@ -12,4 +12,6 @@ assert.throws(()=>parseOfficialResult(html.replace('&yen;3,480','&yen;---'),requ
 const special=parseOfficialResult(html.replace('６</td>','F</td>'),request);assert.equal(checkedOutcome(special).exclude,true);
 assert.equal(checkedOutcome({boats:Array.from({length:6},()=>({racer_place_number:null})),payouts:{trifecta:[]}}).pending,true);
 const refunded=parseOfficialResult(html.replace('<th>返還</th>', '<th>返還</th>').replace('<div class="numberSet1_row">\n                                   </div>', '<div class="numberSet1_row"><span class="numberSet1_number is-type6">6</span></div>'),request);assert.deepEqual(refunded.refund_boats,[6]);assert.equal(checkedOutcome(refunded).exclude,true);
+assert.throws(()=>parseOfficialResult(html.replace('６</td>','５</td>'),request),/finish_payout_mismatch/);
+assert.throws(()=>parseOfficialResult(html.replace('<th>返還</th>','<th>返還</th>').replace('<div class="numberSet1_row">\n                                   </div>','<div class="numberSet1_row">6</div>'),request),/unknown_refund_content/);
 console.log('official fallback parser gates passed');
