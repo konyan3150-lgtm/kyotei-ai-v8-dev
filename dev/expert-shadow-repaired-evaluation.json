@@ -1,4 +1,29 @@
 {
+  "calibration": {
+    "policy": {
+      "version": "trifecta-temperature-plan-v1",
+      "train_dates": 20,
+      "min_train_races": 500,
+      "min_test_dates": 5,
+      "min_test_races": 150,
+      "temperatures": [
+        0.5,
+        0.75,
+        1,
+        1.25,
+        1.5,
+        2,
+        3
+      ]
+    },
+    "status": "collecting",
+    "train_dates": [],
+    "test_dates": [],
+    "train_races": 0,
+    "test_races": 0,
+    "production_changed": false,
+    "interpretation": "Fit one temperature on first20 settled dates only; later dates evaluate only. No recalibration from test results, no EV purchase-rule change or automatic promotion."
+  },
   "variants": {
     "policy": {
       "version": "preclose-st-budget-v1",
@@ -19,8 +44,8 @@
     "settled": 0,
     "pending": 3,
     "excluded": 0,
-    "st_eligible": 0,
-    "st_missing": 3,
+    "st_eligible": 1,
+    "st_missing": 2,
     "confident_captures": 3,
     "arms": {
       "st": {},
@@ -41,8 +66,8 @@
       "course-stats": "49505ebb3f86a0e3cbfcdeb57e769f6837470dd9d804b01c3e7908554163f581",
       "venue-stats": "e8737dbe5b882e95c92198e60fa1e83e1d38cf0753af537f986e9d7cb66dfe3e",
       "technique-stats": "1c8fa9f7d199be9b7c013eb6ceaeec45025f9341eb4ab3fbe6ee0553a1693fec",
-      "odds": "a6f713ff40cf5578ffc0c4cf20871544ff8416c1300d4e3c70d9ebf1b672d0ec",
-      "official-previews": "a00ad2d668874693851739bedd4db600bc5367c09c4178a67ca84fd6544218cf"
+      "odds": "c0904c97ac36a867d0b4c37597ee6832cbc143e7ab6230ac80a51011505d2f77",
+      "official-previews": "854834f0a605d4f81ccbe77c1c937e6587077d662ca11851dc5f64b0cf6e3e75"
     }
   },
   "policy": {
@@ -92,15 +117,15 @@
     "metrics": {}
   },
   "realtime": {
-    "races_with_revisions": 2,
-    "preserved_previous_snapshots": 4,
+    "races_with_revisions": 3,
+    "preserved_previous_snapshots": 5,
     "change_reasons": {
       "first_capture": 4,
-      "model_scores_changed": 2,
-      "odds_changed": 4,
-      "exhibition_changed": 2,
-      "ev_decision_changed": 4,
-      "variants_changed": 3,
+      "model_scores_changed": 3,
+      "odds_changed": 5,
+      "exhibition_changed": 3,
+      "ev_decision_changed": 5,
+      "variants_changed": 4,
       "expert_changed": 1,
       "water_changed": 1
     },
@@ -257,15 +282,21 @@
   "paired_hit_difference": 0,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-10-02T23:58:18.597Z",
-    "eligible_preclose_races": 2,
-    "captured_preclose_races": 2,
+    "checked_at": "2026-10-03T00:05:57.766Z",
+    "eligible_preclose_races": 1,
+    "captured_preclose_races": 1,
     "missing_preclose_records": [],
     "stale_preclose_records": [],
-    "overdue_results": [],
-    "original_exhibition_status": "captured_preclose",
+    "overdue_results": [
+      {
+        "key": "20261003_23_1",
+        "minutes_since_close": 30,
+        "level": "watch"
+      }
+    ],
+    "original_exhibition_status": "no_preclose_values",
     "program_status": "available",
-    "status": "ok",
+    "status": "needs_attention",
     "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent."
   }
 }
