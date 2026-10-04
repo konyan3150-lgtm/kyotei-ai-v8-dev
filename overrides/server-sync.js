@@ -30,16 +30,17 @@
     if(local.cancelled||local.settled)return local;
     return stamp(server.cancelled_at||server.settled_at||server.saved_at)>=stamp(local.cancelled_at||local.settled_at||local.saved_at)?server:local
   }
+  const displayRecord=rec=>rec&&window.v8SavedValueRecommendations?{...rec,recommendations:window.v8SavedValueRecommendations(rec)}:rec;
   window.v8GetServerPrediction=key=>{
     const server=serverRecords[key];if(!server)return null;
     let local=null;try{local=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
-    return choose(local,server)
+    return displayRecord(choose(local,server))
   };
   window.v8GetSavedPredictions=()=>{
     const records={};
     try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key?.startsWith(PREFIX))continue;try{const r=JSON.parse(localStorage.getItem(key)||'null');if(r)records[key]=r}catch(e){}}}catch(e){}
     for(const [key,server]of Object.entries(serverRecords))records[key]=choose(records[key],server);
-    return records;
+    return Object.fromEntries(Object.entries(records).map(([key,r])=>[key,displayRecord(r)]));
   };
   function publish(){
     serverRecords=Object.assign({},...Object.values(archiveRecords),currentData?.records||{});
@@ -115,4 +116,3 @@
   window.syncServerPredictions=syncServerPredictions;
   setTimeout(syncServerPredictions,900);setInterval(syncServerPredictions,180000);
 })();
-

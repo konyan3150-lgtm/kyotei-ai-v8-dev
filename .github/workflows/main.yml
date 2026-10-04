@@ -18,6 +18,10 @@ on:
       - "tests/validation-browser.cjs"
       - "tests/prediction-integrity.cjs"
       - "overrides/server-sync.js"
+      - "overrides/odds-value.js"
+      - "overrides/recommendation.js"
+      - "overrides/value-record-state.js"
+      - "tests/value-record-state.cjs"
   schedule:
     - cron: "*/15 * * * *"
 
@@ -53,12 +57,17 @@ jobs:
       - name: Add development validation screen
         run: |
           cp validation.html validation.css validation.mjs results.html results.css results.mjs site/
-          cp overrides/server-sync.js site/server-sync.js
+          cp overrides/server-sync.js overrides/odds-value.js overrides/recommendation.js overrides/value-record-state.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
           s = p.read_text()
-          s = s.replace('server-sync.js?', 'server-sync.js?dev-integrity-20261003&')
+          if 'src="odds-value.js' not in s:
+              raise RuntimeError('Odds script injection point missing')
+          s = s.replace('src="odds-value.js', 'src="odds-value.js?value-state-20261004&', 1)
+          s = s.replace('src="recommendation.js', 'src="recommendation.js?value-state-20261004&', 1)
+          s = s.replace('<script src="odds-value.js', '<script src="value-record-state.js?value-state-20261004"></script><script src="odds-value.js', 1)
+          s = s.replace('server-sync.js?', 'server-sync.js?dev-integrity-20261004-value-state&')
           marker = '<div class="pickerpanel">'
           link = '<p style="margin:6px 0 12px;text-align:right"><a href="results.html" style="color:#dfc4ff;font-size:15px;text-decoration:none;margin-right:16px">的中結果一覧 ↗</a><a href="validation.html" style="color:#a8caff;font-size:13px;text-decoration:none">開発検証・収集状況 ↗</a></p>'
           if marker not in s:
@@ -73,6 +82,7 @@ jobs:
       - name: Check mobile validation page and interactions
         run: |
           node tests/prediction-integrity.cjs site/server-sync.js
+          node tests/value-record-state.cjs site
           npm install --no-save --ignore-scripts playwright
           npx playwright install --with-deps chromium
           python3 -m http.server 8765 --directory site > /tmp/validation-server.log 2>&1 &
