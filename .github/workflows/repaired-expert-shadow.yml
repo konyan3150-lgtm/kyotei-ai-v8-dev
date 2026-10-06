@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/official_result_fallback.mjs", "experiments/test_official_result_fallback.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs", "experiments/prospective_calibration.mjs", "experiments/test_prospective_calibration.mjs"]
+    paths: [".github/workflows/repaired-expert-shadow.yml", "experiments/run_shadow_cycles.mjs", "experiments/test_run_shadow_cycles.mjs", "experiments/repaired_expert_shadow.mjs", "experiments/prospective_input.mjs", "experiments/official_result_fallback.mjs", "experiments/test_official_result_fallback.mjs", "experiments/refresh_prospective_aptitude.py", "experiments/test_prospective_input.mjs", "experiments/test_refresh_prospective_aptitude.py", "experiments/preclose_variants.mjs", "experiments/test_preclose_variants.mjs", "experiments/prospective_calibration.mjs", "experiments/test_prospective_calibration.mjs"]
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "2-59/5 * * * *"
 permissions:
   contents: write
 concurrency:
@@ -38,6 +38,7 @@ jobs:
           node experiments/test_realtime_shadow.mjs
           node experiments/test_shadow_diagnostics.mjs
           node experiments/test_exhibition_health.mjs
+          node experiments/test_run_shadow_cycles.mjs
       - name: Prepare frozen prediction engine and latest auxiliary data
         run: |
           git clone --depth 1 https://github.com/konyan3150-lgtm/kyotei-ai-v8-live.git /tmp/live-data
@@ -48,23 +49,17 @@ jobs:
           curl -L --fail -o /tmp/expert-classifier-v2.js https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b/expert-classifier-v2.js
       - name: Refresh official history through yesterday
         run: python experiments/refresh_prospective_aptitude.py
-      - name: Collect shadow pairs and settle outcomes
+      - name: Collect and checkpoint three bounded passes
         env:
           TZ: Asia/Tokyo
           ENGINE_ROOT: /tmp/live-data
           CLASSIFIER_PATH: /tmp/expert-classifier-v2.js
           SHADOW_ROOT: ${{ github.workspace }}
-        run: node experiments/repaired_expert_shadow.mjs
-      - name: Preserve experimental records
-        run: |
-          mkdir -p dev/official-result-fallback
-          git add dev/official-result-fallback/ dev/expert-shadow-repaired-archive/ dev/expert-shadow-repaired-evaluation.json dev/racer-aptitude-prospective.json dev/aptitude-prospective-audit.json dev/aptitude-prospective-source/
-          if git diff --cached --quiet; then exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Save separate repaired-input prospective predictions and official history"
-          for attempt in 1 2 3 4 5; do
-            git pull --rebase --autostash origin main
-            if git push origin HEAD:main; then exit 0; fi
-          done
-          exit 1
+        run: node experiments/run_shadow_cycles.mjs
+      - name: Preserve collection diagnostics even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-collection-diagnostics
+          path: dev/shadow-collection-run.json
+          if-no-files-found: ignore
