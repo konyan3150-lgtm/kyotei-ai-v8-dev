@@ -1,0 +1,9 @@
+# DEV data refresh safeguards — 2026-10-06
+
+The development UI now validates the requested JST program date on every source, including the API today fallback. Old tomorrow.json data is rejected. Switching to an unavailable date clears race-specific predictions, result, selection and auxiliary displays; a failed refresh of the same date preserves the previously fetched program with an explicit status. A request counter prevents a late response for the previously selected date from replacing the current selection.
+
+Server prediction synchronization uses a 20-second request timeout and at most one retry after a one-second delay. Returning to the visible page or regaining network connectivity triggers synchronization. Older server responses are rejected after a newer response has already been loaded. The connection status includes the update date and time, and reports an update delay when today's pending records exist and the source update is more than 20 minutes old. This threshold is a display diagnostic, not a guarantee about scheduling.
+
+Validation: tests/data-refresh.cjs exercises mismatched date rejection, missing-date display clearing, overlapping request responses, same-date failure preservation, bounded retry, older response preservation and reconnect handlers. Existing financial-integrity and EV record-state tests pass; the Pages workflow runs these checks before publishing alongside the existing mobile page tests.
+
+Scope: DEV overlays only. No production workflow, prediction rule, saved forecast, investment or payout is modified. GitHub scheduled-job delays and the production next-day retrieval workflow still require a separate operational remedy. These UI safeguards cannot manufacture missing pre-close forecasts or settle an unconfirmed official result. A current next-day source is displayed only when its date matches the requested day.

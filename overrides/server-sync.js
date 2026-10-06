@@ -7,6 +7,27 @@
   window.__v8HistoryStatus='idle';
   const archiveRecords={},archiveVersions={};
   let serverRecords={};
+  async function fetchCurrent(){
+    let last;
+    for(let attempt=0;attempt<2;attempt++){
+      try{
+        const options={cache:'no-store'};
+        if(typeof AbortSignal!=='undefined'&&AbortSignal.timeout)options.signal=AbortSignal.timeout(20000);
+        const res=await fetch(`${LIVE_BASE}dev/server-predictions.json?x=${Date.now()}&attempt=${attempt}`,options);
+        if(!res.ok)throw Error('HTTP '+res.status);
+        const data=await res.json();
+        if(data?.schema!=='kyotei-v8-server-predictions'||data?.version!==1||!data.records)throw Error('データ形式不一致');
+        return data;
+      }catch(e){last=e;if(attempt===0)await new Promise(resolve=>setTimeout(resolve,1000))}
+    }
+    throw last;
+  }
+  function freshness(data){
+    const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');
+    const pending=Object.entries(data.records||{}).some(([key,r])=>r&&key.startsWith(PREFIX+today+'_')&&!r.settled&&!r.cancelled);
+    const age=Date.now()-stamp(data.updated_at);
+    return pending&&(!stamp(data.updated_at)||age>20*60000)?'｜更新遅れ：保存・結果反映を待っています':'';
+  }
   function stamp(v){const n=Date.parse(v||'');return Number.isFinite(n)?n:0}
   function samePicks(a,b){return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>String(x)===String(b[i]))}
   function keepSavedValueDetails(server,local){
@@ -78,16 +99,17 @@
   async function syncHot(){
     const el=diag();try{
       if(el)el.textContent='常時自動保存：同期中…';
-      const res=await fetch(`${LIVE_BASE}dev/server-predictions.json?x=${Date.now()}`,{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);
-      const data=await res.json();if(data?.schema!=='kyotei-v8-server-predictions'||data?.version!==1||!data.records)throw Error('データ形式不一致');
+      const data=await fetchCurrent();
+      if(currentData&&stamp(data.updated_at)<stamp(currentData.updated_at))throw Error('古い応答のため前回取得分を保持');
       currentData=data;
       const current=importRecords(data.records);
       let archive={imported:0,updated:0,total:0},archiveError='';
       if(historyRequested){try{archive=await syncArchives();window.__v8HistoryStatus='ready'}catch(e){archiveError=e.message;window.__v8HistoryStatus='error'}}
       publish();
       const imported=current.imported+archive.imported,updated=current.updated+archive.updated;
-      const updatedAt=data.updated_at?new Date(data.updated_at).toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'}):'--:--';
+      const updatedAt=stamp(data.updated_at)?new Date(data.updated_at).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'日時不明';
       const total=Number(data.total_record_count||archive.total||data.record_count||0);if(el)el.textContent=`✓ 常時自動保存 接続｜${total}R｜${updatedAt}更新${imported||updated?`｜端末へ${imported+updated}件反映`:''}${archiveError?'｜過去履歴は同期待ち':!historyRequested?'｜過去履歴は成績欄で取得':''}`;
+      if(el)el.textContent+=freshness(data);
       return{imported,updated}
     }catch(e){if(el)el.textContent='常時自動保存：接続待ち｜'+e.message;return null}
   }
@@ -114,5 +136,7 @@
     return historyPromise;
   };
   window.syncServerPredictions=syncServerPredictions;
+  if(document.addEventListener)document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncServerPredictions()});
+  if(window.addEventListener)window.addEventListener('online',syncServerPredictions);
   setTimeout(syncServerPredictions,900);setInterval(syncServerPredictions,180000);
 })();
