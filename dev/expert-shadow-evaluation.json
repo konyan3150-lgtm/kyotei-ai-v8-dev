@@ -16,87 +16,87 @@
   },
   "value_arms": {
     "baseline": {
-      "eligible_races": 163,
-      "bought_races": 163,
+      "eligible_races": 164,
+      "bought_races": 164,
       "skipped_races": 0,
       "hits": 4,
-      "hit_rate": 0.024539877300613498,
-      "investment": 65100,
+      "hit_rate": 0.024390243902439025,
+      "investment": 65500,
       "payout": 26870,
-      "roi": 0.4127496159754224
+      "roi": 0.41022900763358777
     },
     "candidate": {
-      "eligible_races": 163,
-      "bought_races": 163,
+      "eligible_races": 164,
+      "bought_races": 164,
       "skipped_races": 0,
       "hits": 4,
-      "hit_rate": 0.024539877300613498,
-      "investment": 65000,
+      "hit_rate": 0.024390243902439025,
+      "investment": 65400,
       "payout": 26870,
-      "roi": 0.4133846153846154
+      "roi": 0.4108562691131499
     }
   },
   "drift": {
     "reference_races": 200,
-    "recent_races": 87,
+    "recent_races": 88,
     "reference_required": 200,
     "recent_required": 50,
     "policy": "first 200 fixed reference; latest 100 non-overlapping observations; PSI warning at 0.20; monitoring only",
     "status": "distribution_change_detected",
     "metrics": {
       "top_probability": {
-        "psi": 0.09952945164764906,
+        "psi": 0.10130235334986316,
         "warning": false
       },
       "inside_probability": {
-        "psi": 0.050496165069775535,
+        "psi": 0.05135305629761893,
         "warning": false
       },
       "expert_class": {
-        "psi": 0.03547867241900472,
+        "psi": 0.02205033284429295,
         "warning": false
       },
       "venue": {
-        "psi": 1.3309742153515698,
+        "psi": 1.3427577568743152,
         "warning": true
       }
     },
     "interpretation": "Changes can reflect venue or race mix; do not automatically retrain or change bets."
   },
   "realtime": {
-    "races_with_revisions": 15,
-    "preserved_previous_snapshots": 15,
+    "races_with_revisions": 16,
+    "preserved_previous_snapshots": 16,
     "change_reasons": {
-      "first_capture": 286,
-      "model_scores_changed": 15,
-      "expert_changed": 13,
-      "odds_changed": 15,
-      "water_changed": 10,
-      "exhibition_changed": 15,
-      "ev_decision_changed": 15
+      "first_capture": 287,
+      "model_scores_changed": 16,
+      "expert_changed": 14,
+      "odds_changed": 16,
+      "water_changed": 11,
+      "exhibition_changed": 16,
+      "ev_decision_changed": 16
     },
     "interpretation": "Only observed pre-close changes are stored. Final paired scoring uses the last valid snapshot; cancelled races are excluded."
   },
   "diagnostics": {
     "integrity": {
-      "saved": 287,
-      "valid": 287,
+      "saved": 288,
+      "valid": 288,
       "invalid": 0,
       "errors": []
     },
     "reliability": {
       "baseline": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 285,
-        "ece": 0.013248493942103987,
+        "races": 286,
+        "ece": 0.0133489820963036,
         "status": "descriptive",
         "bins": [
           {
             "lower": 0,
             "upper": 0.05,
-            "races": 66,
-            "predicted_probability": 0.03942112463574207,
-            "observed_hit_rate": 0.030303030303030304
+            "races": 67,
+            "predicted_probability": 0.03945943779107716,
+            "observed_hit_rate": 0.029850746268656716
           },
           {
             "lower": 0.05,
@@ -137,16 +137,16 @@
       },
       "candidate": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 285,
-        "ece": 0.012210405393589304,
+        "races": 286,
+        "ece": 0.012021890737077335,
         "status": "descriptive",
         "bins": [
           {
             "lower": 0,
             "upper": 0.05,
-            "races": 67,
-            "predicted_probability": 0.03942057808581436,
-            "observed_hit_rate": 0.04477611940298507
+            "races": 68,
+            "predicted_probability": 0.03945416938409405,
+            "observed_hit_rate": 0.04411764705882353
           },
           {
             "lower": 0.05,
@@ -280,25 +280,25 @@
         }
       },
       "20261006": {
-        "races": 5,
+        "races": 6,
         "arms": {
           "baseline": {
-            "races": 5,
+            "races": 6,
             "hit_rate": 1,
-            "investment": 3000,
-            "payout": 4510,
-            "roi": 1.5033333333333334,
-            "log_loss": 2.79730517295991,
-            "brier": 0.9022939883950766
+            "investment": 3600,
+            "payout": 5400,
+            "roi": 1.5,
+            "log_loss": 2.863362530006729,
+            "brier": 0.9083180555241319
           },
           "candidate": {
-            "races": 5,
+            "races": 6,
             "hit_rate": 1,
-            "investment": 3000,
-            "payout": 4510,
-            "roi": 1.5033333333333334,
-            "log_loss": 2.784600870361122,
-            "brier": 0.9013347781407918
+            "investment": 3600,
+            "payout": 5400,
+            "roi": 1.5,
+            "log_loss": 2.853904025421872,
+            "brier": 0.9075830364316438
           }
         }
       }
@@ -535,25 +535,25 @@
         }
       },
       "14": {
-        "races": 3,
+        "races": 4,
         "arms": {
           "baseline": {
-            "races": 3,
+            "races": 4,
             "hit_rate": 1,
-            "investment": 1800,
-            "payout": 2500,
-            "roi": 1.3888888888888888,
-            "log_loss": 2.8876573633072553,
-            "brier": 0.9169261703734634
+            "investment": 2400,
+            "payout": 3390,
+            "roi": 1.4125,
+            "log_loss": 2.964155351290648,
+            "brier": 0.9223042255724496
           },
           "candidate": {
-            "races": 3,
+            "races": 4,
             "hit_rate": 1,
-            "investment": 1800,
-            "payout": 2500,
-            "roi": 1.3888888888888888,
-            "log_loss": 2.871756784667881,
-            "brier": 0.9158531075972611
+            "investment": 2400,
+            "payout": 3390,
+            "roi": 1.4125,
+            "log_loss": 2.953922538682316,
+            "brier": 0.921595912669422
           }
         }
       },
@@ -767,25 +767,25 @@
         }
       },
       "normal": {
-        "races": 167,
+        "races": 168,
         "arms": {
           "baseline": {
-            "races": 167,
-            "hit_rate": 0.3532934131736527,
-            "investment": 100200,
-            "payout": 81480,
-            "roi": 0.8131736526946107,
-            "log_loss": 4.112158255900694,
-            "brier": 0.971225591892335
+            "races": 168,
+            "hit_rate": 0.35714285714285715,
+            "investment": 100800,
+            "payout": 82370,
+            "roi": 0.8171626984126984,
+            "log_loss": 4.106690940777719,
+            "brier": 0.9710304299832699
           },
           "candidate": {
-            "races": 167,
-            "hit_rate": 0.3532934131736527,
-            "investment": 100200,
-            "payout": 81480,
-            "roi": 0.8131736526946107,
-            "log_loss": 4.113383201502138,
-            "brier": 0.9712356142503669
+            "races": 168,
+            "hit_rate": 0.35714285714285715,
+            "investment": 100800,
+            "payout": 82370,
+            "roi": 0.8171626984126984,
+            "log_loss": 4.107948895545135,
+            "brier": 0.9710426899267688
           }
         }
       },
@@ -840,7 +840,7 @@
       "status": "descriptive_interval",
       "method": "1000 paired bootstrap samples of whole date blocks; 95% percentile interval",
       "dates": 5,
-      "races": 285,
+      "races": 286,
       "direction": "candidate minus baseline; negative log loss/Brier is better, positive hit rate/ROI is better",
       "intervals": {
         "hit_rate": {
@@ -848,11 +848,11 @@
           "upper": 0
         },
         "log_loss": {
-          "lower": -0.003587925707948081,
-          "upper": 0.0019670770795583437
+          "lower": -0.003253783411408584,
+          "upper": 0.001967077079560564
         },
         "brier": {
-          "lower": -0.0003394363837916359,
+          "lower": -0.00031603725152429263,
           "upper": 0.000005586232575183203
         },
         "roi": {
@@ -864,41 +864,41 @@
     },
     "promotion": "No automatic production promotion. Future chronological holdout evaluation is still required."
   },
-  "saved": 287,
-  "settled": 285,
+  "saved": 288,
+  "settled": 286,
   "cancelled": 0,
   "invalid": 0,
   "pending": 2,
   "arms": {
     "baseline": {
-      "races": 285,
-      "hits": 109,
-      "investment": 171000,
-      "payout": 142470,
-      "roi": 0.8331578947368421,
-      "log_loss": 3.993483434682126,
-      "brier": 0.9661378600155242
+      "races": 286,
+      "hits": 110,
+      "investment": 171600,
+      "payout": 143360,
+      "roi": 0.8354312354312354,
+      "log_loss": 3.990686811886877,
+      "brier": 0.9660410087258524
     },
     "candidate": {
-      "races": 285,
-      "hits": 109,
-      "investment": 171000,
-      "payout": 142470,
-      "roi": 0.8331578947368421,
-      "log_loss": 3.994690970066975,
-      "brier": 0.9661195498094834
+      "races": 286,
+      "hits": 110,
+      "investment": 171600,
+      "payout": 143360,
+      "roi": 0.8354312354312354,
+      "log_loss": 3.9919137981462005,
+      "brier": 0.9660241119705899
     }
   },
   "paired_hit_difference": 0,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-10-06T00:45:33.410Z",
+    "checked_at": "2026-10-06T01:03:28.159Z",
     "eligible_preclose_races": 2,
     "captured_preclose_races": 2,
     "missing_preclose_records": [],
     "stale_preclose_records": [],
     "overdue_results": [],
-    "original_exhibition_status": "no_preclose_values",
+    "original_exhibition_status": "captured_preclose",
     "program_status": "available",
     "status": "ok",
     "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent."
