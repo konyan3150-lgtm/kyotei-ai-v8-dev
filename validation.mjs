@@ -38,6 +38,10 @@ function render(){
   const ready=document.getElementById('readiness');ready.replaceChildren();
   const item=(title,detail)=>{const n=element('div');n.append(element('strong',title),element('span',detail));ready.append(n)};
   const cal=d.calibration;if(cal)item('期待値用の確率校正',cal.status==='shadow_evaluation_only'?'後の期間で校正の効果を比較中。本番には未反映。':`準備中：学習 ${cal.train_dates?.length||0}/20日・${cal.train_races||0}/500R、評価 ${cal.test_dates?.length||0}/5日・${cal.test_races||0}/150R`);
+  const oc=d.odds_calibration;if(oc){
+    item('オッズを使う確率補正',oc.model_fitted_at?`補正を固定済み。固定後の検証 ${oc.test_dates?.length||0}/5日・${oc.test_races||0}/150R。${oc.ready_for_review?'比較を確認できる段階。':'まだ改善の判断は保留。'}`:`準備中：過去 ${oc.train_dates?.length||0}/20日・締切前オッズあり ${oc.train_races||0}/500R。終了済みレースに補正買い目を追加しません。`);
+    if(oc.arms)item('固定後の期待値方式の仮想比較',`補正前 ${oc.arms.raw.bought_races}R・回収率 ${percentage(oc.arms.raw.roi)}／補正後 ${oc.arms.calibrated.bought_races}R・回収率 ${percentage(oc.arms.calibrated.roi)}。本番には未反映。`);
+  }
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
   renderVariants();renderGroups();renderDaily();renderShadowSelection();renderOdds();

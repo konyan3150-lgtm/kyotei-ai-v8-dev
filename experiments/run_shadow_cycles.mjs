@@ -40,6 +40,8 @@ async function main(){
   await git('config','user.name','github-actions[bot]');
   await git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com');
   const checkpoint=async()=>{
+    const calibrationFile=path.join(root,'dev/probability-calibration/odds-aware-v1.json');
+    if(fs.existsSync(calibrationFile))await git('add','dev/probability-calibration/odds-aware-v1.json');
     fs.mkdirSync(path.join(root,'dev/official-result-fallback'),{recursive:true});
     fs.mkdirSync(path.join(root,'dev/shadow-input-observations'),{recursive:true});
     await git('add','dev/shadow-input-observations/','dev/official-result-fallback/','dev/expert-shadow-repaired-archive/','dev/expert-shadow-repaired-evaluation.json','dev/racer-aptitude-prospective.json','dev/aptitude-prospective-audit.json','dev/aptitude-prospective-source/','dev/shadow-collection-run.json');

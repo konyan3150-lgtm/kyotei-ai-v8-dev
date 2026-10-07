@@ -18,6 +18,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   fixture.variants.daily={20261007:{budget:{six_equal:{investment:600,payout:1200}}}};
   fixture.selection_diagnostics={summary:{races:2,dates:1},axes:{decision:[{key:'confidence_yes',races:2,dates:1,hit_rate:.5,roi:1.25,profit:300,max_payout_share:1}],wind:[{key:'unknown',races:2,dates:1,hit_rate:.5,roi:1.25,profit:300,max_payout_share:1}]}};
   const bucket={lower:500,upper:null,tickets:318,races:160,dates:5,predicted_probability:.005,observed_ticket_hit_rate:0,estimated_roi:4.2,roi:0,profit:-31800};
+  fixture.odds_calibration={status:'collecting_training',train_dates:['20261003','20261004','20261005','20261006','20261007'],train_races:355,model_fitted_at:null,test_dates:[],test_races:0,ready_for_review:false};
   fixture.odds_diagnostics={counts:{eligible_races:355,odds_missing_stale_or_postclose:154,odds_incomplete:1},scopes:{six_equal:{summary:{races:355,tickets:2130,dates:5},by_odds:[bucket],by_probability:[{...bucket,lower:0,upper:.01}]},ev_saved:{summary:{races:354,tickets:1416,dates:5},by_odds:[bucket],by_probability:[{...bucket,lower:0,upper:.01}]},all_combinations:{summary:{races:355,tickets:42600,dates:5},by_odds:[{...bucket,roi:undefined,profit:undefined,estimated_roi:undefined}],by_probability:[]}}};
   await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#dailyCollection').children.length===2);
   await page.locator('summary').filter({hasText:'日別の保存'}).click();
@@ -28,11 +29,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   await page.locator('summary').filter({hasText:'買い方別の日別'}).click();assert.ok((await page.locator('#variantDaily').innerText()).includes('¥600'));
   await page.locator('#shadowSelectionPanel summary').click();assert.ok((await page.locator('#shadowSelectionRows').innerText()).includes('自信度条件あり'));await page.locator('#shadowSelectionGroup').selectOption('wind');assert.ok((await page.locator('#shadowSelectionRows').innerText()).includes('未記録・未確認'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  assert.ok((await page.locator('#readiness').innerText()).includes('締切前オッズあり 355/500R'));
   await page.locator('#oddsPanel summary').click();assert.ok((await page.locator('#oddsRows').innerText()).includes('318点'));assert.ok((await page.locator('#oddsNote').innerText()).includes('355R'));
   await page.locator('#oddsScope').selectOption('ev_saved');assert.ok((await page.locator('#oddsNote').innerText()).includes('1416点'));
   await page.locator('#oddsAxis').selectOption('by_probability');assert.ok((await page.locator('#oddsRows').innerText()).includes('1.0%'));
   await page.locator('#oddsScope').selectOption('all_combinations');await page.locator('#oddsAxis').selectOption('by_odds');assert.ok((await page.locator('#oddsRows').innerText()).includes('—'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:'ui-screenshots/odds-diagnostics-mobile.png',fullPage:true});
+  fixture.odds_calibration={model_fitted_at:new Date().toISOString(),test_dates:['20261021'],test_races:30,ready_for_review:false,arms:{raw:{bought_races:30,roi:.7},calibrated:{bought_races:15,roi:1.1}}};await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#readiness').textContent.includes('補正を固定済み'));assert.ok((await page.locator('#readiness').innerText()).includes('まだ改善の判断は保留'));assert.ok((await page.locator('#readiness').innerText()).includes('補正後 15R'));
   const freshTime=fixture.health.checked_at;fixture.health.checked_at=new Date(Date.now()-21*60000).toISOString();await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#connection').textContent.includes('遅れ'));fixture.health.checked_at=freshTime;
   fail=true;await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
   assert.equal(await page.locator('#error').isVisible(),true);assert.equal(await page.locator('.count').count(),6);
@@ -41,4 +44,5 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   await page.setViewportSize({width:1280,height:900});await page.screenshot({path:'ui-screenshots/validation-desktop.png',fullPage:true});assert.deepEqual(errors,[]);
   console.log('Browser checks passed: mobile width, mode switching, failed refresh preservation, recovery, no JS errors.');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
+
 

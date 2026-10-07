@@ -1,5 +1,6 @@
 import {collectionDaily} from './collection_daily.mjs';
 import {oddsDiagnostics} from './odds_diagnostics.mjs';
+import {prepareOddsCalibration,captureOddsCalibration,settleOddsCalibration,oddsCalibrationReport} from './odds_calibration.mjs';
 import {analyzeShadowSelections} from '../selection-analysis.mjs';
 import {stReason,stDiagnostics,previewObservation,observeCapture,gapDiagnostics} from './collection_diagnostics.mjs';
 import {officialFallback} from './official_result_fallback.mjs';
@@ -80,7 +81,9 @@ export function settle(record,result) {
     const winning=value.items.find(x=>x.combo===combo);
     valueMetrics[arm]={hit:!!winning,investment:value.investment,payout:winning?amount*winning.stake/100:0,tickets:value.items.length};
   }
-  record.outcome={result:combo,amount,source:result.source||'Open API trifecta result',settled_at:new Date().toISOString(),metrics,value_metrics:valueMetrics};return true;
+  record.outcome={result:combo,amount,source:result.source||'Open API trifecta result',settled_at:new Date().toISOString(),metrics,value_metrics:valueMetrics};
+  const calibrated=settleOddsCalibration(record);if(calibrated)record.outcome.odds_calibration=calibrated;
+  return true;
 }
 
 export function evaluate(records) {
@@ -111,6 +114,9 @@ export async function run() {
   const verified=verifiedInput(root,date,engineRoot);fs.mkdirSync(dir,{recursive:true});
   const stores=new Map(fs.readdirSync(dir).filter(f=>/^\d{8}\.json$/.test(f)).map(f=>[f.slice(0,8),read(path.join(dir,f))]));
   for(const store of stores.values()){verifyStore(store);reopenUnconfirmed(store);}
+  const calibrationFile=path.join(root,'dev/probability-calibration/odds-aware-v1.json');
+  const calibrationPrepared=prepareOddsCalibration(Object.assign({},...[...stores.values()].map(s=>s.records)),{today:date,model:read(calibrationFile,null)});
+  if(calibrationPrepared.new_model){fs.mkdirSync(path.dirname(calibrationFile),{recursive:true});fs.writeFileSync(calibrationFile,JSON.stringify(calibrationPrepared.model,null,2)+'\n',{flag:'wx'});}
   const current=stores.get(date)||{cohort:COHORT,schema:'kyotei-expert-shadow',version:1,date,records:{}};stores.set(date,current);
   const inputDir=path.join(root,'dev/shadow-input-observations');fs.mkdirSync(inputDir,{recursive:true});
   const inputFile=path.join(inputDir,date+'.json'),inputObservations=read(inputFile,{date,records:{}});
@@ -141,7 +147,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6){observeCapture(inputObservations.records,k,observation,'invalid_model_rows');continue;}
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
+    if(rec){rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
     else observeCapture(inputObservations.records,k,observation,'snapshot_rejected');
   }
   let fallbackAttempts=0;
@@ -182,6 +188,7 @@ export async function run() {
   report.collection_daily=collectionDaily(all,{now:Date.now(),program,date,cancelled:String(official.date)===date?official.races:{}});
   report.st_diagnostics=stDiagnostics(all);
   report.odds_diagnostics=oddsDiagnostics(all);
+  report.odds_calibration=oddsCalibrationReport(all,calibrationPrepared);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
   report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};
