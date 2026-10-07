@@ -9,6 +9,15 @@ async function programChecks(){
  let calls=0;c.fetch=async()=>{calls++;return{ok:true,json:async()=>({date:'20260917',programs:{stadiums:{1:{races:{1:{}}}}}})}};
  await assert.rejects(c.fetchRaceProgramRaw('20261007','2026'),/取得待ち/);assert.equal(calls,2);
  calls=0;c.fetch=async()=>({ok:true,json:async()=>({date:'20261007',programs:{stadiums:{}}})});assert.equal((await c.fetchRaceProgramRaw('20261007','2026')).data.date,'20261007');
+ // Official API omits the root date and uses ISO dates on individual races.
+ c.fetch=async()=>({ok:true,json:async()=>({programs:{stadiums:{1:{races:{1:{date:'2026-10-07'},2:{date:'2026-10-07'}}}}}})});
+ assert.equal((await c.fetchRaceProgramRaw('20261007','2026')).data.date,'20261007');
+ for(const payload of [
+  {programs:{stadiums:{1:{races:{1:{date:'2026-10-06'}}}}}},
+  {programs:{stadiums:{1:{races:{1:{date:'2026-10-07'},2:{date:'2026-10-06'}}}}}},
+  {programs:{stadiums:{1:{races:{1:{}}}}}},
+  {programs:{stadiums:{}}}
+ ]){c.fetch=async()=>({ok:true,json:async()=>payload});await assert.rejects(c.fetchRaceProgramRaw('20261007','2026'),/取得待ち/)}
  vm.runInContext(source.slice(source.indexOf('let programLoadId=0;'),source.indexOf('\n',source.indexOf('async function load(){'))),c);
  c.fetchRaceProgram=async()=>{throw Error('翌日データ取得待ち')};await c.load();assert.equal(c.D,null);assert.equal(element('bets').textContent,'対象日のデータ取得待ち');assert.equal(element('valueSavedAudit').innerHTML,'');assert.equal(element('selectedRace').textContent,'選択中：--');
  // A late response from the previously selected day must not replace the new day.
