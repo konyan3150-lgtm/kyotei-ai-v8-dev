@@ -7,6 +7,7 @@ const a=analyzeSavedSelections(records);assert.equal(a.summary.races,2);assert.e
 const ev=analyzeSavedSelections({a:base},{view:'value'});assert.equal(ev.summary.investment,300);assert.equal(ev.summary.payout,4500);assert.equal(ev.axes.decision[0].key,'skip');
 const missing=analyzeSavedSelections({a:{...base,closed_at:undefined}});assert.equal(missing.axes.top[0].key,'unknown');assert.equal(missing.axes.timing[0].key,'unverified');
 const late=analyzeSavedSelections({a:{...base,base_recommendations:{hit:{level:'buy',top:.9,created_at:'2026-10-07T01:01:00Z'}}}});assert.equal(late.axes.top[0].key,'unknown');assert.equal(late.axes.timing[0].key,'invalid');
+assert.equal(late.axes.decision[0].key,'unknown','Post-close recommendation cannot identify a preclose purchase condition');
 assert.equal(JSON.stringify(records),before);
 const s={...base,variants:{budget:{confident:true,top_score:.8,score_gap:.3}},outcome:{metrics:{baseline:{investment:600,payout:1500,hit:true}}}};
 const shadow=analyzeShadowSelections({s});assert.equal(shadow.axes.decision[0].key,'confidence_yes');assert.equal(shadow.axes.coverage[0].key,'unknown');
