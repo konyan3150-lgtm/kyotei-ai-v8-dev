@@ -64,6 +64,7 @@
     for(const [key,server]of Object.entries(serverRecords))records[key]=choose(records[key],server);
     return Object.fromEntries(Object.entries(records).map(([key,r])=>[key,displayRecord(r)]));
   };
+  window.v8GetRecordAudit=filter=>currentData&&window.v8RecordAudit?window.v8RecordAudit({server:serverRecords,displayed:window.v8GetSavedPredictions(),updatedAt:currentData.updated_at,historyStatus:window.__v8HistoryStatus,filter}):null;
   function publish(){
     serverRecords=Object.assign({},...Object.values(archiveRecords),currentData?.records||{});
     const data={...currentData,records:serverRecords};window.__v8ServerPredictionData=data;

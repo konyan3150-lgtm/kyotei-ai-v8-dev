@@ -1,4 +1,5 @@
 import {preserveRevision} from './realtime_shadow.mjs';
+import {riskMetrics} from './variant_risk.mjs';
 export const VARIANT_POLICY=Object.freeze({version:'preclose-st-budget-v1',budget:600,st_weights:[0,12.5,25,50],confidence:{top:.62,gap:.25}});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export function exhibitionFactors(race,rows,stWeight=25){
@@ -53,12 +54,14 @@ function add(s,items,outcome){s.races++;const win=items.find(x=>x.combo===outcom
 const summary=x=>({...x,hit_rate:x.races?x.hits/x.races:null,roi:x.investment?x.payout/x.investment:null});
 export function evaluateVariants(records){
  const all=Object.values(records).filter(r=>r.variants?.policy===VARIANT_POLICY.version),valid=all.filter(r=>r.variants.captured_at===r.saved_at&&Date.parse(r.saved_at)<Date.parse(String(r.closed_at).replace(' ','T')+'+09:00')),settled=valid.filter(r=>r.outcome&&!r.excluded&&!r.cancelled);
- const groups={st:{},budget:{}},daily={};
+ const groups={st:{},budget:{}},daily={},events={st:{},budget:{}};
  for(const r of settled)for(const group of ['st','budget'])for(const [key,items] of Object.entries(r.variants[group].arms)){
   budgetTickets(items.map(x=>x.combo),items.map(x=>x.stake));add(groups[group][key]??=empty(),items,r.outcome);
+  const win=items.find(x=>x.combo===r.outcome.result);
+  (events[group][key]??=[]).push({date:r.date,closed_at:r.closed_at,stadium:r.stadium,race:r.race,hit:!!win,investment:items.reduce((n,x)=>n+x.stake,0),payout:win?r.outcome.amount*win.stake/100:0});
   const d=daily[r.date]??={st:{},budget:{}};add(d[group][key]??=empty(),items,r.outcome);
  }
  return {policy:VARIANT_POLICY,captured:all.length,invalid:all.length-valid.length,settled:settled.length,pending:valid.filter(r=>!r.outcome&&!r.cancelled).length,excluded:valid.filter(r=>r.excluded).length,st_eligible:valid.filter(r=>r.variants.st.eligible).length,st_missing:valid.filter(r=>!r.variants.st.eligible).length,confident_captures:valid.filter(r=>r.variants.budget.confident).length,
-  arms:Object.fromEntries(Object.entries(groups).map(([g,arms])=>[g,Object.fromEntries(Object.entries(arms).map(([k,x])=>[k,summary(x)]))])),daily,
+  arms:Object.fromEntries(Object.entries(groups).map(([g,arms])=>[g,Object.fromEntries(Object.entries(arms).map(([k,x])=>[k,{...summary(x),risk:riskMetrics(events[g][k])}]))])),daily,
   interpretation:'Exploratory fixed-policy prospective comparison. All arms spend 600 yen per included race; ST arms share the same six-ST eligibility. No automatic best-arm selection or production promotion.'};
 }

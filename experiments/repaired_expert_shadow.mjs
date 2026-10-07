@@ -1,4 +1,5 @@
 import {collectionDaily} from './collection_daily.mjs';
+import {stReason,stDiagnostics,previewObservation,observeCapture,gapDiagnostics} from './collection_diagnostics.mjs';
 import {officialFallback} from './official_result_fallback.mjs';
 import fs from 'node:fs';
 import {calibrationReadiness} from './prospective_calibration.mjs';
@@ -109,6 +110,8 @@ export async function run() {
   const stores=new Map(fs.readdirSync(dir).filter(f=>/^\d{8}\.json$/.test(f)).map(f=>[f.slice(0,8),read(path.join(dir,f))]));
   for(const store of stores.values()){verifyStore(store);reopenUnconfirmed(store);}
   const current=stores.get(date)||{cohort:COHORT,schema:'kyotei-expert-shadow',version:1,date,records:{}};stores.set(date,current);
+  const inputDir=path.join(root,'dev/shadow-input-observations');fs.mkdirSync(inputDir,{recursive:true});
+  const inputFile=path.join(inputDir,date+'.json'),inputObservations=read(inputFile,{date,records:{}});
   const ctx={models:engine.normalizeModel(read(path.join(engineRoot,'v8_model_aptitude.json'))),aptitude:verified.data,
     course:read(path.join(engineRoot,'dev/course-stats.json')),venue:read(path.join(engineRoot,'dev/venue-stats.json')),technique:read(path.join(engineRoot,'dev/technique-stats.json'))};
   const odds=read(path.join(engineRoot,'dev/odds.json'));
@@ -130,11 +133,14 @@ export async function run() {
     if(current.records[k]?.outcome||current.records[k]?.cancelled||!Number.isFinite(closeMs(race))||closeMs(race)<=now.getTime()||closeMs(race)-now.getTime()>20*60000)continue;
     eligibleKeys.push(k);
     const previewRecord=String(previews.date)===date?previews.races?.[String(Number(sid))]?.[String(Number(n))]:null;
+    const observation=previewObservation(race,previewRecord,{now:new Date().toISOString(),date,fileDate:previews.date});
     const supplemented=applyPreclosePreview(race,previewRecord,new Date());
-    const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
+    observation.supplemented=supplemented;observation.final_st_reason=stReason(Array.from({length:6},(_,i)=>race.preview?.racers?.[String(i+1)]?.start_timing));
+    const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6){observeCapture(inputObservations.records,k,observation,'invalid_model_rows');continue;}
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';collectRevision(current.records,k,rec,revisionRejections)}
+    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
+    else observeCapture(inputObservations.records,k,observation,'snapshot_rejected');
   }
   let fallbackAttempts=0;
   for(const [d,store] of stores){
@@ -172,6 +178,10 @@ export async function run() {
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
   const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
   report.collection_daily=collectionDaily(all,{now:Date.now(),program,date,cancelled:String(official.date)===date?official.races:{}});
+  report.st_diagnostics=stDiagnostics(all);
+  report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
+  report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};
+  fs.writeFileSync(inputFile,JSON.stringify(inputObservations)+'\n');
   report.health.revision_rejections=revisionRejections;
   if(revisionRejections.length)report.health.status='needs_attention';
   fs.writeFileSync(path.join(root,'dev/expert-shadow-repaired-evaluation.json'),JSON.stringify(report,null,2)+'\n');

@@ -12,9 +12,17 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   fs.mkdirSync('ui-screenshots',{recursive:true});await page.screenshot({path:'ui-screenshots/validation-mobile.png',fullPage:true});
   await page.locator('#ev').click();assert.equal(await page.locator('#ev').getAttribute('aria-pressed'),'true');assert.ok((await page.locator('#comparisonNote').innerText()).includes('最大4点'));
   fixture.collection_daily={days:{20261007:{saved:2,preclose_saved:2,settled:1,pending:1,overdue:1,unrecorded_closed_races:3},20261006:{saved:1,preclose_saved:1,settled:1,pending:0,overdue:0,unrecorded_closed_races:null}}};
+  fixture.st_diagnostics={counts:{eligible:2,negative_st:3,out_of_range:0,missing_or_unparseable:1}};
+  fixture.collection_gaps={reasons:{not_observed_unknown:3}};
+  fixture.variants.arms.budget.six_equal={races:1,hit_rate:1,roi:2,investment:600,payout:1200,risk:{max_consecutive_misses:2,max_drawdown:1800}};
+  fixture.variants.daily={20261007:{budget:{six_equal:{investment:600,payout:1200}}}};
   await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#dailyCollection').children.length===2);
   await page.locator('summary').filter({hasText:'日別の保存'}).click();
   assert.ok((await page.locator('#dailyCollection').innerText()).includes('未確認'));
+  assert.ok((await page.locator('#gapNote').innerText()).includes('原因未確認 3R'));
+  assert.ok((await page.locator('#stDiagnosticsNote').innerText()).includes('負のST（展示F等） 3R'));
+  assert.ok((await page.locator('#variantsTable').innerText()).includes('¥1,800'));
+  await page.locator('summary').filter({hasText:'買い方別の日別'}).click();assert.ok((await page.locator('#variantDaily').innerText()).includes('¥600'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   const freshTime=fixture.health.checked_at;fixture.health.checked_at=new Date(Date.now()-21*60000).toISOString();await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#connection').textContent.includes('遅れ'));fixture.health.checked_at=freshTime;
   fail=true;await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);

@@ -19,6 +19,8 @@ on:
       - "tests/prediction-integrity.cjs"
       - "tests/money-integrity.cjs"
       - "overrides/server-sync.js"
+      - "overrides/record-audit.js"
+      - "tests/record-audit.cjs"
       - "overrides/odds-value.js"
       - "overrides/recommendation.js"
       - "overrides/value-record-state.js"
@@ -62,6 +64,7 @@ jobs:
           cp validation.html validation.css validation.mjs results.html results.css results.mjs site/
           cp overrides/server-sync.js overrides/odds-value.js overrides/recommendation.js overrides/value-record-state.js site/
           cp overrides/app2.js site/
+          cp overrides/record-audit.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
@@ -96,6 +99,8 @@ jobs:
           node tests/value-record-state.cjs site
           node tests/data-refresh.cjs site
           node experiments/test_collection_daily.mjs
+          node experiments/test_collection_diagnostics.mjs
+          node tests/record-audit.cjs site/record-audit.js
           npm install --no-save --ignore-scripts playwright
           npx playwright install --with-deps chromium
           python3 -m http.server 8765 --directory site > /tmp/validation-server.log 2>&1 &

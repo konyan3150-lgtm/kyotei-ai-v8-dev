@@ -41,7 +41,8 @@ async function main(){
   await git('config','user.email','41898282+github-actions[bot]@users.noreply.github.com');
   const checkpoint=async()=>{
     fs.mkdirSync(path.join(root,'dev/official-result-fallback'),{recursive:true});
-    await git('add','dev/official-result-fallback/','dev/expert-shadow-repaired-archive/','dev/expert-shadow-repaired-evaluation.json','dev/racer-aptitude-prospective.json','dev/aptitude-prospective-audit.json','dev/aptitude-prospective-source/','dev/shadow-collection-run.json');
+    fs.mkdirSync(path.join(root,'dev/shadow-input-observations'),{recursive:true});
+    await git('add','dev/shadow-input-observations/','dev/official-result-fallback/','dev/expert-shadow-repaired-archive/','dev/expert-shadow-repaired-evaluation.json','dev/racer-aptitude-prospective.json','dev/aptitude-prospective-audit.json','dev/aptitude-prospective-source/','dev/shadow-collection-run.json');
     await git('commit','-m','Checkpoint prospective collection and retry diagnostics');
     let error;
     for(let i=0;i<5;i++){

@@ -45,14 +45,18 @@ function renderDaily(){
  const body=document.getElementById('dailyCollection');body.replaceChildren();const report=data?.collection_daily;
  document.getElementById('dailyNote').textContent=report?'収集ジョブが確認した日別集計。未記録は番組との照合、結果待ちは保存済み記録の集計です。':'日別診断は次の収集更新後に表示します。以前の集計だけでは保存漏れを判定できません。';
  for(const [date,g] of Object.entries(report?.days||{}).sort(([a],[b])=>b.localeCompare(a)))row(body,[date.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1/$2/$3'),`${g.preclose_saved}/${g.saved}R`,`${g.settled}R`,`${g.pending}R`,`${g.overdue}R`,g.unrecorded_closed_races==null?'未確認':`${g.unrecorded_closed_races}R`]);
+ const labels={not_observed_unknown:'観測履歴なし・原因未確認',invalid_model_rows:'予測入力の艇数不足',snapshot_rejected:'保存条件外',revision_rejected:'更新の識別不一致',observed_without_capture:'観測あり・保存未確認'},gaps=data?.collection_gaps;
+ document.getElementById('gapNote').textContent=gaps?'未記録の内訳：'+(Object.entries(gaps.reasons||{}).filter(([,n])=>n>0).map(([k,n])=>`${labels[k]||k} ${n}R`).join('／')||'今回の照合で未記録なし'):'未記録の原因は、診断開始後の観測履歴で照合します。';
 }
 function renderVariants(){
  const v=data?.variants,legacy=document.getElementById('cohort').value==='legacy',body=document.getElementById('variantsTable');body.replaceChildren();document.getElementById('variantsPanel').hidden=legacy;
  if(legacy)return;
  document.getElementById('variantsNote').textContent=v?`保存 ${v.captured}R・確定 ${v.settled}R。展示ST比較対象 ${v.st_eligible}R・欠け/対象外 ${v.st_missing}R。`:'新しく保存する予測から比較を始めます。';
+ const st=data?.st_diagnostics?.counts;document.getElementById('stDiagnosticsNote').textContent=st?`展示STの内訳：6艇有効 ${st.eligible}R／負のST（展示F等） ${st.negative_st}R／範囲外 ${st.out_of_range}R／欠け・読取不能 ${st.missing_or_unparseable}R。欠けの過去記録だけでは発表前と取得失敗を区別できません。`:'展示STの原因別集計は次の収集更新後に表示します。';
  const labels={st_0:'展示ST：重みなし',st_12_5:'展示ST：弱め',st_25:'展示ST：標準',st_50:'展示ST：強め',six_equal:'6点・各100円',three_equal:'3点・各200円',two_equal:'2点・各300円',confident_three_weighted:'自信度が高い時に厚張り'};
- for(const group of ['st','budget'])for(const [k,a] of Object.entries(v?.arms?.[group]||{}))row(body,[labels[k]||k,a.races+'R',percentage(a.hit_rate),percentage(a.roi),money(Number(a.payout)-Number(a.investment))]);
- if(!body.children.length){const tr=element('tr'),td=element('td','新しい予測の結果が確定すると表示します','empty');td.colSpan=5;tr.append(td);body.append(tr);}
+ for(const group of ['st','budget'])for(const [k,a] of Object.entries(v?.arms?.[group]||{}))row(body,[labels[k]||k,a.races+'R',percentage(a.hit_rate),percentage(a.roi),money(Number(a.payout)-Number(a.investment)),a.risk?`${a.risk.max_consecutive_misses}R`:'—',money(a.risk?.max_drawdown)]);
+ if(!body.children.length){const tr=element('tr'),td=element('td','新しい予測の結果が確定すると表示します','empty');td.colSpan=7;tr.append(td);body.append(tr);}
+ const daily=document.getElementById('variantDaily');daily.replaceChildren();for(const [date,d] of Object.entries(v?.daily||{}).sort(([a],[b])=>b.localeCompare(a)))row(daily,[date.replace(/^(\d{4})(\d{2})(\d{2})$/,'$1/$2/$3'),...['six_equal','three_equal','two_equal','confident_three_weighted'].map(k=>d.budget?.[k]?money(d.budget[k].payout-d.budget[k].investment):'—')]);
 }
 function renderGroups(){
   const field=document.getElementById('group').value,body=document.getElementById('groups');body.replaceChildren();

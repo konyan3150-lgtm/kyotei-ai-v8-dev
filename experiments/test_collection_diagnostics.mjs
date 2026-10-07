@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {stReason,stDiagnostics,previewObservation,observeCapture,gapDiagnostics} from './collection_diagnostics.mjs';
+import {riskMetrics} from './variant_risk.mjs';
+assert.equal(stReason([.1,.2,.3,.4,.5,.6]),'eligible');
+assert.equal(stReason([-.01,null,.1,.2,.3,.4]),'negative_st');
+assert.equal(stReason([.1,3,.1,.2,.3,.4]),'out_of_range');
+assert.equal(stReason([.1,'F.01',.1,.2,.3,.4]),'missing_or_unparseable');
+const r={date:'20261007',closed_at:'2026-10-07 10:00:00',saved_at:'2026-10-07T00:50:00Z',variants:{captured_at:'2026-10-07T00:50:00Z',st:{values:[-.01,.1,.1,.1,.1,.1]}}};
+const records={r},before=JSON.stringify(records);assert.equal(stDiagnostics(records).counts.negative_st,1);assert.equal(JSON.stringify(records),before);
+assert.equal(previewObservation(r,{fetched_at:'2026-10-07T01:00:00Z'},{now:r.saved_at,date:r.date,fileDate:r.date}).official_preview_status,'future_time');
+assert.equal(previewObservation(r,{fetched_at:'2026-10-07T00:55:00Z'},{now:'2026-10-07T00:56:00Z',date:r.date,fileDate:r.date}).official_preview_status,'preclose_record');
+const observations={};observeCapture(observations,'20261007_1_1',{checked_at:r.saved_at},'invalid_model_rows');
+const gaps=gapDiagnostics({days:{20261007:{unrecorded:[{stadium:1,race:1},{stadium:2,race:1}]}}},observations);
+assert.equal(gaps.reasons.invalid_model_rows,1);assert.equal(gaps.reasons.not_observed_unknown,1);
+const events=[0,1,2,3].map((n)=>({date:'20261007',closed_at:`2026-10-07 10:0${n}:00`,stadium:1,race:n+1,investment:600,payout:n===2?1800:0,hit:n===2}));
+const immutable=JSON.stringify(events),risk=riskMetrics(events.reverse());assert.equal(risk.profit,-600);assert.equal(risk.max_drawdown,1200);assert.equal(risk.max_consecutive_misses,2);assert.equal(risk.worst_day_profit,-600);assert.equal(JSON.stringify(events.reverse()),immutable);
+assert.equal(riskMetrics([]).worst_day_profit,null);
+console.log('Diagnostics passed: negative ST versus missing, source timestamps, unknown coverage, chronological losses and immutable inputs.');
