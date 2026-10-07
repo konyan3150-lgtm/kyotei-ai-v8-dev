@@ -35,7 +35,14 @@ async function fetchRaceProgramRaw(d,y){
       const res=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(20000)});
       if(!res.ok)continue;
       const data=await res.json();
-      if(String(data?.date)!==String(d)||!data?.programs?.stadiums)continue;
+      if(!data?.programs?.stadiums)continue;
+      const normalizeDate=value=>String(value??'').replace(/-/g,'');
+      const races=Object.values(data.programs.stadiums).flatMap(venue=>Object.values(venue?.races||{}));
+      // Official API programs have no top-level date. Validate every race instead.
+      if(data.date!=null&&normalizeDate(data.date)!==d)continue;
+      if(data.date==null&&(!races.length||races.some(race=>normalizeDate(race?.date)!==d)))continue;
+      if(races.some(race=>race?.date!=null&&normalizeDate(race.date)!==d))continue;
+      data.date=d;
       return {data,source};
     }catch(e){console.warn('番組取得待ち',url,e.message)}
   }
