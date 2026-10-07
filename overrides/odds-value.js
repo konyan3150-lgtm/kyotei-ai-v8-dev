@@ -85,10 +85,29 @@
     try{localStorage.setItem(key,JSON.stringify(rec));return true}catch(e){return false}
   }
   const baseSavePredictionSnapshot=savePredictionSnapshot;
-  savePredictionSnapshot=function(r,rows){const ok=baseSavePredictionSnapshot(r,rows);saveValueSnapshot(r,rows);return ok};
+  savePredictionSnapshot=function(r,rows){
+    try{if(JSON.parse(localStorage.getItem(resultStoreKey())||'null')?.source==='server')return false}catch(e){return false}
+    const ok=baseSavePredictionSnapshot(r,rows);saveValueSnapshot(r,rows);return ok
+  };
 
   const baseSettlePredictionKey=settlePredictionKey;
-  settlePredictionKey=function(r,key){const changed=baseSettlePredictionKey(r,key),t=r?.result?.payouts?.trifecta?.[0];if(!t)return changed;let rec;try{rec=JSON.parse(localStorage.getItem(key)||'null')}catch(e){return changed}if(!rec?.value_modes)return changed;const combo=String(t.combination||'').trim(),amount=Number(t.amount||0);for(const mode of Object.keys(rec.value_modes)){const m=rec.value_modes[mode];m.settled=true;m.result=combo;m.hit=Array.isArray(m.picks)&&m.picks.includes(combo);const hitItem=Array.isArray(m.items)?m.items.find(x=>x.combo===combo):null;m.payout=m.hit?amount*(Number(hitItem?.stake||100)/100):0}try{localStorage.setItem(key,JSON.stringify(rec))}catch(e){}return true};
+  settlePredictionKey=function(r,key){
+    let before;try{before=JSON.parse(localStorage.getItem(key)||'null')}catch(e){return false}
+    // Imported records are settled by the server; never recalculate their money on a device.
+    if(before?.source==='server'||before?.cancelled)return false;
+    const changed=baseSettlePredictionKey(r,key),t=r?.result?.payouts?.trifecta?.[0];if(!t)return changed;
+    let rec;try{rec=JSON.parse(localStorage.getItem(key)||'null')}catch(e){return changed}
+    if(!rec?.value_modes)return changed;
+    const combo=String(t.combination||'').trim(),amount=Number(t.amount||0);let valueChanged=false;
+    for(const m of Object.values(rec.value_modes)){
+      if(!m||m.settled||m.cancelled)continue;
+      m.settled=true;m.result=combo;m.hit=Array.isArray(m.picks)&&m.picks.includes(combo);
+      const hitItem=Array.isArray(m.items)?m.items.find(x=>x.combo===combo):null;
+      m.payout=m.hit?amount*(Number(hitItem?.stake||100)/100):0;valueChanged=true
+    }
+    if(!valueChanged)return changed;
+    try{localStorage.setItem(key,JSON.stringify(rec))}catch(e){return changed}return true
+  };
 
   async function loadLiveOdds(){
     if(typeof dateOffset!=='undefined'&&dateOffset!==0){oddsStatus='unavailable';return}

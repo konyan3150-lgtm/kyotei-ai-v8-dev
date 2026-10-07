@@ -17,6 +17,7 @@ on:
       - "validation.mjs"
       - "tests/validation-browser.cjs"
       - "tests/prediction-integrity.cjs"
+      - "tests/money-integrity.cjs"
       - "overrides/server-sync.js"
       - "overrides/odds-value.js"
       - "overrides/recommendation.js"
@@ -73,6 +74,8 @@ jobs:
           s = s.replace('server-sync.js?', 'server-sync.js?dev-integrity-20261004-value-state&')
           s = s.replace('src="app2.js?', 'src="app2.js?program-date-20261007&')
           s = s.replace('server-sync.js?', 'server-sync.js?refresh-20261006&')
+          for asset in ['server-sync.js', 'odds-value.js', 'recommendation.js']:
+              s = s.replace('src="' + asset + '?', 'src="' + asset + '?money-integrity-20261007&')
           marker = '<div class="pickerpanel">'
           link = '<p style="margin:6px 0 12px;text-align:right"><a href="results.html" style="color:#dfc4ff;font-size:15px;text-decoration:none;margin-right:16px">的中結果一覧 ↗</a><a href="validation.html" style="color:#a8caff;font-size:13px;text-decoration:none">開発検証・収集状況 ↗</a></p>'
           if marker not in s:
@@ -87,6 +90,7 @@ jobs:
       - name: Check mobile validation page and interactions
         run: |
           node tests/prediction-integrity.cjs site/server-sync.js
+          node tests/money-integrity.cjs site
           node tests/value-record-state.cjs site
           node tests/data-refresh.cjs site
           npm install --no-save --ignore-scripts playwright

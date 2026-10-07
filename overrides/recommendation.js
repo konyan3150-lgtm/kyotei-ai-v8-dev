@@ -54,7 +54,7 @@
   function saveAssessments(r,rows,recs,baseRecs){
     if(!openForSaving(r))return false;
     const key=resultStoreKey();let rec;try{rec=JSON.parse(localStorage.getItem(key)||'null')}catch(e){return false}
-    if(!rec||rec.settled)return false;
+    if(!rec||rec.settled||rec.source==='server')return false;
     // Persist the purchase decision against the same odds snapshot as the saved EV picks.
     const oddsAt=rec.odds_snapshot_at||null;
     recs=Object.fromEntries(Object.entries(recs||{}).map(([mode,x])=>[mode,{...x,odds_snapshot_at:oddsAt}]));

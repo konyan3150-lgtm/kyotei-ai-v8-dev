@@ -14,5 +14,9 @@ async function check(local,server){
  const incompatible=structuredClone(local);incompatible.value_modes.hit.stake=600;incompatible.value_modes.hit.items[0].stake=500;assert.equal((await check(incompatible,server)).value_modes.hit.items,undefined);
  const otherTime=structuredClone(local);otherTime.value_saved_at='2026-10-03T00:01:00Z';assert.equal((await check(otherTime,server)).value_modes.hit.items,undefined);
  await check(null,server);await check(local,{...server,cancelled:true});
+ const pending={...server,settled:false,saved_at:'2026-10-03T00:50:00Z',value_modes:{hit:{picks:['1-2-3'],stake:300,payout:0,settled:false}}};
+ const deviceChanged={...pending,saved_at:'2026-10-03T00:51:00Z',settled:true,value_modes:{hit:{picks:['6-5-4'],stake:100,payout:9000,settled:true}}};
+ assert.deepEqual((await check(deviceChanged,pending)).value_modes,pending.value_modes);
+ assert.deepEqual((await check({...deviceChanged,settled:false},pending)).value_modes,pending.value_modes);
  console.log('Prediction integrity passed: single/list parity, six/value mode separation, authoritative stake/payout, no double multiplier, matching saved timestamp and cancellation.');
 })().catch(e=>{console.error(e);process.exit(1)});
