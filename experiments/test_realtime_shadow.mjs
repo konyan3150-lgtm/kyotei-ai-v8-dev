@@ -18,6 +18,17 @@ assert.deepEqual(second.change_reasons,['water_changed']);assert.equal(first.rev
 assert.throws(()=>preserveRevision(second,{...original,saved_at:'2026-10-03T03:00:00Z'}));
 assert.throws(()=>preserveRevision(second,{...original,saved_at:'2026-10-03T02:49:00Z'}));
 assert.throws(()=>preserveRevision(second,{...original,race:'2',saved_at:'2026-10-03T02:55:00Z'}));
+const delayed=preserveRevision(first,{...original,closed_at:'2026-10-03 12:05:00',saved_at:'2026-10-03T02:55:00Z'});
+assert.deepEqual(delayed.change_reasons,['close_time_changed']);
+assert.equal(delayed.revisions[0].closed_at,original.closed_at);
+assert.equal(first.closed_at,original.closed_at);
+const earlier=preserveRevision(first,{...original,closed_at:'2026-10-03 11:58:00',saved_at:'2026-10-03T02:55:00Z'});
+assert.equal(earlier.closed_at,'2026-10-03 11:58:00');
+assert.throws(()=>preserveRevision(first,{...original,closed_at:'2026-10-03 12:05:00',saved_at:'2026-10-03T03:00:00Z'}),e=>e.code==='REVISION_IDENTITY_MISMATCH'&&e.differences.closed_at.previous===original.closed_at);
+assert.throws(()=>preserveRevision(first,{...original,closed_at:'2026-10-03 11:54:00',saved_at:'2026-10-03T02:55:00Z'}),/before close/);
+for(const [field,value] of [['date','20261004'],['stadium','2'],['race','2']]){
+ assert.throws(()=>preserveRevision(first,{...original,[field]:value,saved_at:'2026-10-03T02:55:00Z'}),e=>e.code==='REVISION_IDENTITY_MISMATCH'&&e.differences[field].next===value);
+}
 const summary=realtimeSummary({a:second});assert.equal(summary.preserved_previous_snapshots,1);assert.equal(summary.change_reasons.water_changed,1);
 assert.equal(markCancelled(second,{cancelled:false}),false);
 assert.equal(markCancelled(second,{cancelled:true,source:'official test'}),true);

@@ -36,6 +36,18 @@ export function variantRevision(previous,next){
  const prior={...previous};delete prior.revisions;delete prior.outcome;delete prior.cancelled;
  return {...next,revision_number:(previous.revision_number||0)+1,change_reasons:['variants_changed'],revisions:[...(previous.revisions||[]),prior]};
 }
+export function collectRevision(records,key,next,rejections){
+ if(!next||records[key]?.outcome||records[key]?.cancelled)return true;
+ try{
+  const revised=variantRevision(records[key],next);
+  records[key]={...revised,last_checked_at:next.saved_at};
+  return true;
+ }catch(error){
+  if(error.code!=='REVISION_IDENTITY_MISMATCH')throw error;
+  rejections.push({key,checked_at:next.saved_at,code:error.code,differences:error.differences});
+  return false;
+ }
+}
 const empty=()=>({races:0,hits:0,investment:0,payout:0});
 function add(s,items,outcome){s.races++;const win=items.find(x=>x.combo===outcome.result);s.hits+=Number(!!win);s.investment+=items.reduce((n,x)=>n+x.stake,0);s.payout+=win?outcome.amount*win.stake/100:0;}
 const summary=x=>({...x,hit_rate:x.races?x.hits/x.races:null,roi:x.investment?x.payout/x.investment:null});

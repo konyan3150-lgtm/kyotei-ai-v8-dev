@@ -24,12 +24,21 @@ export function preserveRevision(previous,next){
   const saved=Date.parse(next.saved_at),close=closeMs(next);
   if(!Number.isFinite(saved)||!Number.isFinite(close)||saved>=close)throw Error('Revision must be captured before close');
   if(previous){
-    if(['date','stadium','race','closed_at'].some(k=>String(previous[k])!==String(next[k])))throw Error('Revision identity mismatch');
+    const differences=Object.fromEntries(['date','stadium','race','closed_at'].filter(k=>String(previous[k])!==String(next[k])).map(k=>[k,{previous:previous[k],next:next[k]}]));
+    const identityChanged=['date','stadium','race'].some(k=>k in differences);
+    const previousClose=closeMs(previous);
+    // A revised deadline cannot reopen a race whose earlier deadline has passed.
+    if(identityChanged||(differences.closed_at&&(!Number.isFinite(previousClose)||saved>=previousClose))){
+      const error=Error('Revision identity mismatch: '+JSON.stringify(differences));
+      error.code='REVISION_IDENTITY_MISMATCH';error.differences=differences;
+      throw error;
+    }
     if(saved<=Date.parse(previous.saved_at))throw Error('Revision time must increase');
   }
   const reasons=[];
   if(!previous)reasons.push('first_capture');
   else {
+    if(previous.closed_at!==next.closed_at)reasons.push('close_time_changed');
     if(!equal(previous.rank_probabilities,next.rank_probabilities))reasons.push('model_scores_changed');
     if(!equal(previous.expert,next.expert))reasons.push('expert_changed');
     if(previous.odds_snapshot_at!==next.odds_snapshot_at||!equal(previous.baseline_distribution.map(x=>[x.combo,x.odds]),next.baseline_distribution.map(x=>[x.combo,x.odds])))reasons.push('odds_changed');

@@ -1,7 +1,7 @@
 import {officialFallback} from './official_result_fallback.mjs';
 import fs from 'node:fs';
 import {calibrationReadiness} from './prospective_calibration.mjs';
-import {captureVariants,variantRevision,evaluateVariants} from './preclose_variants.mjs';
+import {captureVariants,collectRevision,evaluateVariants} from './preclose_variants.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
@@ -122,7 +122,7 @@ export async function run() {
     catch(e){originalStatus='fetch_or_parse_error'}
   }
   const now=new Date();
-  const eligibleKeys=[];
+  const eligibleKeys=[],revisionRejections=[];
   for(const [sid,v] of Object.entries(program?.programs?.stadiums||{}))for(const [n,race] of Object.entries(v.races||{})){
     const k=`${date}_${Number(sid)}_${Number(n)}`,officialRace=String(official.date)===date?official.races?.[String(Number(sid))]?.[String(Number(n))]:null;
     if(officialRace?.cancelled===true){markCancelled(current.records[k],{cancelled:true,source:'live official-results cancellation'});continue}
@@ -133,7 +133,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6)continue;
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';current.records[k]=variantRevision(current.records[k],rec);current.records[k].last_checked_at=rec.saved_at}
+    if(rec){rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';collectRevision(current.records,k,rec,revisionRejections)}
   }
   let fallbackAttempts=0;
   for(const [d,store] of stores){
@@ -163,9 +163,15 @@ export async function run() {
       else if(check.eligible)settle(r,{combination:check.combo,amount:check.amount,source:resolved.source||'Open API complete normal finishers'});
     }
   }
+  if(revisionRejections.length){
+    current.revision_rejections=[...(current.revision_rejections||[]),...revisionRejections];
+    console.warn('Rejected race revisions:',JSON.stringify(revisionRejections));
+  }
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
   const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
+  report.health.revision_rejections=revisionRejections;
+  if(revisionRejections.length)report.health.status='needs_attention';
   fs.writeFileSync(path.join(root,'dev/expert-shadow-repaired-evaluation.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({date,cohort:COHORT,saved:report.saved,settled:report.settled,pending:report.pending,through:verified.proof.history_through,health:report.health}));
 }
