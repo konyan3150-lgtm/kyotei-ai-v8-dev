@@ -105,7 +105,7 @@ jobs:
       - name: Preserve UI check screenshots
         uses: actions/upload-artifact@v4
         with:
-          name: validation-ui-check
+          name: validation-ui-check-${{ github.run_attempt }}
           path: ui-screenshots/
 
       - name: Configure GitHub Pages
@@ -116,8 +116,11 @@ jobs:
       - name: Upload development site
         uses: actions/upload-pages-artifact@v4
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: site
 
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
