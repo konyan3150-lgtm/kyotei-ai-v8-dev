@@ -13,7 +13,7 @@ function stBand(exhibition){
 export const SELECTION_AXES={decision:'保存時の推奨判定',venue:'会場',top:'1着最上位スコア',gap:'1着スコアの差',coverage:'情報充足度',wind:'保存時の風速',st:'保存時の展示ST',timing:'保存・判定時刻の確認'};
 export const GROUP_LABELS={buy:'購入推奨',caution:'注意',skip:'見送り',none:'判定なし',unknown:'未記録・未確認',confidence_yes:'厚張りの自信度条件あり',confidence_no:'厚張りの自信度条件なし',top_low:'48%未満',top_mid:'48〜62%未満',top_high:'62〜80%未満',top_very_high:'80%以上',gap_low:'14%未満',gap_mid:'14〜25%未満',gap_high:'25%以上',coverage_low:'70%未満',coverage_mid:'70〜82%未満',coverage_high:'82%以上',wind_low:'3m/s未満',wind_mid:'3〜6m/s未満',wind_high:'6m/s以上',negative:'負のSTを含む',out_of_range:'ST範囲外',incomplete:'STの欠け・読取不能',six_values:'6艇のSTあり',preclose:'締切前を確認',unverified:'時刻情報が不足',invalid:'保存・判定が締切後または不正'};
 function features(r,decision={},timing='preclose'){
-  const usable=timing==='preclose';return {decision:decision.level||'unknown',venue:String(r.stadium||'unknown'),
+  const usable=timing==='preclose';return {decision:timing==='invalid'?'unknown':decision.level||'unknown',venue:String(r.stadium||'unknown'),
     top:band(usable?bounded(decision.top,1):null,[.48,.62,.8,Infinity],['top_low','top_mid','top_high','top_very_high']),
     gap:band(usable?bounded(decision.gap,1):null,[.14,.25,Infinity],['gap_low','gap_mid','gap_high']),
     coverage:band(usable?bounded(decision.coverage,100):null,[70,82,Infinity],['coverage_low','coverage_mid','coverage_high']),
