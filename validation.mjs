@@ -40,7 +40,18 @@ function render(){
   const cal=d.calibration;if(cal)item('期待値用の確率校正',cal.status==='shadow_evaluation_only'?'後の期間で校正の効果を比較中。本番には未反映。':`準備中：学習 ${cal.train_dates?.length||0}/20日・${cal.train_races||0}/500R、評価 ${cal.test_dates?.length||0}/5日・${cal.test_races||0}/150R`);
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
-  renderVariants();renderGroups();renderDaily();renderShadowSelection();
+  renderVariants();renderGroups();renderDaily();renderShadowSelection();renderOdds();
+}
+function renderOdds(){
+ const panel=document.getElementById('oddsPanel');panel.hidden=document.getElementById('cohort').value==='legacy';
+ const d=data?.odds_diagnostics,body=document.getElementById('oddsRows'),scope=document.getElementById('oddsScope').value,axis=document.getElementById('oddsAxis').value;body.replaceChildren();
+ const s=d?.scopes?.[scope],c=d?.counts;
+ document.getElementById('oddsNote').textContent=d?`締切前の全120点オッズがそろう ${c.eligible_races}R。時刻不良・古いオッズ ${c.odds_missing_stale_or_postclose}R／オッズ欠け ${c.odds_incomplete}Rを除外。選択中：${s?.summary.races||0}R・${s?.summary.tickets||0}点・${s?.summary.dates||0}日。`:'オッズ診断は次の収集更新後に表示します。';
+ for(const g of s?.[axis]||[]){
+  const label=axis==='by_odds'?`${g.lower}倍〜${g.upper==null?'上限なし':g.upper+'倍未満'}`:`${percentage(g.lower)}〜${percentage(g.upper)}${g.upper===1?'以下':'未満'}`;
+  row(body,[label,`${g.tickets}点 / ${g.races}R / ${g.dates}日`,percentage(g.predicted_probability),percentage(g.observed_ticket_hit_rate),percentage(g.estimated_roi),percentage(g.roi),money(g.profit)]);
+ }
+ if(!body.children.length){const tr=element('tr'),td=element('td','対象の確定記録はまだありません','empty');td.colSpan=7;tr.append(td);body.append(tr);}
 }
 function renderShadowSelection(){
  const d=data?.selection_diagnostics,body=document.getElementById('shadowSelectionRows'),axis=document.getElementById('shadowSelectionGroup').value;body.replaceChildren();
@@ -80,6 +91,7 @@ async function refresh(){
 if(typeof document!=='undefined'){
   document.getElementById('refresh').addEventListener('click',refresh);document.getElementById('six').addEventListener('click',()=>{valueMode=false;if(data)render()});document.getElementById('ev').addEventListener('click',()=>{valueMode=true;if(data)render()});document.getElementById('group').addEventListener('change',renderGroups);
   document.getElementById('shadowSelectionGroup').addEventListener('change',renderShadowSelection);
+  document.getElementById('oddsScope').addEventListener('change',renderOdds);document.getElementById('oddsAxis').addEventListener('change',renderOdds);
   document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness','variantsTable'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
   refresh();setInterval(refresh,180000);setInterval(()=>{if(data&&document.getElementById('error').hidden){const s=status(data);const el=document.getElementById('connection');el.textContent=s.text;el.className='pill '+s.kind;}},30000);
 }

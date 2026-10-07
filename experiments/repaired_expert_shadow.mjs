@@ -1,4 +1,5 @@
 import {collectionDaily} from './collection_daily.mjs';
+import {oddsDiagnostics} from './odds_diagnostics.mjs';
 import {analyzeShadowSelections} from '../selection-analysis.mjs';
 import {stReason,stDiagnostics,previewObservation,observeCapture,gapDiagnostics} from './collection_diagnostics.mjs';
 import {officialFallback} from './official_result_fallback.mjs';
@@ -180,6 +181,7 @@ export async function run() {
   const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
   report.collection_daily=collectionDaily(all,{now:Date.now(),program,date,cancelled:String(official.date)===date?official.races:{}});
   report.st_diagnostics=stDiagnostics(all);
+  report.odds_diagnostics=oddsDiagnostics(all);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
   report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};
