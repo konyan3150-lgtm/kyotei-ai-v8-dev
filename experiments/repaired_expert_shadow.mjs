@@ -1,3 +1,4 @@
+import {collectionDaily} from './collection_daily.mjs';
 import {officialFallback} from './official_result_fallback.mjs';
 import fs from 'node:fs';
 import {calibrationReadiness} from './prospective_calibration.mjs';
@@ -170,6 +171,7 @@ export async function run() {
   for(const [d,s] of stores)fs.writeFileSync(path.join(dir,d+'.json'),JSON.stringify(s)+'\n');
   const all=Object.assign({},...[...stores.values()].map(s=>s.records));
   const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
+  report.collection_daily=collectionDaily(all,{now:Date.now(),program,date,cancelled:String(official.date)===date?official.races:{}});
   report.health.revision_rejections=revisionRejections;
   if(revisionRejections.length)report.health.status='needs_attention';
   fs.writeFileSync(path.join(root,'dev/expert-shadow-repaired-evaluation.json'),JSON.stringify(report,null,2)+'\n');

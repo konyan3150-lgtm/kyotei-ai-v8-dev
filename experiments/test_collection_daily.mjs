@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {collectionDaily} from './collection_daily.mjs';
+const now=Date.parse('2026-10-07T12:00:00Z');
+const record=(race,extra={})=>({date:'20261007',stadium:'1',race:String(race),saved_at:'2026-10-07T10:00:00Z',closed_at:'2026-10-07 20:00:00',...extra});
+const records={'20261007_1_1':record(1,{outcome:{}}),'20261007_1_2':record(2),'20261007_1_3':record(3,{cancelled:true}),'20261007_1_4':record(4,{excluded:{}}),'20261007_1_5':record(5,{saved_at:'bad'})};
+const before=JSON.stringify(records);
+const races=Object.fromEntries([1,2,3,4,5,6,7].map(n=>[n,{date:'2026-10-07',closed_at:n===7?'2026-10-07 22:00:00':'2026-10-07 20:00:00'}]));
+const d=collectionDaily(records,{now,date:'20261007',program:{programs:{stadiums:{1:{races}}}},cancelled:{1:{3:{cancelled:true}}}}).days['20261007'];
+assert.equal(d.saved,5);assert.equal(d.preclose_saved,4);assert.equal(d.invalid_time,1);assert.equal(d.settled,1);assert.equal(d.pending,2);assert.equal(d.overdue,2);assert.equal(d.cancelled,1);assert.equal(d.excluded,1);assert.equal(d.closed_program_races,5);assert.equal(d.recorded_closed_races,3);assert.equal(d.unrecorded_closed_races,2);assert.deepEqual(d.unrecorded.map(x=>x.race),[5,6]);assert.equal(JSON.stringify(records),before);
+assert.equal(collectionDaily(records,{now}).days['20261007'].unrecorded_closed_races,null);
+assert.equal(collectionDaily(records,{now,date:'20261007',program:{programs:{stadiums:{}}}}).days['20261007'].closed_program_races,0);
+console.log('Daily collection checks passed: pre-close times, coverage gaps, pending, exclusions, historical unknowns, no record mutations.');

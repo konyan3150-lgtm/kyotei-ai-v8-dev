@@ -26,7 +26,8 @@ async function programChecks(){
  const payload=d=>({data:{date:d,programs:{stadiums:{1:{races:{1:{}}}}}},source:'test'});
  waits[1].resolve(payload('20261007'));await second;waits[0].resolve(payload('20261006'));await first;assert.equal(c.D.date,'20261007');
  // Temporary errors on the same date preserve the previously fetched program.
- c.fetchRaceProgram=async()=>{throw Error('network')};await c.load();assert.equal(c.D.date,'20261007');assert.match(element('status').textContent,/前回取得分/);
+ assert.match(element('status').textContent,/画面取得/);
+ c.fetchRaceProgram=async()=>{throw Error('network')};await c.load();assert.equal(c.D.date,'20261007');assert.match(element('status').textContent,/前回取得分/);assert.match(element('status').textContent,/画面取得/);
 }
 async function syncChecks(){
  let calls=0,fail=false,older=false;const el={textContent:''},events={};

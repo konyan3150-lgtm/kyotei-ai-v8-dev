@@ -11,6 +11,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   assert.equal(await page.locator('.count').count(),6);assert.equal(await page.locator('#variantsTable tr').count(),3);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   fs.mkdirSync('ui-screenshots',{recursive:true});await page.screenshot({path:'ui-screenshots/validation-mobile.png',fullPage:true});
   await page.locator('#ev').click();assert.equal(await page.locator('#ev').getAttribute('aria-pressed'),'true');assert.ok((await page.locator('#comparisonNote').innerText()).includes('最大4点'));
+  fixture.collection_daily={days:{20261007:{saved:2,preclose_saved:2,settled:1,pending:1,overdue:1,unrecorded_closed_races:3},20261006:{saved:1,preclose_saved:1,settled:1,pending:0,overdue:0,unrecorded_closed_races:null}}};
+  await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#dailyCollection').children.length===2);
+  assert.ok((await page.locator('#dailyCollection').innerText()).includes('未確認'));
+  await page.locator('summary').filter({hasText:'日別の保存'}).click();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   const freshTime=fixture.health.checked_at;fixture.health.checked_at=new Date(Date.now()-21*60000).toISOString();await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#connection').textContent.includes('遅れ'));fixture.health.checked_at=freshTime;
   fail=true;await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
   assert.equal(await page.locator('#error').isVisible(),true);assert.equal(await page.locator('.count').count(),6);

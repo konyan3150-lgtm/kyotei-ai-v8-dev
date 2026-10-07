@@ -73,6 +73,8 @@ jobs:
           s = s.replace('<script src="odds-value.js', '<script src="value-record-state.js?value-state-20261004"></script><script src="odds-value.js', 1)
           s = s.replace('server-sync.js?', 'server-sync.js?dev-integrity-20261004-value-state&')
           s = s.replace('src="app2.js?', 'src="app2.js?program-date-20261007&')
+          s = s.replace('src="app2.js?', 'src="app2.js?load-time-20261007&')
+          s = s.replace('server-sync.js?', 'server-sync.js?archive-timeout-20261007&')
           s = s.replace('server-sync.js?', 'server-sync.js?refresh-20261006&')
           for asset in ['server-sync.js', 'odds-value.js', 'recommendation.js']:
               s = s.replace('src="' + asset + '?', 'src="' + asset + '?money-integrity-20261007&')
@@ -93,6 +95,7 @@ jobs:
           node tests/money-integrity.cjs site
           node tests/value-record-state.cjs site
           node tests/data-refresh.cjs site
+          node experiments/test_collection_daily.mjs
           npm install --no-save --ignore-scripts playwright
           npx playwright install --with-deps chromium
           python3 -m http.server 8765 --directory site > /tmp/validation-server.log 2>&1 &

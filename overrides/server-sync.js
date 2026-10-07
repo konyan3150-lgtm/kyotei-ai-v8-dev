@@ -85,11 +85,12 @@
   async function syncArchives(){
     if(archivesPromise)return archivesPromise;
     archivesPromise=(async()=>{
-      const indexRes=await fetch(`${LIVE_BASE}dev/server-predictions-index.json?x=${Date.now()}`,{cache:'no-store'});if(!indexRes.ok)throw Error('archive index HTTP '+indexRes.status);
+      const options=()=>({cache:'no-store',...(typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(20000)}:{})});
+      const indexRes=await fetch(`${LIVE_BASE}dev/server-predictions-index.json?x=${Date.now()}`,options());if(!indexRes.ok)throw Error('archive index HTTP '+indexRes.status);
       const index=await indexRes.json();if(index?.schema!=='kyotei-v8-server-predictions-index'||index?.version!==1)throw Error('archive index format mismatch');
       let imported=0,updated=0;for(const item of index.archives||[]){
         const version=String(item.updated_at||item.record_count||'1');if(archiveVersions[item.file]===version)continue;
-        const res=await fetch(`${LIVE_BASE}dev/${item.file}?v=${encodeURIComponent(version)}`);if(!res.ok)throw Error('archive HTTP '+res.status);
+        const res=await fetch(`${LIVE_BASE}dev/${item.file}?v=${encodeURIComponent(version)}`,options());if(!res.ok)throw Error('archive HTTP '+res.status);
         const archive=await res.json();if(archive?.schema!=='kyotei-v8-server-predictions-archive'||archive?.version!==1||!archive.records)throw Error('archive format mismatch');
         archiveRecords[item.file]=archive.records;archiveVersions[item.file]=version;
         const merged=importRecords(archive.records);imported+=merged.imported;updated+=merged.updated;
