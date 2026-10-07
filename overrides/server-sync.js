@@ -58,12 +58,14 @@
     let local=null;try{local=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
     return displayRecord(choose(local,server))
   };
-  window.v8GetSavedPredictions=()=>{
+  function savedRecords(){
     const records={};
     try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key?.startsWith(PREFIX))continue;try{const r=JSON.parse(localStorage.getItem(key)||'null');if(r)records[key]=r}catch(e){}}}catch(e){}
     for(const [key,server]of Object.entries(serverRecords))records[key]=choose(records[key],server);
-    return Object.fromEntries(Object.entries(records).map(([key,r])=>[key,displayRecord(r)]));
-  };
+    return records;
+  }
+  window.v8GetSavedPredictions=()=>Object.fromEntries(Object.entries(savedRecords()).map(([key,r])=>[key,displayRecord(r)]));
+  window.v8GetSavedPredictionsForAnalysis=savedRecords;
   window.v8GetRecordAudit=filter=>currentData&&window.v8RecordAudit?window.v8RecordAudit({server:serverRecords,displayed:window.v8GetSavedPredictions(),updatedAt:currentData.updated_at,historyStatus:window.__v8HistoryStatus,filter}):null;
   function publish(){
     serverRecords=Object.assign({},...Object.values(archiveRecords),currentData?.records||{});

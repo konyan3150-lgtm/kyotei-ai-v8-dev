@@ -1,3 +1,4 @@
+import {GROUP_LABELS} from './selection-analysis.mjs';
 export const SOURCES={repaired:'https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-dev/main/dev/expert-shadow-repaired-evaluation.json',legacy:'https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-dev/main/dev/expert-shadow-evaluation.json'};
 export const SOURCE=SOURCES.repaired;
 const names={normal:'通常',inside:'イン逃げ',upset:'イン崩れ・穴',exhibition:'展示変化',water:'水面'};
@@ -39,7 +40,13 @@ function render(){
   const cal=d.calibration;if(cal)item('期待値用の確率校正',cal.status==='shadow_evaluation_only'?'後の期間で校正の効果を比較中。本番には未反映。':`準備中：学習 ${cal.train_dates?.length||0}/20日・${cal.train_races||0}/500R、評価 ${cal.test_dates?.length||0}/5日・${cal.test_races||0}/150R`);
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
-  renderVariants();renderGroups();renderDaily();
+  renderVariants();renderGroups();renderDaily();renderShadowSelection();
+}
+function renderShadowSelection(){
+ const d=data?.selection_diagnostics,body=document.getElementById('shadowSelectionRows'),axis=document.getElementById('shadowSelectionGroup').value;body.replaceChildren();
+ document.getElementById('shadowSelectionNote').textContent=d?`仮想通常V8 ${d.summary.races}R・${d.summary.dates}日を集計。件数・観測日数・払戻の偏りを確認してください。`:'条件別診断は次の収集更新後に表示します。';
+ for(const g of d?.axes?.[axis]||[])row(body,[axis==='venue'?(venues[Number(g.key)]||g.key):(GROUP_LABELS[g.key]||g.key),`${g.races}R / ${g.dates}日`,percentage(g.hit_rate),percentage(g.roi),money(g.profit),percentage(g.max_payout_share)]);
+ if(!body.children.length){const tr=element('tr'),td=element('td','条件別の確定記録はまだありません','empty');td.colSpan=6;tr.append(td);body.append(tr);}
 }
 function renderDaily(){
  const body=document.getElementById('dailyCollection');body.replaceChildren();const report=data?.collection_daily;
@@ -72,6 +79,7 @@ async function refresh(){
 }
 if(typeof document!=='undefined'){
   document.getElementById('refresh').addEventListener('click',refresh);document.getElementById('six').addEventListener('click',()=>{valueMode=false;if(data)render()});document.getElementById('ev').addEventListener('click',()=>{valueMode=true;if(data)render()});document.getElementById('group').addEventListener('change',renderGroups);
+  document.getElementById('shadowSelectionGroup').addEventListener('change',renderShadowSelection);
   document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness','variantsTable'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
   refresh();setInterval(refresh,180000);setInterval(()=>{if(data&&document.getElementById('error').hidden){const s=status(data);const el=document.getElementById('connection');el.textContent=s.text;el.className='pill '+s.kind;}},30000);
 }

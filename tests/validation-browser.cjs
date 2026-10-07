@@ -16,6 +16,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   fixture.collection_gaps={reasons:{not_observed_unknown:3}};
   fixture.variants.arms.budget.six_equal={races:1,hit_rate:1,roi:2,investment:600,payout:1200,risk:{max_consecutive_misses:2,max_drawdown:1800}};
   fixture.variants.daily={20261007:{budget:{six_equal:{investment:600,payout:1200}}}};
+  fixture.selection_diagnostics={summary:{races:2,dates:1},axes:{decision:[{key:'confidence_yes',races:2,dates:1,hit_rate:.5,roi:1.25,profit:300,max_payout_share:1}],wind:[{key:'unknown',races:2,dates:1,hit_rate:.5,roi:1.25,profit:300,max_payout_share:1}]}};
   await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#dailyCollection').children.length===2);
   await page.locator('summary').filter({hasText:'日別の保存'}).click();
   assert.ok((await page.locator('#dailyCollection').innerText()).includes('未確認'));
@@ -23,6 +24,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   assert.ok((await page.locator('#stDiagnosticsNote').innerText()).includes('負のST（展示F等） 3R'));
   assert.ok((await page.locator('#variantsTable').innerText()).includes('¥1,800'));
   await page.locator('summary').filter({hasText:'買い方別の日別'}).click();assert.ok((await page.locator('#variantDaily').innerText()).includes('¥600'));
+  await page.locator('#shadowSelectionPanel summary').click();assert.ok((await page.locator('#shadowSelectionRows').innerText()).includes('自信度条件あり'));await page.locator('#shadowSelectionGroup').selectOption('wind');assert.ok((await page.locator('#shadowSelectionRows').innerText()).includes('未記録・未確認'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   const freshTime=fixture.health.checked_at;fixture.health.checked_at=new Date(Date.now()-21*60000).toISOString();await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#connection').textContent.includes('遅れ'));fixture.health.checked_at=freshTime;
   fail=true;await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
