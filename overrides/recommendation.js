@@ -109,7 +109,7 @@
     const box=ensureBox();if(!box)return;
     const cancelled=typeof isRaceCancelled==='function'&&isRaceCancelled(r,D?.programs?.stadiums?.[sid]?.races),cancelledRecs=()=>Object.fromEntries(MODES.map(m=>[m,{level:'none',score:0,reasons:['開催中止のため購入対象外です']} ]));
     let recs=allAssessments(r,rows),isOpen=openForSaving(r),saved=storedAssessments();
-    if(cancelled)recs=cancelledRecs();else if(!isOpen){if(saved)recs=saved;else recs=Object.fromEntries(MODES.map(m=>[m,{level:'none',score:0,reasons:['締切前の判定記録がありません']}]))}
+    if(cancelled)recs=cancelledRecs();else if(savedDecision()?.source==='server'||!isOpen){if(saved)recs=saved;else recs=Object.fromEntries(MODES.map(m=>[m,{level:'none',score:0,reasons:['締切前の判定記録がありません']}]))}
     box.innerHTML=boxHtml('V8 購入判断（期待値対応）',recs,valuePredictionMode,recommendedStats(valuePredictionMode))
     const baseBox=ensureBaseBox();if(!baseBox)return;
     let baseRecs=allBaseAssessments(r,rows),savedBase=storedBaseAssessments();
