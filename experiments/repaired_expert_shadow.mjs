@@ -1,3 +1,4 @@
+import {captureLearningInputs,validateRecentInput,learningInputReport} from './learning_inputs.mjs';
 import {collectionDaily} from './collection_daily.mjs';
 import {oddsDiagnostics} from './odds_diagnostics.mjs';
 import {prepareOddsCalibration,captureOddsCalibration,settleOddsCalibration,oddsCalibrationReport} from './odds_calibration.mjs';
@@ -134,6 +135,9 @@ export async function run() {
     catch(e){originalStatus='fetch_or_parse_error'}
   }
   const now=new Date();
+  let recent=null,recentStatus='missing';
+  try{recent=validateRecentInput(fs.readFileSync(process.env.RECENT_PLAYER_INPUT||'/tmp/recent-player-input.json','utf8'),date,verified.proof);recentStatus='verified';}
+  catch(e){recentStatus='unavailable: '+String(e.message).slice(0,200);}
   const eligibleKeys=[],revisionRejections=[];
   for(const [sid,v] of Object.entries(program?.programs?.stadiums||{}))for(const [n,race] of Object.entries(v.races||{})){
     const k=`${date}_${Number(sid)}_${Number(n)}`,officialRace=String(official.date)===date?official.races?.[String(Number(sid))]?.[String(Number(n))]:null;
@@ -147,7 +151,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6){observeCapture(inputObservations.records,k,observation,'invalid_model_rows');continue;}
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v2-original';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
+    if(rec){rec.learning_inputs=captureLearningInputs({race,rows,date,stadium:sid,capturedAt:rec.saved_at,recent});rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v3-learning-inputs';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
     else observeCapture(inputObservations.records,k,observation,'snapshot_rejected');
   }
   let fallbackAttempts=0;
@@ -187,6 +191,7 @@ export async function run() {
   const report={calibration:calibrationReadiness(all),variants:evaluateVariants(all),cohort:COHORT,input_provenance:verified.proof,...evaluate(all),health:health(all,{now:new Date(),eligibleKeys,originalStatus,programStatus:program?'available':'program_unpublished'})};
   report.collection_daily=collectionDaily(all,{now:Date.now(),program,date,cancelled:String(official.date)===date?official.races:{}});
   report.st_diagnostics=stDiagnostics(all);
+  report.learning_inputs={...learningInputReport(all),current_recent_source_status:recentStatus};
   report.odds_diagnostics=oddsDiagnostics(all);
   report.odds_calibration=oddsCalibrationReport(all,calibrationPrepared);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));

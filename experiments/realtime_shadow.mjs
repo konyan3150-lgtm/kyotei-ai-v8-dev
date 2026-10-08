@@ -44,6 +44,8 @@ export function preserveRevision(previous,next){
     if(previous.odds_snapshot_at!==next.odds_snapshot_at||!equal(previous.baseline_distribution.map(x=>[x.combo,x.odds]),next.baseline_distribution.map(x=>[x.combo,x.odds])))reasons.push('odds_changed');
     if(!equal(previous.input_state?.water,next.input_state?.water))reasons.push('water_changed');
     if(!equal(previous.input_state?.exhibition,next.input_state?.exhibition))reasons.push('exhibition_changed');
+    const learning=x=>x?{...x,captured_at:null}:null;
+    if(!equal(learning(previous.learning_inputs),learning(next.learning_inputs)))reasons.push('learning_inputs_changed');
     if(!equal(previous.value_arms,next.value_arms))reasons.push('ev_decision_changed');
   }
   if(previous&&!reasons.length)return previous;
