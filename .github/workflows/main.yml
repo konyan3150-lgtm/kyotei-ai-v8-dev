@@ -100,6 +100,9 @@ jobs:
           for module in ['results.mjs', 'validation.mjs']:
               target = public / module
               target.write_text(target.read_text().replace("'./selection-analysis.mjs'", "'./selection-analysis.mjs?v=" + digest('selection-analysis.mjs') + "'"))
+          for asset in ['odds-value.js', 'recommendation.js']:
+              s = re.sub(r'src="' + re.escape(asset) + r'(?:\?[^"]*)?"', lambda match: 'src="' + asset + '?v=' + digest(asset) + '"', s)
+          p.write_text(s)
           for page in ['results.html', 'validation.html']:
               target = public / page
               target.write_text(re.sub(r'(src|href)="(server-sync\.js|results\.mjs|validation\.mjs|selection\.css)(?:\?[^"]*)?"', lambda match: match.group(1) + '="' + match.group(2) + '?v=' + digest(match.group(2)) + '"', target.read_text()))
