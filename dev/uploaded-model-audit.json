@@ -1,0 +1,157 @@
+{
+  "version": "uploaded-v8-assets-audit-v1",
+  "sources": {
+    "archive_sha256": "35c380da92fe363cb146292ca48945f5ff4c01fe63d3e5eaf3fe1c32e1b440f3",
+    "csv_sha256": "e3baae60d42389f38a32b7600f403f1eaa90f8198628d521faed637b5ca178e5",
+    "model_artifact_sha256": {
+      "models_v8/backtest_v8_selected_test.csv": "3695cb17d91b2510afe4d5efc8ad98e7dc20cac25c536aeced83d1aeff39a784",
+      "models_v8/rank1.joblib": "69c75cc6532316424c97c71bdd00fc725d8bf13b990a190aa026c5ef807668d4",
+      "models_v8/v8_rule_candidates.csv": "9a73063618eedeeb603c6b17d8d3d677ff455a5a5810edd61006eb18fb04dfeb",
+      "models_v8/cal_rank2.joblib": "480a6fa56dcdddc5535ba0fef839ec0a3a6f3bed6894b32a0989fbe339d87148",
+      "models_v8/cal_rank1.joblib": "23931ea8b8f95a561c2f0ea703917a42701696b7542d88f53d2edf962417139e",
+      "models_v8/rank3.joblib": "5289e16102f589e7ca7ac7fb560f6082f64596dd70c39ece11c14ba9df1ac824",
+      "models_v8/selective_rule.json": "3f645678a0f4738606b565723c68a8a9780261b77e1ac88522cec7ac1a6f240a",
+      "models_v8/cal_rank3.joblib": "fcae932a47244d27a88bf5e1aa08a917fa8c77e7e61f63dbf96c1502ebc87005",
+      "models_v8/meta.joblib": "5e87c2e0ceac1a0640b97a7658c3bfad2b770d35fc00e2b2b1194124d8103f6d",
+      "models_v8/rank2.joblib": "235b5dbe2118385ade7c386bd697ee933b826f216c69d665d325c92d159bfe60",
+      "models_v8/metrics.json": "609382383bcdd9f9ca9aca8542eb2c31b405643606e4c8e7dd5c7a94ea5ab8f5"
+    }
+  },
+  "data": {
+    "races": 55301,
+    "columns": 94,
+    "periods": {
+      "train": {
+        "races": 41441,
+        "days": 275,
+        "first_date": "2024-04-01",
+        "last_date": "2024-12-31"
+      },
+      "validate": {
+        "races": 6862,
+        "days": 44,
+        "first_date": "2025-01-01",
+        "last_date": "2025-02-13"
+      },
+      "test": {
+        "races": 6998,
+        "days": 46,
+        "first_date": "2025-02-14",
+        "last_date": "2025-03-31"
+      }
+    },
+    "chronological_separation": true,
+    "errors": {},
+    "empty_cells_by_column": {},
+    "proposed_validation_partition": {
+      "calibration": {
+        "first_date": "2025-01-01",
+        "last_date": "2025-01-22",
+        "races": 3611,
+        "days": 22
+      },
+      "rule_selection": {
+        "first_date": "2025-01-23",
+        "last_date": "2025-02-13",
+        "races": 3251,
+        "days": 22
+      }
+    }
+  },
+  "features": {
+    "count": 19,
+    "names": [
+      "PLACE",
+      "RACE",
+      "MONTH",
+      "DAYOFWEEK",
+      "LANE",
+      "AGE",
+      "WEIGHT",
+      "ST_AVG",
+      "CLASS",
+      "L",
+      "F",
+      "WIN1RATE",
+      "WIN2RATE",
+      "LOCALWIN1RATE",
+      "LOCALWIN2RATE",
+      "MOTORWIN2RATE",
+      "MOTORWIN3RATE",
+      "BOATWIN2RATE",
+      "BOATWIN3RATE"
+    ],
+    "outcome_columns_used": [],
+    "missing_source_columns": [],
+    "as_of_capture_provenance": "not_present_in_csv; historical rate cutoff cannot be verified"
+  },
+  "training_source_review": {
+    "model_fit_train_only": true,
+    "calibrator_fit_validate": true,
+    "rule_search_validate": true,
+    "same_validate_used_for_calibration_and_rule_selection": true,
+    "caution": "Shared validation may overstate tuning results; it does not by itself leak test labels. Static source review, not proof of how uploaded binary artifacts were built."
+  },
+  "saved_evaluation": {
+    "rule_validation": {
+      "races": 370,
+      "hits": 138,
+      "hit_rate": 0.372972972972973,
+      "bet_yen": 111000.0,
+      "return_yen": 98530.0,
+      "profit_yen": -12470.0,
+      "roi": 0.8876576576576577
+    },
+    "rule_test": {
+      "races": 376,
+      "hits": 123,
+      "hit_rate": 0.3271276595744681,
+      "bet_yen": 112800.0,
+      "return_yen": 86400.0,
+      "profit_yen": -26400.0,
+      "roi": 0.7659574468085106
+    },
+    "all_test": {
+      "races": 6998,
+      "hits": 1451,
+      "hit_rate": 0.20734495570162903,
+      "bet_yen": 2099400.0,
+      "return_yen": 1627680.0,
+      "profit_yen": -471720.0,
+      "roi": 0.775307230637325
+    },
+    "brier": {
+      "rank1": {
+        "raw": 0.0986937724155054,
+        "calibrated": 0.09877441474294266,
+        "delta_calibrated_minus_raw": 8.064232743724975e-05
+      },
+      "rank2": {
+        "raw": 0.1331419748041484,
+        "calibrated": 0.13320693265879222,
+        "delta_calibrated_minus_raw": 6.495785464380455e-05
+      },
+      "rank3": {
+        "raw": 0.13583369700522072,
+        "calibrated": 0.1358465819923103,
+        "delta_calibrated_minus_raw": 1.288498708959529e-05
+      }
+    },
+    "test_backtest_recomputed": {
+      "races": 376,
+      "hits": 123,
+      "bet_yen": 112800.0,
+      "return_yen": 86400.0,
+      "roi": 0.7659574468085106
+    },
+    "backtest_matches_saved_metrics": true,
+    "roi_difference_percentage_points": -0.9349783828814351,
+    "test_status": "already_reported; unsuitable as untouched test for future rule tuning"
+  },
+  "next_data_requirements": {
+    "recent_player_course_venue": "Registration IDs and dated, verified result history; IDs absent from this CSV.",
+    "exhibition_F": "Observed preclose signed exhibition ST; ST_AVG is historical average, not exhibition ST.",
+    "odds_deterioration": "Timestamped preclose odds; payout column covers winning combination only, never all 120 odds."
+  },
+  "decision": "Do not promote uploaded selective rule or recalibration on these results. Preserve assets; separate calibration/rule-selection periods and evaluate frozen candidates on later unseen data."
+}
