@@ -29,6 +29,7 @@ jobs:
       - name: Test shadow gates
         run: |
           node experiments/test_odds_calibration.mjs
+          node experiments/test_robust_ev.mjs
           node experiments/test_odds_diagnostics.mjs
           node tests/selection-analysis.mjs
           node experiments/test_collection_diagnostics.mjs
@@ -68,5 +69,6 @@ jobs:
           name: shadow-collection-diagnostics
           path: dev/shadow-collection-run.json
           if-no-files-found: ignore
+
 
 

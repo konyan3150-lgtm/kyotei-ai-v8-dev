@@ -3,6 +3,7 @@ import {auditRecord} from './shadow_diagnostics.mjs';
 import {temperatureDistribution} from './prospective_calibration.mjs';
 import {evTickets,EV_POLICY} from './ev_drift.mjs';
 import {riskMetrics} from './variant_risk.mjs';
+import {robustEvCapture,robustEvReport} from './robust_ev.mjs';
 
 export const ODDS_CALIBRATION_POLICY=Object.freeze({version:'odds-calibration-prospective-v1',train_dates:20,min_train_races:500,min_test_dates:5,min_test_races:150,
   temperatures:[1,.75],market_weights:[0,.25,.5,.75],ev_policy:EV_POLICY.version});
@@ -46,7 +47,7 @@ export function captureOddsCalibration(r,model){
  if(!eligible(r)||Date.parse(r.saved_at)<Date.parse(model.fitted_at)||r.date<=model.train_dates.at(-1))return null;
  const distribution=oddsCalibratedDistribution(r.baseline_distribution,model);
  return {version:model.version,model_fingerprint:model.train_fingerprint,model_fitted_at:model.fitted_at,captured_at:r.saved_at,
-   temperature:model.temperature,market_weight:model.market_weight,distribution,value:evTickets(distribution,r.baseline_distribution,r.odds_snapshot_at,r.saved_at)};
+   temperature:model.temperature,market_weight:model.market_weight,distribution,value:evTickets(distribution,r.baseline_distribution,r.odds_snapshot_at,r.saved_at),robust_ev:robustEvCapture(distribution,r.baseline_distribution,r.odds_snapshot_at,r.saved_at)};
 }
 function captureValid(r,c){
  if(!c||c.version!==ODDS_CALIBRATION_POLICY.version||c.captured_at!==r.saved_at||!Number.isFinite(Date.parse(c.model_fitted_at))||Date.parse(c.model_fitted_at)>Date.parse(r.saved_at)||!Array.isArray(c.distribution)||c.distribution.length!==120||new Set(c.distribution.map(x=>x.combo)).size!==120||c.distribution.some(x=>!Number.isFinite(x.prob)||x.prob<0||x.prob>1)||Math.abs(c.distribution.reduce((s,x)=>s+x.prob,0)-1)>1e-8||c.value?.status!=='shadow_estimate_uncalibrated'||!Array.isArray(c.value.items))return false;
@@ -68,6 +69,8 @@ export function oddsCalibrationReport(records,prepared){
    interpretation:'Fit once on first20 completed past dates with >=500 complete preclose-odds races. Freeze persisted model; compare only snapshots captured after fitting, never retrofit completed races. Same saved odds and fixed EV policy. Five future dates and >=150 paired settled races required for review. No automatic production adoption.'};
  const rs=model?Object.values(records).filter(r=>eligible(r)&&captureValid(r,r.odds_calibration_shadow)&&r.date>model.train_dates.at(-1)&&r.odds_calibration_shadow?.model_fingerprint===model.train_fingerprint&&r.odds_calibration_shadow.model_fitted_at===model.fitted_at&&r.odds_calibration_shadow.temperature===model.temperature&&r.odds_calibration_shadow.market_weight===model.market_weight&&r.odds_calibration_shadow.captured_at===r.saved_at&&Date.parse(r.saved_at)>=Date.parse(model.fitted_at)&&r.outcome?.odds_calibration&&r.outcome?.value_metrics?.baseline&&r.outcome?.metrics?.baseline):[];
  base.test_dates=[...new Set(rs.map(r=>r.date))].sort();base.test_races=rs.length;base.ready_for_review=base.test_dates.length>=5&&rs.length>=150;
+ base.robust_ev=robustEvReport(rs);
+ if(!model)base.robust_ev.status='waiting_for_calibration';
  if(base.ready_for_review)base.status='future_comparison_ready';
  if(!rs.length)return base;
  base.arms={};for(const arm of ['raw','calibrated']){
@@ -78,3 +81,4 @@ export function oddsCalibrationReport(records,prepared){
  }
  return base;
 }
+

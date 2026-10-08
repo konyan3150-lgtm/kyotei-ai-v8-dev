@@ -41,6 +41,10 @@ function render(){
   const oc=d.odds_calibration;if(oc){
     item('オッズを使う確率補正',oc.model_fitted_at?`補正を固定済み。固定後の検証 ${oc.test_dates?.length||0}/5日・${oc.test_races||0}/150R。${oc.ready_for_review?'比較を確認できる段階。':'まだ改善の判断は保留。'}`:`準備中：過去 ${oc.train_dates?.length||0}/20日・締切前オッズあり ${oc.train_races||0}/500R。終了済みレースに補正買い目を追加しません。`);
     if(oc.arms)item('固定後の期待値方式の仮想比較',`補正前 ${oc.arms.raw.bought_races}R・回収率 ${percentage(oc.arms.raw.roi)}／補正後 ${oc.arms.calibrated.bought_races}R・回収率 ${percentage(oc.arms.calibrated.roi)}。本番には未反映。`);
+    const re=oc.robust_ev;if(re){
+      item('確率・オッズ下落を見込む購入条件',`補正後の既存判定に、確率10%減・オッズ10%減を追加した固定条件を比較。誤差の保証ではなく仮定の検証です。1R最大400円。${re.status==='waiting_for_calibration'?'補正モデル確定待ち。':`同じ対象 ${re.test_races}R・${re.test_dates.length}/5日（150R必要）。${re.ready_for_review?'比較確認可能。':'判断保留。'}`}`);
+      if(re.test_races)for(const [key,label] of [['reference','補正後の既存条件'],['conservative','下落を見込む条件']]){const a=re.arms[key];item(label,`購入 ${a.bought_races}R・見送り ${a.skipped_races}R／的中率 ${percentage(a.hit_rate)}・回収率 ${percentage(a.roi)}／仮想収支 ${money(a.profit)}・投資 ${money(a.investment)}・払戻 ${money(a.payout)}／最大下落 ${money(a.risk.max_drawdown)}・最大連続不的中 ${a.risk.max_consecutive_misses}R`);}
+    }
   }
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
@@ -99,3 +103,4 @@ if(typeof document!=='undefined'){
   document.getElementById('cohort').addEventListener('change',()=>{data=null;for(const id of ['counts','comparison','groups','health','readiness','variantsTable'])document.getElementById(id).replaceChildren();document.getElementById('connection').textContent='データを取得中…';document.getElementById('updated').textContent='収集時刻を確認中';document.getElementById('sample').textContent='結果待ち';document.getElementById('cohortNote').textContent=document.getElementById('cohort').value==='legacy'?'修復前の参考記録を読み込み中。':'修復済み履歴の検証を読み込み中。';refresh();});
   refresh();setInterval(refresh,180000);setInterval(()=>{if(data&&document.getElementById('error').hidden){const s=status(data);const el=document.getElementById('connection');el.textContent=s.text;el.className='pill '+s.kind;}},30000);
 }
+

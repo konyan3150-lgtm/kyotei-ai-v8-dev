@@ -21,6 +21,11 @@ r.odds_calibration_shadow=captureOddsCalibration(r,fitted.model);assert.ok(r.odd
 const one=oddsCalibrationReport({r},fitted);assert.equal(one.test_races,1);assert.equal(one.ready_for_review,false);assert.equal(one.arms.raw.bought_races,1);assert.equal(one.arms.calibrated.bought_races,0);assert.equal(one.arms.calibrated.roi,null);assert.equal(one.production_changed,false);
 const test={};for(let day=21;day<=25;day++)for(let n=1;n<=30;n++){const x=fixture(day,n);x.odds_calibration_shadow=captureOddsCalibration(x,fitted.model);x.outcome.odds_calibration=settleOddsCalibration(x);test[`${day}_${n}`]=x;}
 const checked=oddsCalibrationReport(test,fitted);assert.equal(checked.test_races,150);assert.equal(checked.test_dates.length,5);assert.equal(checked.ready_for_review,true);assert.equal(checked.production_changed,false);
+assert.equal(checked.robust_ev.test_races,150);assert.equal(checked.robust_ev.ready_for_review,true);
+assert.equal(checked.robust_ev.arms.reference.investment,checked.arms.calibrated.investment);
+assert.equal(checked.robust_ev.arms.reference.payout,checked.arms.calibrated.payout);
+const oldCapture=structuredClone(r);delete oldCapture.odds_calibration_shadow.robust_ev;
+assert.equal(oddsCalibrationReport({oldCapture},fitted).robust_ev.test_races,0);
 const corrupt=structuredClone(r);corrupt.odds_calibration_shadow.model_fitted_at='2026-10-22T00:00:00Z';assert.equal(oddsCalibrationReport({corrupt},fitted).test_races,0);assert.equal(settleOddsCalibration(corrupt),null);
 for(const change of [x=>x.odds_calibration_shadow.distribution[0].prob=-1,x=>x.odds_calibration_shadow.captured_at='2026-10-21T00:00:00Z',x=>x.odds_calibration_shadow.model_fitted_at='invalid',x=>x.cancelled=true,x=>x.excluded={reason:'refund'}]){const bad=structuredClone(r);change(bad);assert.equal(settleOddsCalibration(bad),null);assert.equal(oddsCalibrationReport({bad},fitted).test_races,0);}
 // Exercise actual collector snapshot and settlement, keeping existing picks intact.
@@ -29,3 +34,4 @@ for(const x of r.baseline_distribution){const [a,b,c]=x.combo.split('-');odds.tr
 const rec=snapshot({race:{date:'2026-10-21',closed_at:'2026-10-21 10:15:00'},rows,expert:{version:2,weights:{inside:0,upset:0}},makeBets:rs=>allCombinations(rs).slice(0,6),date:r.date,stadium:'1',number:'1',now:new Date(r.saved_at),odds});rec.cohort='expert-shadow-official-v1';rec.odds_calibration_shadow=captureOddsCalibration(rec,fitted.model);const picks=JSON.stringify(rec.baseline_picks);
 assert.ok(settle(rec,{combination:combos[0],amount:200}));assert.ok(rec.outcome.odds_calibration);assert.equal(JSON.stringify(rec.baseline_picks),picks);assert.equal(rec.outcome.metrics.baseline.investment,600);assert.equal(settle(rec,{combination:combos[0],amount:200}),false);
 console.log('Odds calibration passed: 20 completed dates / 500 complete-odds races, immutable training and frozen model, no retrofits, capture/settlement integration, paired EV skips and future-only holdout');
+
