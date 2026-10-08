@@ -93,7 +93,8 @@ jobs:
           link = '<p style="margin:6px 0 12px;text-align:right"><a href="results.html" style="color:#dfc4ff;font-size:15px;text-decoration:none;margin-right:16px">的中結果一覧 ↗</a><a href="validation.html" style="color:#a8caff;font-size:13px;text-decoration:none">開発検証・収集状況 ↗</a></p>'
           if marker not in s:
               raise RuntimeError('Development homepage insertion point missing')
-          p.write_text(s.replace(marker, link + marker, 1))
+          s = s.replace(marker, link + marker, 1)
+          p.write_text(s)
           import hashlib, re
           public = Path('site')
           digest = lambda asset: hashlib.sha256((public / asset).read_bytes()).hexdigest()[:12]
@@ -103,6 +104,8 @@ jobs:
           for asset in ['odds-value.js', 'recommendation.js']:
               s = re.sub(r'src="' + re.escape(asset) + r'(?:\?[^"]*)?"', lambda match: 'src="' + asset + '?v=' + digest(asset) + '"', s)
           p.write_text(s)
+          if 'href="results.html"' not in p.read_text() or 'href="validation.html"' not in p.read_text():
+              raise RuntimeError('Development navigation links missing from final homepage')
           for page in ['results.html', 'validation.html']:
               target = public / page
               target.write_text(re.sub(r'(src|href)="(server-sync\.js|results\.mjs|validation\.mjs|selection\.css)(?:\?[^"]*)?"', lambda match: match.group(1) + '="' + match.group(2) + '?v=' + digest(match.group(2)) + '"', target.read_text()))
