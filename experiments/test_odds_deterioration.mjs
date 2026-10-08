@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {oddsDeterioration} from './odds_deterioration.mjs';
+const combos=[];for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(new Set([a,b,c]).size===3)combos.push(`${a}-${b}-${c}`);
+function fixture(){const d=combos.map(combo=>({combo,prob:1/120,odds:10}));return {cohort:'expert-shadow-official-v1',date:'20261008',stadium:'1',race:'1',saved_at:'2026-10-08T01:00:00Z',closed_at:'2026-10-08 10:05:00',odds_snapshot_at:'2026-10-08T00:50:00Z',baseline_distribution:d,candidate_distribution:d.map(x=>({...x})),baseline_picks:combos.slice(0,6),candidate_picks:combos.slice(0,6),outcome:{result:combos[0],amount:800},value_arms:{baseline:{status:'shadow_estimate_uncalibrated',items:[{...d[0],stake:200}],investment:200}}};}
+const r=fixture(),before=JSON.stringify(r),report=oddsDeterioration({r}),six=report.scopes.six_equal,ev=report.scopes.ev_saved;
+assert.equal(JSON.stringify(r),before);assert.equal(report.counts.eligible_races,1);assert.equal(six.investment,600);assert.equal(six.actual_payout,800);assert.equal(six.saved_odds_realized_payout,1000);assert.ok(Math.abs(six.estimated_payout-50)<1e-9);assert.equal(ev.actual_payout,1600);assert.equal(ev.saved_odds_realized_payout,2000);assert.equal(ev.payout_ratio_actual_to_saved_odds,.8);assert.equal(ev.concentration.roi_if_largest_payout_zeroed,0);
+assert.ok(Math.abs(six.odds_movement_roi_percentage_points+six.probability_and_sampling_residual_percentage_points-100*(six.actual_roi-six.estimated_roi))<1e-9);
+assert.equal(six.by_date['20261008'].actual_payout,six.actual_payout);
+const lose=fixture();lose.outcome.result=combos[119];const lost=oddsDeterioration({lose}).scopes.ev_saved;assert.equal(lost.actual_roi,0);assert.equal(lost.payout_ratio_actual_to_saved_odds,null);assert.equal(lost.winning_ticket_ratios.observations,0);
+const skip=fixture();skip.value_arms.baseline={status:'shadow_estimate_uncalibrated',items:[],investment:0};assert.equal(oddsDeterioration({skip}).scopes.ev_saved.actual_roi,null);
+for(const change of [x=>x.odds_snapshot_at='2026-10-08T00:49:59Z',x=>x.odds_snapshot_at='2026-10-08T01:01:00Z',x=>x.saved_at='2026-10-08T01:05:00Z',x=>x.cancelled=true,x=>x.excluded={},x=>x.outcome.result='1-1-2',x=>x.baseline_distribution[119].odds=null]){const x=fixture();change(x);assert.equal(oddsDeterioration({x}).counts.eligible_races,0);}
+const tamper=fixture();tamper.value_arms.baseline.items[0].odds=999;assert.equal(oddsDeterioration({tamper}).counts.ev_unavailable_or_inconsistent,1);
+console.log('Odds deterioration passed: payout units, exact decomposition, skips, winning-only ratios, concentration stress, integrity/time/refund exclusions and immutable inputs.');

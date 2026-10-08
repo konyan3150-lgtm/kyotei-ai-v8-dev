@@ -1,3 +1,4 @@
+import {oddsDeterioration} from './odds_deterioration.mjs';
 import {captureLearningInputs,validateRecentInput,learningInputReport} from './learning_inputs.mjs';
 import {collectionDaily} from './collection_daily.mjs';
 import {oddsDiagnostics} from './odds_diagnostics.mjs';
@@ -193,6 +194,7 @@ export async function run() {
   report.st_diagnostics=stDiagnostics(all);
   report.learning_inputs={...learningInputReport(all),current_recent_source_status:recentStatus};
   report.odds_diagnostics=oddsDiagnostics(all);
+  report.odds_deterioration=oddsDeterioration(all);
   report.odds_calibration=oddsCalibrationReport(all,calibrationPrepared);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
