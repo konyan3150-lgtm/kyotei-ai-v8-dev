@@ -1584,7 +1584,7 @@
   "paired_hit_difference": 0,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-10-08T14:28:34.714Z",
+    "checked_at": "2026-10-08T14:32:24.284Z",
     "eligible_preclose_races": 0,
     "captured_preclose_races": 0,
     "missing_preclose_records": [],
@@ -1592,7 +1592,7 @@
     "overdue_results": [
       {
         "key": "20261008_14_5",
-        "minutes_since_close": 781,
+        "minutes_since_close": 785,
         "level": "high"
       }
     ],
@@ -1603,7 +1603,7 @@
     "revision_rejections": []
   },
   "collection_daily": {
-    "checked_at": "2026-10-08T14:28:34.715Z",
+    "checked_at": "2026-10-08T14:32:24.285Z",
     "days": {
       "20261003": {
         "saved": 134,
@@ -2362,7 +2362,68 @@
     "interpretation": "Fit once on first20 completed past dates with >=500 complete preclose-odds races. Freeze persisted model; compare only snapshots captured after fitting, never retrofit completed races. Same saved odds and fixed EV policy. Five future dates and >=150 paired settled races required for review. No automatic production adoption.",
     "test_dates": [],
     "test_races": 0,
-    "ready_for_review": false
+    "ready_for_review": false,
+    "robust_ev": {
+      "policy": {
+        "version": "robust-ev-prospective-v1",
+        "starts_at": "2026-10-08T14:30:00Z",
+        "probability_factor": 0.9,
+        "odds_factor": 0.9,
+        "min_ev": 1.08,
+        "max_tickets": 4,
+        "stake": 100,
+        "min_test_dates": 5,
+        "min_test_races": 150
+      },
+      "status": "waiting_for_calibration",
+      "test_dates": [],
+      "test_races": 0,
+      "ready_for_review": false,
+      "production_changed": false,
+      "interpretation": "Fixed calibrated EV comparison, same eligible races and 400 yen maximum per race. Additional 10% probability and 10% odds reductions are hypothetical stress scenarios, not statistical confidence bounds. Use actual settled payouts. Never retrofit missing captures or auto-promote.",
+      "arms": {
+        "reference": {
+          "eligible_races": 0,
+          "bought_races": 0,
+          "skipped_races": 0,
+          "hits": 0,
+          "hit_rate": null,
+          "investment": 0,
+          "payout": 0,
+          "profit": 0,
+          "roi": null,
+          "risk": {
+            "profit": 0,
+            "max_consecutive_misses": 0,
+            "max_drawdown": 0,
+            "worst_day_profit": null,
+            "daily_profit": {},
+            "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
+            "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
+          }
+        },
+        "conservative": {
+          "eligible_races": 0,
+          "bought_races": 0,
+          "skipped_races": 0,
+          "hits": 0,
+          "hit_rate": null,
+          "investment": 0,
+          "payout": 0,
+          "profit": 0,
+          "roi": null,
+          "risk": {
+            "profit": 0,
+            "max_consecutive_misses": 0,
+            "max_drawdown": 0,
+            "worst_day_profit": null,
+            "daily_profit": {},
+            "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
+            "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
+          }
+        }
+      }
+    }
   },
   "selection_diagnostics": {
     "kind": "shadow_baseline_confidence_conditions",
