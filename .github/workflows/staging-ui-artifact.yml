@@ -69,6 +69,9 @@ jobs:
           python3 -m http.server 8765 --directory site > /tmp/staging-server.log 2>&1 &
           node tests/validation-browser.cjs
           node tests/results-browser.cjs
+      - name: Verify homepage with real feeds (read-only)
+        timeout-minutes: 8
+        run: node tests/homepage-live-browser.cjs
       - name: Upload inspectable staging files (never publish)
         if: always()
         uses: actions/upload-artifact@v4
