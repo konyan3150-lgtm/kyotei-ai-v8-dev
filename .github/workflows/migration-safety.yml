@@ -51,6 +51,19 @@ jobs:
             ${{ runner.temp }}/production-history-totals.json
             ${{ runner.temp }}/history-display-coverage.json
           retention-days: 30
+      - name: Audit current production index and archives (read-only)
+        run: |
+          set -euo pipefail
+          root='https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/main/dev'
+          mkdir -p /tmp/v8-current-live/server-predictions-archive
+          for file in server-predictions.json server-predictions-index.json; do
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
+          done
+          jq -r '.archives[].file' /tmp/v8-current-live/server-predictions-index.json | while IFS= read -r file; do
+            [[ "$file" =~ ^server-predictions-archive/[0-9]{6}\\.json$ ]] || exit 1
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
+          done
+          node scripts/check-current-live-index.mjs /tmp/v8-current-live
       - name: Report
         if: always()
         run: |
