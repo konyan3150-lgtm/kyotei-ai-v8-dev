@@ -80,3 +80,37 @@ jobs:
             exit 1
           fi
           echo "No Expert shadow archive JSON files deleted"
+      - name: Validate Expert shadow evaluation accounting
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, math, pathlib, sys
+          path = pathlib.Path('dev/expert-shadow-evaluation.json')
+          if not path.exists():
+              print('Expert evaluation file absent; skipping optional check')
+              sys.exit(0)
+          data = json.loads(path.read_text(encoding='utf-8'))
+          errors = []
+          for name, arm in data.get('value_arms', {}).items():
+              if not isinstance(arm, dict):
+                  errors.append(f'{name}: invalid arm')
+                  continue
+              for key in ('eligible_races', 'bought_races', 'skipped_races', 'hits', 'investment', 'payout'):
+                  value = arm.get(key)
+                  if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) or value < 0:
+                      errors.append(f'{name}: invalid {key}')
+              if any(f'{name}: invalid {key}' in errors for key in ('eligible_races', 'bought_races', 'skipped_races', 'hits', 'investment', 'payout')):
+                  continue
+              if arm['bought_races'] + arm['skipped_races'] != arm['eligible_races']:
+                  errors.append(f'{name}: race accounting mismatch')
+              if arm['hits'] > arm['bought_races']:
+                  errors.append(f'{name}: hits exceed bought races')
+              investment = arm['investment']
+              roi = arm.get('roi')
+              if investment > 0 and (not isinstance(roi, (int, float)) or not math.isclose(roi, arm['payout']/investment, rel_tol=1e-6)):
+                  errors.append(f'{name}: ROI does not match payout / investment')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('Expert shadow accounting passed')
+          PY
