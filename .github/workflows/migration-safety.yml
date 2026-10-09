@@ -19,6 +19,10 @@ jobs:
           node-version: '24'
       - name: Verify migration safety invariants
         run: |
+          node --check experiments/official_result_fallback.mjs
+          node experiments/test_official_result_fallback.mjs
+          node experiments/test_prospective_input.mjs
+          node experiments/test_exhibition_health.mjs
           node --check overrides/server-sync.js
           for file in tests/*.test.mjs; do node --check "$file"; done
           node --check scripts/production-history-totals.mjs
