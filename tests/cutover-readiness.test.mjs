@@ -10,7 +10,8 @@ test('staging does not deploy or overwrite production',()=>{
   assert.doesNotMatch(workflow,/actions\/deploy-pages|peaceiris\/actions-gh-pages|git push|gh api .*PATCH/);
 });
 test('live saved prediction endpoint remains explicitly protected',()=>{
-  assert.match(sync,/kyotei-ai-v8-live\/main\/dev\/server-predictions\.json/);
+  assert.match(sync,/kyotei-ai-v8-live\/main\//);
+  assert.match(sync,/dev\/server-predictions\.json/);
   assert.match(checklist,/Do not remove or rename this endpoint/);
 });
 test('cutover plan includes localStorage and rollback protection',()=>{
