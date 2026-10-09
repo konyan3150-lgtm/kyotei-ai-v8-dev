@@ -46,3 +46,14 @@ test('open unsaved V8 race can show current recommendations',()=>{
   assert.match(x.html,/6-5-4/);
   assert.equal(x.recalculations,1);
 });
+
+test('legacy saved V8 picks render after close without model',()=>{
+  const x=render({closed:true,stored:{mode:'hit',picks:['3-2-1']}});
+  assert.match(x.html,/3-2-1/);
+  assert.equal(x.recalculations,0);
+});
+test('legacy saved V8 picks never leak across prediction modes',()=>{
+  const x=render({closed:true,stored:{mode:'balance',picks:['3-2-1']}});
+  assert.doesNotMatch(x.html,/3-2-1/);
+  assert.equal(x.recalculations,0);
+});
