@@ -246,5 +246,10 @@ jobs:
               sys.exit(1)
           print('Expert evaluation history regression check passed')
           PY
+      - name: Check results and selection module syntax
+        run: |
+          node --check results.mjs
+          node --check selection-analysis.mjs
+          node --check tests/mode-isolation.test.mjs
       - name: Test V8 and EV saved mode isolation
         run: node --test tests/mode-isolation.test.mjs
