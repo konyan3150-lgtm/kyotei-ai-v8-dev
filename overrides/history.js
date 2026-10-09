@@ -15,7 +15,7 @@
     const map=new Map();
     for(let i=0;i<localStorage.length;i++){
       const key=localStorage.key(i);if(!key?.startsWith(PREFIX))continue;
-      try{const x=JSON.parse(localStorage.getItem(key)||'null');if(x?.source==='server')map.set(`${x.date}_${x.stadium}_${x.race}`,x)}catch(e){}
+      try{const x=JSON.parse(localStorage.getItem(key)||'null');if(x?.date&&x?.stadium&&x?.race)map.set(`${x.date}_${x.stadium}_${x.race}`,x)}catch(e){}
     }
     const latest=window.__v8ServerPredictionData?Object.values(window.v8GetSavedPredictions?.()||window.__v8ServerPredictionData.records||{}):serverRecords;
     for(const x of latest){const k=`${x.date}_${x.stadium}_${x.race}`,prev=map.get(k);if(!prev||Date.parse(x.settled_at||x.saved_at||0)>=Date.parse(prev.settled_at||prev.saved_at||0))map.set(k,x)}
