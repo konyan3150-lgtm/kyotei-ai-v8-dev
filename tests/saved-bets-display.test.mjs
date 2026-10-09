@@ -11,6 +11,7 @@ test('V8 saved bets take precedence after close or server sync',()=>{
   assert.match(body,/if\(\(closed\|\|authoritative\)&&savedMode\)/);
   assert.ok(body.indexOf('if((closed||authoritative)&&savedMode)')<body.indexOf('const picks=makeBets(rows,6,basePredictionMode)'));
   assert.match(body,/if\(closed\|\|authoritative\).*return/);
+  assert.ok(body.indexOf('if((closed||authoritative)&&savedMode)')<body.indexOf("if(typeof models==='undefined'||models.length!==3)"),'saved tickets must render even when models are loading');
 });
 test('value bets still prefer saved server records and saved snapshots',()=>{
   assert.match(source,/renderSavedValueBets\(savedValueMode\(\),false\)/);
