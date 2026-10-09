@@ -1,6 +1,4 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
+// Strict individual-result parser adapted from ../official_result_fallback.mjs.
 const clean=s=>s.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim().normalize('NFKC');
 export function parseOfficialResult(html,{date,stadium,race}) {
  const sid=String(Number(stadium)).padStart(2,'0'),n=Number(race);
@@ -27,7 +25,7 @@ export function parseOfficialResult(html,{date,stadium,race}) {
  const refundBoats=[...refundBody.matchAll(/numberSet1_number[^>]*>\s*([1-6])\s*<\/span>/g)].map(m=>Number(m[1]));
  // Unexpected nonempty refund contents must not silently become no refunds.
  if(clean(refundBody).replace(/[1-6\s]/g,'')||clean(refundBody).replace(/\s/g,'')!==refundBoats.join(''))throw Error('unknown_refund_content');
- const trifecta=[];let trifectaStatus=null;
+ const trifecta=[];let specialPayout=false;
  const section=[...payout.matchAll(/<tbody[^>]*>([^]*?)<\/tbody>/g)].find(m=>clean(m[1]).includes('3連単'))?.[1];
  if(!section)throw Error('trifecta_unconfirmed');
  for(const row of section.matchAll(/<tr\b[^>]*>([^]*?)<\/tr>/g)){
@@ -35,41 +33,17 @@ export function parseOfficialResult(html,{date,stadium,race}) {
   const amountText=row[1].match(/class="is-payout1"[^>]*>([^]*?)<\/span>/)?.[1];
   if(!lanes.length&&!clean(amountText||''))continue;
   const amount=Number(clean(amountText||'').replace(/&yen;|¥|,/g,''));
-  const cells=[...row[1].matchAll(/<td\b[^>]*>([^]*?)<\/td>/g)].map(m=>clean(m[1]));
-  // Official non-established trifecta returns the 100-yen ticket unit.
-  // Require an exact label, refund amount and abnormal finish/refund evidence;
-  // an empty or malformed payout must remain pending instead of being excluded.
-  if(cells.includes('不成立')){
-   if(trifectaStatus||trifecta.length||lanes.length||amount!==100||(!refundBoats.length&&boats.every(b=>b.racer_place_number!==null)))throw Error('invalid_non_established_trifecta');
-   trifectaStatus={status:'non_established',label:'不成立',refund_per_100_yen:100};continue;
-  }
-  if(trifectaStatus)throw Error('mixed_trifecta_status');
-  if(lanes.length!==3||new Set(lanes).size!==3||!Number.isInteger(amount)||amount<=0)throw Error('invalid_payout');
+  if(!lanes.length&&clean(row[1]).includes('特払')){if(!Number.isSafeInteger(amount)||amount<=0)throw Error('invalid_special_payout');specialPayout=true;continue;}
+  if(lanes.length!==3||new Set(lanes).size!==3||!Number.isSafeInteger(amount)||amount<=0)throw Error('invalid_payout');
   trifecta.push({combination:lanes.join('-'),amount});
  }
- if(!trifecta.length&&!trifectaStatus)throw Error('payout_pending');
- const special=!!trifectaStatus||refundBoats.length>0||boats.some(b=>b.racer_place_number===null)||trifecta.length>1;
+ if(!trifecta.length&&!specialPayout)throw Error('payout_pending');
+ if(specialPayout&&trifecta.length)throw Error('conflicting_special_payout');
+ const special=specialPayout||refundBoats.length>0||boats.some(b=>b.racer_place_number===null)||trifecta.length>1;
  if(!special){
   const ranks=boats.map(b=>b.racer_place_number);
   const combo=[...boats].sort((a,b)=>a.racer_place_number-b.racer_place_number).slice(0,3).map(b=>b.racer_boat_number).join('-');
   if(new Set(ranks).size!==6||trifecta[0].combination!==combo)throw Error('finish_payout_mismatch');
  }
- return {boats,payouts:{trifecta},...(trifectaStatus?{trifecta_status:trifectaStatus}:{}),refund_boats:refundBoats,official_special:special,source:'verified official individual result'};
-}
-export async function officialFallback(root,request,published=null){
- const {date,stadium,race}=request,key=`${date}_${Number(stadium)}_${Number(race)}`;
- const dir=path.join(root,'dev/official-result-fallback');fs.mkdirSync(dir,{recursive:true});
- const file=path.join(dir,key+'.json');
- let entry;
- if(fs.existsSync(file))entry=JSON.parse(fs.readFileSync(file));
- else {
-  const url=`https://www.boatrace.jp/owpc/pc/race/raceresult?rno=${Number(race)}&jcd=${String(Number(stadium)).padStart(2,'0')}&hd=${date}`;
-  const response=await fetch(url,{signal:AbortSignal.timeout(20000),headers:{'User-Agent':'Mozilla/5.0'}});
-  if(!response.ok)throw Error(`official_HTTP_${response.status}`);
-  const html=await response.text(),result=parseOfficialResult(html,request);
-  entry={request,url,fetched_at:new Date().toISOString(),html_sha256:crypto.createHash('sha256').update(html).digest('hex'),result};
-  fs.writeFileSync(file,JSON.stringify(entry)+'\n');
- }
- if(published?.combination&&!entry.result.official_special){const p=entry.result.payouts.trifecta[0];if(p.combination!==published.combination||p.amount!==Number(published.amount))throw Error('published_payout_mismatch');}
- return {...entry.result,verification:{url:entry.url,fetched_at:entry.fetched_at,html_sha256:entry.html_sha256}};
+ return {boats,payouts:{trifecta},special_payout:specialPayout,refund_boats:refundBoats,official_special:special,source:'verified official individual result'};
 }

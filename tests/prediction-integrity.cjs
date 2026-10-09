@@ -18,5 +18,7 @@ async function check(local,server){
  const deviceChanged={...pending,saved_at:'2026-10-03T00:51:00Z',settled:true,value_modes:{hit:{picks:['6-5-4'],stake:100,payout:9000,settled:true}}};
  assert.deepEqual((await check(deviceChanged,pending)).value_modes,pending.value_modes);
  assert.deepEqual((await check({...deviceChanged,settled:false},pending)).value_modes,pending.value_modes);
+ const localFirst={...deviceChanged,source:'device',settled:false,saved_at:'2026-10-03T00:59:00Z'};
+ assert.deepEqual((await check(localFirst,pending)).value_modes,pending.value_modes);
  console.log('Prediction integrity passed: single/list parity, six/value mode separation, authoritative stake/payout, no double multiplier, matching saved timestamp and cancellation.');
 })().catch(e=>{console.error(e);process.exit(1)});

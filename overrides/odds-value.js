@@ -70,6 +70,20 @@
   function renderBaseBetsPanel(rows){
     const el=document.getElementById('baseBets');if(!el)return;
     const r=D?.programs?.stadiums?.[sid]?.races?.[rno];if(cancelledRace(r)){el.innerHTML='<div class="odds-wait">開催中止のため買い目対象外</div>';return}
+    // After a race closes, never replace its saved V8 picks with freshly computed picks.
+    const close=typeof raceCloseMs==='function'?raceCloseMs(r):NaN;
+    const closed=(typeof hasOfficialResult==='function'&&hasOfficialResult(r))||(Number.isFinite(close)&&close<=Date.now());
+    const stored=savedRaceRecord(rno);
+    const authoritative=stored?.source==='server';
+    const savedMode=stored?.modes?.[basePredictionMode]||((stored?.mode||'hit')===basePredictionMode&&Array.isArray(stored?.picks)?{picks:stored.picks}:null);
+    if((closed||authoritative)&&savedMode){
+      const savedPicks=Array.isArray(savedMode.picks)?savedMode.picks:[];
+      el.innerHTML=savedPicks.length
+        ?'<div class="modehint">保存済みV8買い目（再計算なし）</div><table class="bettable"><thead><tr><th>順</th><th>組番</th></tr></thead><tbody>'+savedPicks.map((combo,i)=>'<tr><td>'+(i+1)+'</td><td>'+String(combo).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';')+'</td></tr>').join('')+'</tbody></table>'
+        :'<div class="odds-wait">保存済みV8買い目はありません</div>';
+      return;
+    }
+    if(closed||authoritative){el.innerHTML='<div class="odds-wait">締切前のV8保存買い目がありません</div>';return}
     if(typeof models==='undefined'||models.length!==3){el.textContent='V8モデル待機中';return}
     const picks=makeBets(rows,6,basePredictionMode);
     if(!picks.length){el.textContent='通常V8買い目を計算できません';return}

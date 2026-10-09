@@ -1,0 +1,110 @@
+name: V8 Migration Safety (staging only)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/stage-live-cutover-20261009
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  migration-guards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify migration safety invariants
+        run: |
+          node --check experiments/official_result_fallback.mjs
+          node experiments/test_official_result_fallback.mjs
+          node experiments/test_prospective_input.mjs
+          node experiments/test_exhibition_health.mjs
+          node --check overrides/server-sync.js
+          for file in tests/*.test.mjs; do node --check "$file"; done
+          node --check scripts/production-history-totals.mjs
+          node --check scripts/check-production-baseline.mjs
+          node --check overrides/odds-value.js
+          node --check scripts/history-display-coverage.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs tests/production-special-outcomes.test.mjs tests/save-provenance.test.mjs tests/excluded-display.test.mjs
+          node experiments/production-update/update_server_predictions.mjs --self-test
+      - name: Verify saved records, monetary integrity and refresh behavior
+        run: |
+          node tests/prediction-integrity.cjs overrides/server-sync.js
+          node tests/money-integrity.cjs overrides
+          node tests/value-record-state.cjs overrides
+          node tests/history-venues.cjs overrides/history.js
+          node tests/record-audit.cjs overrides/record-audit.js
+          node tests/data-refresh.cjs overrides
+      - name: Fetch frozen production history snapshot (read-only)
+        run: |
+          set -euo pipefail
+          root='https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/c97667ed28ba764abf50542c521d507eea166f03/dev'
+          mkdir -p /tmp/v8-live-audit/server-predictions-archive
+          for file in server-predictions.json server-predictions-index.json server-predictions-archive/202609.json server-predictions-archive/202610.json; do
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-live-audit/$file"
+            test -s "/tmp/v8-live-audit/$file"
+          done
+      - name: Audit archive counts and monetary fields
+        run: node scripts/audit-production-history.mjs /tmp/v8-live-audit
+      - name: Compute historical investment and payout totals
+        run: node scripts/production-history-totals.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/production-history-totals.json"
+      - name: Enforce frozen historical totals and checksum
+        run: node scripts/check-production-baseline.mjs "$RUNNER_TEMP/production-history-totals.json"
+      - name: Audit which frozen records qualify for history display
+        run: node scripts/history-display-coverage.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/history-display-coverage.json"
+      - name: Upload audit baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-history-totals
+          path: |
+            ${{ runner.temp }}/production-history-totals.json
+            ${{ runner.temp }}/history-display-coverage.json
+          retention-days: 30
+      - name: Audit current production index and archives (read-only)
+        run: |
+          set -euo pipefail
+          live_sha="$(curl --fail --location --retry 3 --silent --show-error 'https://api.github.com/repos/konyan3150-lgtm/kyotei-ai-v8-live/commits/main' | jq -er '.sha | select(test("^[0-9a-f]{40}$"))')"
+          root="https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/${live_sha}/dev"
+          mkdir -p /tmp/v8-current-live/server-predictions-archive
+          printf '%s\n' "$live_sha" > "$RUNNER_TEMP/current-live-source-sha.txt"
+          echo "Current read-only production snapshot: $live_sha" >> "$GITHUB_STEP_SUMMARY"
+          for file in server-predictions.json server-predictions-index.json; do
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
+          done
+          jq -r '.archives[].file' /tmp/v8-current-live/server-predictions-index.json | while IFS= read -r file; do
+            [[ "$file" =~ ^server-predictions-archive/[0-9]{6}\.json$ ]] || exit 1
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
+          done
+          node scripts/check-current-live-index.mjs /tmp/v8-current-live
+          node experiments/production-update/verify_prediction_history.mjs /tmp/v8-current-live "$RUNNER_TEMP/current-live-preservation-baseline.json" --save-baseline
+          node scripts/audit-production-history.mjs /tmp/v8-current-live
+          node scripts/production-history-totals.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-stored-totals.json"
+          node scripts/history-display-coverage.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-display-coverage.json"
+          node experiments/production-update/outcome_summary.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-outcome-groups.json"
+      - name: Upload current snapshot audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-live-history-audit
+          path: |
+            ${{ runner.temp }}/current-live-source-sha.txt
+            ${{ runner.temp }}/current-live-stored-totals.json
+            ${{ runner.temp }}/current-live-display-coverage.json
+            ${{ runner.temp }}/current-live-outcome-groups.json
+          retention-days: 30
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test disjoint calibration and selection chronology
+        run: |
+          python -m pip install pandas==2.2.3
+          python -m unittest discover -s experiments/training-v8 -p test_chronology.py
+      - name: Report
+        if: always()
+        run: |
+          echo '### V8 migration guard check' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Read-only historical audit against frozen production SHA c97667ed.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No production deployment or production data writes performed.' >> "$GITHUB_STEP_SUMMARY"

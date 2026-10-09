@@ -1,0 +1,88 @@
+name: Build staging UI artifact (no deploy)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - migration/stage-live-cutover-20261009
+    paths:
+      - ".github/workflows/staging-ui-artifact.yml"
+      - "overrides/**"
+      - "results.*"
+      - "validation.*"
+      - "selection*"
+      - "tests/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download pinned upstream UI source
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --output /tmp/staging-source.zip "https://github.com/konyan3150-lgtm/kyotei-ai-v8-live/archive/6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b.zip"
+          mkdir -p /tmp/staging-source site
+          unzip -q /tmp/staging-source.zip -d /tmp/staging-source
+          test -f /tmp/staging-source/kyotei-ai-v8-live-6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b/index.html
+          cp -a /tmp/staging-source/kyotei-ai-v8-live-6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b/. site/
+          for file in server-sync.js odds-value.js recommendation.js value-record-state.js app2.js history.js record-audit.js; do
+            test -s "overrides/$file"
+            cp "overrides/$file" "site/$file"
+          done
+          cp results.html results.css results.mjs validation.html validation.css validation.mjs selection-analysis.mjs selection.css site/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('site/index.html')
+          s=p.read_text()
+          for asset in ['odds-value.js','recommendation.js','app2.js','server-sync.js']:
+              if asset not in s: raise SystemExit(f'Missing expected UI script marker: {asset}')
+          if '<div class="pickerpanel">' not in s: raise SystemExit('Missing homepage navigation insertion marker')
+          s=s.replace('<div class="pickerpanel">','<p><a href="results.html">的中結果一覧</a>　<a href="validation.html">開発検証</a></p><div class="pickerpanel">',1)
+          if 'src="odds-value.js' not in s: raise SystemExit('Missing odds-value script insertion marker')
+          s=s.replace('<script src="odds-value.js','<script src="value-record-state.js"></script><script src="odds-value.js',1)
+          p.write_text(s)
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate staging logic
+        run: |
+          node --check site/app2.js
+          node --check site/odds-value.js
+          node --check site/history.js
+          node tests/prediction-integrity.cjs site/server-sync.js
+          node tests/money-integrity.cjs site
+          node tests/value-record-state.cjs site
+          node tests/history-venues.cjs site/history.js
+      - name: Install headless browser
+        run: |
+          npm install --no-save --ignore-scripts playwright
+          npx playwright install --with-deps chromium
+      - name: Browser smoke tests
+        run: |
+          python3 -m http.server 8765 --directory site > /tmp/staging-server.log 2>&1 &
+          node tests/validation-browser.cjs
+          node tests/results-browser.cjs
+      - name: Verify homepage with real feeds (read-only)
+        timeout-minutes: 8
+        run: node tests/homepage-live-browser.cjs
+      - name: Build and verify lightweight review preview
+        timeout-minutes: 8
+        run: |
+          python3 scripts/build-review-preview.py site site/review --revision "${{ github.sha }}" > /tmp/review-files.json
+          HOMEPAGE_URL=http://127.0.0.1:8765/review/index.html node tests/homepage-live-browser.cjs
+      - name: Upload inspectable staging files (never publish)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-ui-review-${{ github.sha }}
+          path: |
+            site/
+            ui-screenshots/
+          retention-days: 7

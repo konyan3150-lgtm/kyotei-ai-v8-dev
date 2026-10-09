@@ -24,7 +24,7 @@
   }
   function freshness(data){
     const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');
-    const pending=Object.entries(data.records||{}).some(([key,r])=>r&&key.startsWith(PREFIX+today+'_')&&!r.settled&&!r.cancelled);
+    const pending=Object.entries(data.records||{}).some(([key,r])=>r&&key.startsWith(PREFIX+today+'_')&&!r.settled&&!r.cancelled&&!r.excluded);
     const age=Date.now()-stamp(data.updated_at);
     return pending&&(!stamp(data.updated_at)||age>20*60000)?'｜更新遅れ：保存・結果反映を待っています':'';
   }
@@ -47,7 +47,7 @@
   }
   function choose(local,server){
     if(!local)return server;
-    if(server.cancelled||server.settled)return keepSavedValueDetails(server,local);
+    if(server.source==='server'||server.cancelled||server.settled)return keepSavedValueDetails(server,local);
     if(local.source==='server')return server;
     if(local.cancelled||local.settled)return local;
     return stamp(server.cancelled_at||server.settled_at||server.saved_at)>=stamp(local.cancelled_at||local.settled_at||local.saved_at)?server:local
