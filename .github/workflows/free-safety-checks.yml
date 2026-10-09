@@ -45,3 +45,26 @@ jobs:
               sys.exit(1)
           print('Tracked JSON syntax check passed')
           PY
+      - name: Detect unresolved merge markers in source files
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess, sys
+          extensions = {'.js', '.mjs', '.cjs', '.json', '.html', '.css', '.py', '.yml', '.yaml'}
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode('utf-8', 'surrogateescape').split('\0')
+          errors = []
+          for name in paths:
+              if not name or pathlib.Path(name).suffix.lower() not in extensions:
+                  continue
+              try:
+                  with open(name, encoding='utf-8') as stream:
+                      for line_number, line in enumerate(stream, 1):
+                          if line.startswith(('<<<<<<< ', '=======', '>>>>>>> ')):
+                              errors.append(f'{name}:{line_number}: unresolved merge marker')
+              except (UnicodeError, OSError) as exc:
+                  errors.append(f'{name}: {exc}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('No unresolved merge markers in tracked source files')
+          PY
