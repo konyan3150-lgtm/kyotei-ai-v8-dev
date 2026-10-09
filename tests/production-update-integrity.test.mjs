@@ -16,7 +16,8 @@ function fixture() {
   const pending={date:'20260801',stadium:'1',race:'1',settled:false,modes:{hit:{picks:['1-2-3'],stake:600,payout:0}}};
   const settled={date:'20260701',stadium:'1',race:'1',settled:true,modes:{hit:{picks:['1-2-3'],stake:600,payout:800,settled:true}}};
   const write=(file,obj)=>fs.writeFileSync(file,JSON.stringify(obj));
-  write(path.join(root,'racer-aptitude.json'),{schema:'kyotei-v8-racer-aptitude',racers:{}});
+  write(path.join(root,'v8_model_aptitude.json'),{ranks:{1:{},2:{},3:{}}});
+  write(path.join(root,'racer-aptitude.json'),{schema:'kyotei-v8-racer-aptitude',racers:{},history_end:'20260701'});
   write(path.join(data,'server-predictions.json'),{schema:'kyotei-v8-server-predictions',version:1,record_count:1,total_record_count:2,records:{[hotKey]:pending}});
   write(path.join(archive,'202607.json'),{schema:'kyotei-v8-server-predictions-archive',version:1,month:'202607',record_count:1,records:{[archiveKey]:settled}});
   write(path.join(data,'server-predictions-index.json'),{schema:'kyotei-v8-server-predictions-index',version:1,total_record_count:2,archives:[{month:'202607',file:'server-predictions-archive/202607.json',record_count:1}]});
@@ -130,3 +131,20 @@ test('recovery persists excluded refund without counting a pending race or chang
     const history=loadHistory(path.join(f.data,'server-predictions.json'),f.archive,path.join(f.data,'server-predictions-index.json'));const rec=history.hot.records[f.hotKey];assert.equal(history.keys.size,2);assert.equal(rec.modes.hit.stake,600);assert.equal(rec.modes.hit.payout,0);assert.equal(rec.excluded.kind,'refund');assert.equal(rec.excluded.verification.request.date,'20260801');
   }finally{fs.rmSync(f.root,{recursive:true,force:true});}
 });
+test('updater rejects future aptitude before any fetch or writes',async()=>{const f=fixture();try{const file=path.join(f.root,'racer-aptitude.json');const data=JSON.parse(fs.readFileSync(file));data.history_end='20261009';fs.writeFileSync(file,JSON.stringify(data));const before=bytes(f.root);await withUpdater(f,async run=>{let calls=0;globalThis.fetch=async()=>{calls++;throw Error('unexpected')};await assert.rejects(run({now:new Date('2026-10-09T01:00:00Z')}),/history must end/);assert.equal(calls,0);});assert.deepEqual(bytes(f.root),before);}finally{fs.rmSync(f.root,{recursive:true,force:true});}});
+test('unsaved EV initializes once when odds arrive; frozen V8 and saved EV stay unchanged',async()=>{
+ const f=fixture();try{
+  const key='kyotei_v8_dev_result_20261009_01_01',rec={...f.pending,date:'20261009',value_modes:{}};
+  const file=path.join(f.data,'server-predictions.json'),hot=JSON.parse(fs.readFileSync(file));hot.records={[key]:rec};fs.writeFileSync(file,JSON.stringify(hot));
+  fs.writeFileSync(path.join(f.root,'v8_model_aptitude.json'),JSON.stringify({features:['LANE'],ranks:Object.fromEntries([1,2,3].map(k=>[k,{baseline:0,trees:[[[0,0,0,0,false,true,.1]]],categories:[],medians:[1],calx:[0,1],caly:[0,1]}]))}));
+  const oddsFile=path.join(f.data,'odds.json'),trifecta={};for(let a=1;a<=6;a++){trifecta[a]={};for(let b=1;b<=6;b++){trifecta[a][b]={};for(let c=1;c<=6;c++)trifecta[a][b][c]=1000;}}
+  const now=new Date('2026-10-09T01:00:00Z');
+  await withUpdater(f,async run=>{globalThis.fetch=async url=>({ok:true,text:async()=>'',json:async()=>String(url).includes('/results/')?{results:[]}:{programs:{stadiums:{1:{races:{1:{closed_at:'2026-10-09T12:00:00+09:00',racers:Object.fromEntries([1,2,3,4,5,6].map(k=>[k,{number:4000+k}]))}}}}}}});
+   const first=await run({now,clock:()=>now});assert.deepEqual(first.records[key].value_modes,{});
+   fs.writeFileSync(oddsFile,JSON.stringify({date:'20261009',races:{1:{1:{trifecta,fetched_at:now.toISOString()}}}}));
+   const saved=await run({now,clock:()=>now});assert.deepEqual(saved.records[key].modes,rec.modes);assert.ok(saved.records[key].value_modes.hit.items.length);const frozen=structuredClone(saved.records[key].value_modes);
+   fs.writeFileSync(oddsFile,JSON.stringify({date:'20261009',races:{1:{1:{trifecta:{}}}}}));const again=await run({now,clock:()=>now});assert.deepEqual(again.records[key].value_modes,frozen);
+  });
+ }finally{fs.rmSync(f.root,{recursive:true,force:true});}
+});
+test('precommit verifier rejects changed saved stake even if keys and counts are unchanged',()=>{const f=fixture();try{const baseline=path.join(f.root,'baseline.json');verifyHistory(f.data,baseline,true);const file=path.join(f.data,'server-predictions.json'),hot=JSON.parse(fs.readFileSync(file));hot.records[f.hotKey].modes.hit.stake=500;fs.writeFileSync(file,JSON.stringify(hot));assert.throws(()=>verifyHistory(f.data,baseline),/Saved purchase changed/);}finally{fs.rmSync(f.root,{recursive:true,force:true});}});

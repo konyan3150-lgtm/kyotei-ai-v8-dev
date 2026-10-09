@@ -29,6 +29,9 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
       - name: Sync latest main
         run: git pull --ff-only origin main
       - name: Capture validated history baseline
@@ -74,5 +77,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add odds.json dev/odds.json dev/official-results.json dev/official-previews.json dev/racer-aptitude-runtime.json.gz dev/course-stats-runtime.json dev/server-predictions.json dev/server-predictions-index.json dev/server-predictions-archive
           git commit -m "chore: update live odds and predictions"
-          git pull --rebase --autostash
-          git push
+          # A changed remote head rejects this commit; retry from a fresh checkout next run.
+          git push origin HEAD:main

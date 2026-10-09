@@ -25,7 +25,7 @@ jobs:
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
           node --check scripts/history-display-coverage.mjs
-          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs tests/production-special-outcomes.test.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs tests/production-special-outcomes.test.mjs tests/save-provenance.test.mjs tests/excluded-display.test.mjs
           node experiments/production-update/update_server_predictions.mjs --self-test
       - name: Verify saved records, monetary integrity and refresh behavior
         run: |
@@ -91,6 +91,13 @@ jobs:
             ${{ runner.temp }}/current-live-display-coverage.json
             ${{ runner.temp }}/current-live-outcome-groups.json
           retention-days: 30
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test disjoint calibration and selection chronology
+        run: |
+          python -m pip install pandas==2.2.3
+          python -m unittest discover -s experiments/training-v8 -p test_chronology.py
       - name: Report
         if: always()
         run: |

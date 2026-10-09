@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {parseOfficialResult} from './official_result_parser.mjs';
-import {checkedOutcome} from '../prospective_input.mjs';
+import {checkedOutcome} from './checked_outcome.mjs';
 import {fetchFeed} from './feed_fetch.mjs';
 
 export async function verifyIndividualResult(request,published,{fetchIndividual}={}){

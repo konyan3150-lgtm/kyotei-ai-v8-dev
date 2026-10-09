@@ -56,3 +56,4 @@ test('empty history has finite zero ROI without division by zero',()=>{
   const empty=total([],'hit','base');
   assert.equal(empty.roi,0);assert.equal(empty.hitRate,0);assert.equal(empty.profit,0);
 });
+test('confirmed special result stays outside both monetary cohorts',()=>{const excluded={...record,excluded:{confirmed:true,kind:'refund'}};assert.equal(total([excluded],'all','base').invest,0);assert.equal(total([excluded],'all','value').payout,0);});
