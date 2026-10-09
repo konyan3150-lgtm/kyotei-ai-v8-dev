@@ -20,12 +20,20 @@ jobs:
       - name: Verify migration safety invariants
         run: |
           node --check overrides/server-sync.js
-          node --check tests/production-cutover-guards.test.mjs
+          for file in tests/*.test.mjs; do node --check "$file"; done
           node --check scripts/production-history-totals.mjs
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
           node --check scripts/history-display-coverage.mjs
           node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs
+      - name: Verify saved records, monetary integrity and refresh behavior
+        run: |
+          node tests/prediction-integrity.cjs overrides/server-sync.js
+          node tests/money-integrity.cjs overrides
+          node tests/value-record-state.cjs overrides
+          node tests/history-venues.cjs overrides/history.js
+          node tests/record-audit.cjs overrides/record-audit.js
+          node tests/data-refresh.cjs overrides
       - name: Fetch frozen production history snapshot (read-only)
         run: |
           set -euo pipefail
