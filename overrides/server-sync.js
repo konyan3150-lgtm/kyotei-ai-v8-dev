@@ -47,7 +47,7 @@
   }
   function choose(local,server){
     if(!local)return server;
-    if(server.cancelled||server.settled)return keepSavedValueDetails(server,local);
+    if(server.source==='server'||server.cancelled||server.settled)return keepSavedValueDetails(server,local);
     if(local.source==='server')return server;
     if(local.cancelled||local.settled)return local;
     return stamp(server.cancelled_at||server.settled_at||server.saved_at)>=stamp(local.cancelled_at||local.settled_at||local.saved_at)?server:local
