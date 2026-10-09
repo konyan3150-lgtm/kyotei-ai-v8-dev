@@ -70,7 +70,6 @@
   function renderBaseBetsPanel(rows){
     const el=document.getElementById('baseBets');if(!el)return;
     const r=D?.programs?.stadiums?.[sid]?.races?.[rno];if(cancelledRace(r)){el.innerHTML='<div class="odds-wait">開催中止のため買い目対象外</div>';return}
-    if(typeof models==='undefined'||models.length!==3){el.textContent='V8モデル待機中';return}
     // After a race closes, never replace its saved V8 picks with freshly computed picks.
     const close=typeof raceCloseMs==='function'?raceCloseMs(r):NaN;
     const closed=(typeof hasOfficialResult==='function'&&hasOfficialResult(r))||(Number.isFinite(close)&&close<=Date.now());
@@ -85,6 +84,7 @@
       return;
     }
     if(closed||authoritative){el.innerHTML='<div class="odds-wait">締切前のV8保存買い目がありません</div>';return}
+    if(typeof models==='undefined'||models.length!==3){el.textContent='V8モデル待機中';return}
     const picks=makeBets(rows,6,basePredictionMode);
     if(!picks.length){el.textContent='通常V8買い目を計算できません';return}
     const notes={hit:'確率上位を優先した通常V8予想',balance:'本命を残しながら着順を分散した通常V8予想',return:'V8穴度を加味した通常V8予想（オッズ未反映）'};
