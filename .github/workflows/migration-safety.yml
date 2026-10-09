@@ -24,6 +24,7 @@ jobs:
           node --check scripts/production-history-totals.mjs
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
+          node --check scripts/history-display-coverage.mjs
           node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs
       - name: Fetch frozen production history snapshot (read-only)
         run: |
@@ -40,11 +41,15 @@ jobs:
         run: node scripts/production-history-totals.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/production-history-totals.json"
       - name: Enforce frozen historical totals and checksum
         run: node scripts/check-production-baseline.mjs "$RUNNER_TEMP/production-history-totals.json"
+      - name: Audit which frozen records qualify for history display
+        run: node scripts/history-display-coverage.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/history-display-coverage.json"
       - name: Upload audit baseline artifact
         uses: actions/upload-artifact@v4
         with:
           name: production-history-totals
-          path: ${{ runner.temp }}/production-history-totals.json
+          path: |
+            ${{ runner.temp }}/production-history-totals.json
+            ${{ runner.temp }}/history-display-coverage.json
           retention-days: 30
       - name: Report
         if: always()
