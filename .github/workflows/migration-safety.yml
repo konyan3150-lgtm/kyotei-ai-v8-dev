@@ -33,6 +33,14 @@ jobs:
           done
       - name: Audit archive counts and monetary fields
         run: node scripts/audit-production-history.mjs /tmp/v8-live-audit
+      - name: Compute historical investment and payout totals
+        run: node scripts/production-history-totals.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/production-history-totals.json"
+      - name: Upload audit baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-history-totals
+          path: ${{ runner.temp }}/production-history-totals.json
+          retention-days: 30
       - name: Report
         if: always()
         run: |
