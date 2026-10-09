@@ -23,7 +23,7 @@ jobs:
           node --check tests/production-cutover-guards.test.mjs
           node --check scripts/production-history-totals.mjs
           node --check scripts/check-production-baseline.mjs
-          node --test tests/production-cutover-guards.test.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs
       - name: Fetch frozen production history snapshot (read-only)
         run: |
           set -euo pipefail
