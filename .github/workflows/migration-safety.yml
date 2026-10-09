@@ -32,7 +32,7 @@ jobs:
             test -s "/tmp/v8-live-audit/$file"
           done
       - name: Audit archive counts and monetary fields
-        run: node --test scripts/audit-production-history.mjs /tmp/v8-live-audit
+        run: node scripts/audit-production-history.mjs /tmp/v8-live-audit
       - name: Report
         if: always()
         run: |
