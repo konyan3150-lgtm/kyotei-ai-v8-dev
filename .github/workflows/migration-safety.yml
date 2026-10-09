@@ -62,8 +62,11 @@ jobs:
       - name: Audit current production index and archives (read-only)
         run: |
           set -euo pipefail
-          root='https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/main/dev'
+          live_sha="$(curl --fail --location --retry 3 --silent --show-error 'https://api.github.com/repos/konyan3150-lgtm/kyotei-ai-v8-live/commits/main' | jq -er '.sha | select(test("^[0-9a-f]{40}$"))')"
+          root="https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/${live_sha}/dev"
           mkdir -p /tmp/v8-current-live/server-predictions-archive
+          printf '%s\n' "$live_sha" > "$RUNNER_TEMP/current-live-source-sha.txt"
+          echo "Current read-only production snapshot: $live_sha" >> "$GITHUB_STEP_SUMMARY"
           for file in server-predictions.json server-predictions-index.json; do
             curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
           done
@@ -72,6 +75,18 @@ jobs:
             curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
           done
           node scripts/check-current-live-index.mjs /tmp/v8-current-live
+          node scripts/audit-production-history.mjs /tmp/v8-current-live
+          node scripts/production-history-totals.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-stored-totals.json"
+          node scripts/history-display-coverage.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-display-coverage.json"
+      - name: Upload current snapshot audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-live-history-audit
+          path: |
+            ${{ runner.temp }}/current-live-source-sha.txt
+            ${{ runner.temp }}/current-live-stored-totals.json
+            ${{ runner.temp }}/current-live-display-coverage.json
+          retention-days: 30
       - name: Report
         if: always()
         run: |
