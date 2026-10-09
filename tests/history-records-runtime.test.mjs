@@ -26,3 +26,11 @@ test('newer server record wins over older local copy',()=>{
   assert.equal(result.length,1);
   assert.equal(result[0].modes.hit.stake,300);
 });
+
+test('local-only saved predictions appear in history',()=>{
+  const local={date:'20261009',stadium:'01',race:'02',saved_at:'2026-10-09T09:00:00Z',modes:{hit:{stake:600,payout:900}}};
+  const result=getRecords({},[['kyotei_v8_dev_result_20261009_01_02',local]]);
+  assert.equal(result.length,1);
+  assert.equal(result[0].modes.hit.stake,600);
+  assert.equal(result[0].modes.hit.payout,900);
+});
