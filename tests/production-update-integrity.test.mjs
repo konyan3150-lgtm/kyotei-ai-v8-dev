@@ -1,3 +1,4 @@
+import {officialResultFixture} from './official-result-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -96,14 +97,14 @@ test('candidate workflow blocks prediction errors and verifies history before co
   assert.doesNotMatch(step,/continue-on-error/);assert.ok(source.indexOf('Verify history preservation before commit')<source.indexOf('Commit updated odds and predictions'));
   assert.ok(!fs.existsSync('.github/workflows/update-live-odds.candidate.yml'));
 });
-for(const scenario of ['before close','invalid result','valid result'])test('run preserves saved purchase: '+scenario,async()=>{
+for(const scenario of ['before close','invalid result','valid result','refund result','special payout'])test('run preserves saved purchase: '+scenario,async()=>{
   const f=fixture();try{
     const key='kyotei_v8_dev_result_20261009_01_01',rec={...f.pending,date:'20261009',saved_at:'2026-10-09T00:00:00Z',value_modes:{hit:{picks:['1-2-3'],stake:200,items:[{combo:'1-2-3',ev:1.8,stake:200}]}}};
     const file=path.join(f.data,'server-predictions.json'),hot=JSON.parse(fs.readFileSync(file));hot.records={[key]:rec};fs.writeFileSync(file,JSON.stringify(hot));
     await withUpdater(f,async run=>{
-      globalThis.fetch=async url=>({ok:true,text:async()=>'',json:async()=>String(url).includes('v8_model')?{ranks:{1:{},2:{},3:{}}}:String(url).includes('/results/')?{results:scenario==='before close'?[]:[{stadium_number:1,number:1,payouts:{trifecta:[scenario==='valid result'?{combination:'1-2-3',amount:1230}:{combination:'',amount:0}]}}]}:{programs:{stadiums:{1:{races:{1:{closed_at:'2026-10-09T12:00:00+09:00',racers:{}}}}}}}});
-      const out=await run({now:new Date('2026-10-09T01:00:00Z')}),after=out.records[key];assert.deepEqual(after.value_modes.hit.items,rec.value_modes.hit.items);assert.equal(after.value_modes.hit.stake,200);assert.equal(after.saved_at,rec.saved_at);assert.deepEqual(after.modes.hit.picks,rec.modes.hit.picks);
-      if(scenario==='valid result'){assert.equal(after.settled,true);assert.equal(after.value_modes.hit.payout,2460);}else assert.deepEqual(after,rec);
+      globalThis.fetch=async url=>({ok:true,text:async()=>'',json:async()=>String(url).includes('v8_model')?{ranks:{1:{},2:{},3:{}}}:String(url).includes('/results/')?{results:scenario==='before close'?[]:[{stadium_number:1,number:1,payouts:{trifecta:[scenario!=='invalid result'?{combination:'1-2-3',amount:1230}:{combination:'',amount:0}]}}]}:{programs:{stadiums:{1:{races:{1:{closed_at:'2026-10-09T12:00:00+09:00',racers:{}}}}}}}});
+      const out=await run({now:new Date('2026-10-09T01:00:00Z'),fetchIndividual:async request=>officialResultFixture(request,{refund:scenario==='refund result',special:scenario==='special payout'})}),after=out.records[key];assert.deepEqual(after.value_modes.hit.items,rec.value_modes.hit.items);assert.equal(after.value_modes.hit.stake,200);assert.equal(after.saved_at,rec.saved_at);assert.deepEqual(after.modes.hit.picks,rec.modes.hit.picks);
+      if(scenario==='valid result'){assert.equal(after.settled,true);assert.equal(after.value_modes.hit.payout,2460);}else if(scenario==='refund result'||scenario==='special payout'){assert.equal(after.excluded.confirmed,true);assert.equal(after.modes.hit.settled,false);assert.equal(Number(after.value_modes.hit.payout||0),0);}else assert.deepEqual(after,rec);
     });
   }finally{fs.rmSync(f.root,{recursive:true,force:true});}
 });
@@ -113,13 +114,19 @@ test('results recovery fetch failure leaves all files unchanged after earlier su
     const file=path.join(f.data,'server-predictions.json'),hot=JSON.parse(fs.readFileSync(file));
     hot.records.second={...f.pending,date:'20260802'};hot.record_count=2;hot.total_record_count=3;fs.writeFileSync(file,JSON.stringify(hot));
     const indexFile=path.join(f.data,'server-predictions-index.json'),index=JSON.parse(fs.readFileSync(indexFile));index.total_record_count=3;fs.writeFileSync(indexFile,JSON.stringify(index));const before=bytes(f.root);
-    await assert.rejects(recover({root:f.root,now:new Date('2026-10-09T01:00:00Z'),fetchPage:async date=>{if(date==='20260802')throw Error('offline');return `<td data-href="/x?rno=1&amp;jcd=01&amp;hd=${date}"><span class="numberSet1_number is-type1">1</span><span class="numberSet1_number is-type2">2</span><span class="numberSet1_number is-type3">3</span></td><td>1,230</td>`;}}),/offline/);
+    await assert.rejects(recover({root:f.root,fetchIndividual:async request=>officialResultFixture(request),now:new Date('2026-10-09T01:00:00Z'),fetchPage:async date=>{if(date==='20260802')throw Error('offline');return `<td data-href="/x?rno=1&amp;jcd=01&amp;hd=${date}"><span class="numberSet1_number is-type1">1</span><span class="numberSet1_number is-type2">2</span><span class="numberSet1_number is-type3">3</span></td><td>1,230</td>`;}}),/offline/);
     assert.deepEqual(bytes(f.root),before);
   }finally{fs.rmSync(f.root,{recursive:true,force:true});}
 });
 test('results recovery persists official result with frozen stake and valid history index',async()=>{
   const {recover}=await import('../experiments/production-update/settle_pending_results.mjs');const f=fixture();try{
-    const counts=await recover({root:f.root,now:new Date('2026-10-09T01:00:00Z'),fetchPage:async date=>`<td data-href="/x?rno=1&amp;jcd=01&amp;hd=${date}"><span class="numberSet1_number is-type1">1</span><span class="numberSet1_number is-type2">2</span><span class="numberSet1_number is-type3">3</span></td><td>1,230</td>`});assert.equal(counts.settled,1);
+    const counts=await recover({root:f.root,fetchIndividual:async request=>officialResultFixture(request),now:new Date('2026-10-09T01:00:00Z'),fetchPage:async date=>`<td data-href="/x?rno=1&amp;jcd=01&amp;hd=${date}"><span class="numberSet1_number is-type1">1</span><span class="numberSet1_number is-type2">2</span><span class="numberSet1_number is-type3">3</span></td><td>1,230</td>`});assert.equal(counts.settled,1);
     const history=loadHistory(path.join(f.data,'server-predictions.json'),f.archive,path.join(f.data,'server-predictions-index.json'));assert.equal(history.keys.size,2);assert.equal(history.hot.records[f.hotKey].modes.hit.stake,600);assert.equal(history.hot.records[f.hotKey].modes.hit.payout,1230);
+  }finally{fs.rmSync(f.root,{recursive:true,force:true});}
+});
+test('recovery persists excluded refund without counting a pending race or changing saved money',async()=>{
+  const {recover}=await import('../experiments/production-update/settle_pending_results.mjs');const f=fixture();try{
+    const counts=await recover({root:f.root,now:new Date('2026-10-09T01:00:00Z'),fetchIndividual:async request=>officialResultFixture(request,{refund:true}),fetchPage:async date=>`<td data-href="/x?rno=1&amp;jcd=01&amp;hd=${date}"><span class="numberSet1_number is-type1">1</span><span class="numberSet1_number is-type2">2</span><span class="numberSet1_number is-type3">3</span></td><td>1,230</td>`});assert.equal(counts.excluded,1);assert.equal(counts.settled,0);assert.equal(counts.pending,0);
+    const history=loadHistory(path.join(f.data,'server-predictions.json'),f.archive,path.join(f.data,'server-predictions-index.json'));const rec=history.hot.records[f.hotKey];assert.equal(history.keys.size,2);assert.equal(rec.modes.hit.stake,600);assert.equal(rec.modes.hit.payout,0);assert.equal(rec.excluded.kind,'refund');assert.equal(rec.excluded.verification.request.date,'20260801');
   }finally{fs.rmSync(f.root,{recursive:true,force:true});}
 });

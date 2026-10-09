@@ -25,7 +25,7 @@ jobs:
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
           node --check scripts/history-display-coverage.mjs
-          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs tests/production-special-outcomes.test.mjs
           node experiments/production-update/update_server_predictions.mjs --self-test
       - name: Verify saved records, monetary integrity and refresh behavior
         run: |
@@ -80,6 +80,7 @@ jobs:
           node scripts/audit-production-history.mjs /tmp/v8-current-live
           node scripts/production-history-totals.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-stored-totals.json"
           node scripts/history-display-coverage.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-display-coverage.json"
+          node experiments/production-update/outcome_summary.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-outcome-groups.json"
       - name: Upload current snapshot audit evidence
         uses: actions/upload-artifact@v4
         with:
@@ -88,6 +89,7 @@ jobs:
             ${{ runner.temp }}/current-live-source-sha.txt
             ${{ runner.temp }}/current-live-stored-totals.json
             ${{ runner.temp }}/current-live-display-coverage.json
+            ${{ runner.temp }}/current-live-outcome-groups.json
           retention-days: 30
       - name: Report
         if: always()
