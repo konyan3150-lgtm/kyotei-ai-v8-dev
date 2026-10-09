@@ -1,0 +1,40 @@
+name: V8 Free Safety Checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  safety-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check whitespace errors
+        run: git diff --check HEAD^ HEAD || if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "No parent diff available; skipping"; else exit 1; fi
+      - name: Validate tracked JSON files
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, sys
+          files = subprocess.check_output(['git','ls-files','-z']).decode().split('\0')
+          errors = []
+          for f in files:
+              if not f.endswith('.json') or not f:
+                  continue
+              try:
+                  with open(f, encoding='utf-8') as fh:
+                      json.load(fh)
+              except Exception as exc:
+                  errors.append(f'{f}: {exc}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('Tracked JSON syntax check passed')
+          PY
