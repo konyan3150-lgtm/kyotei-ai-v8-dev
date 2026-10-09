@@ -251,5 +251,6 @@ jobs:
           node --check results.mjs
           node --check selection-analysis.mjs
           node --check tests/mode-isolation.test.mjs
+          node --check tests/value-record-state.test.mjs
       - name: Test V8 and EV saved mode isolation
-        run: node --test tests/mode-isolation.test.mjs
+        run: node --test tests/mode-isolation.test.mjs tests/value-record-state.test.mjs
