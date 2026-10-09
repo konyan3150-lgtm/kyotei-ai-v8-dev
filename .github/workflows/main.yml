@@ -35,6 +35,8 @@ on:
       - "overrides/value-record-state.js"
       - "tests/value-record-state.cjs"
       - "overrides/app2.js"
+      - "overrides/history.js"
+      - "tests/history-venues.cjs"
       - "tests/data-refresh.cjs"
   schedule:
     - cron: "*/15 * * * *"
@@ -74,6 +76,7 @@ jobs:
           cp selection-analysis.mjs selection.css site/
           cp overrides/server-sync.js overrides/odds-value.js overrides/recommendation.js overrides/value-record-state.js site/
           cp overrides/app2.js site/
+          cp overrides/history.js site/
           cp overrides/record-audit.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
@@ -103,7 +106,7 @@ jobs:
           for module in ['results.mjs', 'validation.mjs']:
               target = public / module
               target.write_text(target.read_text().replace("'./selection-analysis.mjs'", "'./selection-analysis.mjs?v=" + digest('selection-analysis.mjs') + "'"))
-          for asset in ['odds-value.js', 'recommendation.js']:
+          for asset in ['odds-value.js', 'recommendation.js', 'history.js']:
               s = re.sub(r'src="' + re.escape(asset) + r'(?:\?[^"]*)?"', lambda match: 'src="' + asset + '?v=' + digest(asset) + '"', s)
           p.write_text(s)
           if 'href="results.html"' not in p.read_text() or 'href="validation.html"' not in p.read_text():
@@ -123,6 +126,7 @@ jobs:
           node tests/money-integrity.cjs site
           node tests/value-record-state.cjs site
           node tests/data-refresh.cjs site
+          node tests/history-venues.cjs site/history.js
           node experiments/test_collection_daily.mjs
           node experiments/test_collection_diagnostics.mjs
           node tests/record-audit.cjs site/record-audit.js

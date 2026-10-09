@@ -1,0 +1,23 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const elements={};
+for(const id of ['historyPanel','historyPeriod','historyVenue','historyMode','historyScope','historyTitle','historyScopeLabel','historySummary','historyList'])elements[id]={value:'',innerHTML:'',textContent:''};
+elements.historyPeriod.value='1';elements.historyMode.value='all';elements.historyScope.value='all';
+const venue=elements.historyVenue;let html='',value='all';
+Object.defineProperties(venue,{innerHTML:{get:()=>html,set:s=>{html=s;venue.options=[...s.matchAll(/value="([^"]+)"/g)].map(m=>({value:m[1]}));value=venue.options[0]?.value||'';}},value:{get:()=>value,set:v=>{value=venue.options?.some(o=>o.value===v)?v:'';}}});
+const record=(date,stadium)=>({date,stadium,race:1,source:'server',value_model_version:4,value_modes:{hit:{settled:true,stake:100,payout:200,hit:true,picks:['1-2-3']}}});
+const records={old:record('20261008',1),today:record('20261009','23'),future:record('20261010',24)};
+const before=JSON.stringify(records);
+const ctx={window:{__v8ServerPredictionData:{records}},document:{getElementById:id=>elements[id],querySelector:()=>null},localStorage:{length:0},jstDate:()=> '20261009',D:{date:'20261009',programs:{stadiums:{23:{races:{1:{}}},14:{races:{1:{}}},1:{races:{}}}}},N:{1:'桐生',14:'鳴門',23:'唐津',24:'大村'},Date,console};
+vm.createContext(ctx);vm.runInContext(fs.readFileSync(process.argv[2]||'overrides/history.js','utf8'),ctx);
+const options=()=>Array.from(venue.options,o=>o.value);
+assert.deepEqual(options(),['all','14','23']); // Unsaved scheduled venue stays selectable.
+assert.match(elements.historySummary.innerHTML,/1R/);
+assert.match(elements.historySummary.innerHTML,/¥100/);
+venue.value='23';ctx.window.renderPredictionHistory();assert.equal(venue.value,'23');
+elements.historyPeriod.value='all';ctx.window.renderPredictionHistory();assert.deepEqual(options(),['all','1','23','24']);
+venue.value='1';elements.historyPeriod.value='1';ctx.window.renderPredictionHistory();assert.equal(venue.value,'all');
+ctx.D={date:'20261010',programs:{stadiums:{24:{races:{1:{}}}}}};ctx.window.renderPredictionHistory();assert.deepEqual(options(),['all','23']);
+ctx.D=null;ctx.window.renderPredictionHistory();assert.deepEqual(options(),['all','23']);
+records.today.stadium='023';ctx.window.renderPredictionHistory();assert.deepEqual(options(),['all','23']);venue.value='23';ctx.window.renderPredictionHistory();assert.match(elements.historySummary.innerHTML,/1R/);records.today.stadium='23';
+assert.equal(JSON.stringify(records),before);
+console.log('History venues passed: today program, unsaved venue, date fallback, reset, other periods, normalized IDs and unchanged records.');
