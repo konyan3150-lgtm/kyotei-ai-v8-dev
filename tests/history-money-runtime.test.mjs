@@ -10,10 +10,11 @@ const funcs=source.slice(modeStart,modeEnd);
 const sumStart=source.indexOf('    let races=0,hits=0,invest=0,payout=0;');
 const sumEnd=source.indexOf('    const roi=',sumStart);
 assert.ok(sumStart>=0&&sumEnd>sumStart);
-const calculation=source.slice(sumStart,sumEnd);
+const roiEnd=source.indexOf('\n',sumEnd);
+const calculation=source.slice(sumStart,roiEnd);
 function total(filtered,mode,view,scope='all'){
   const context={filtered,mode,view,scope,MODE_LABELS:{hit:'hit',balance:'balance',return:'return'},Number,Object};
-  return vm.runInNewContext(funcs+'\n'+calculation+'\n({races,hits,invest,payout})',context);
+  return vm.runInNewContext(funcs+'\n'+calculation+'\n({races,hits,invest,payout,roi,hitRate,profit})',context);
 }
 const record={
   value_model_version:4,
@@ -41,4 +42,17 @@ test('cancelled, skipped and unsettled modes do not enter monetary totals',()=>{
   const pending={value_model_version:4,value_modes:{hit:{settled:false,stake:500,payout:0}}};
   const value=total([cancelled,skipped,pending],'hit','value');
   assert.equal(value.races,0);assert.equal(value.invest,0);assert.equal(value.payout,0);
+});
+
+test('ROI uses settled saved stakes and payouts in each prediction mode',()=>{
+  const base=total([record],'hit','base');
+  const value=total([record],'hit','value');
+  assert.equal(base.roi,150);assert.equal(base.profit,300);
+  assert.equal(value.roi,250);assert.equal(value.profit,300);
+  const combined=total([record],'all','base');
+  assert.equal(combined.roi,900/1300*100);assert.equal(combined.profit,-400);
+});
+test('empty history has finite zero ROI without division by zero',()=>{
+  const empty=total([],'hit','base');
+  assert.equal(empty.roi,0);assert.equal(empty.hitRate,0);assert.equal(empty.profit,0);
 });
