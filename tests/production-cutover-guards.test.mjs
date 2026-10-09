@@ -5,6 +5,17 @@ import fs from 'node:fs';
 const sync=fs.readFileSync('overrides/server-sync.js','utf8');
 const workflow=fs.readFileSync('.github/workflows/main.yml','utf8');
 const required=['dev/server-predictions.json','dev/server-predictions-index.json','dev/server-predictions-archive/202609.json','dev/server-predictions-archive/202610.json'];
+test('current history audit reads one immutable production revision',()=>{
+  const safety=fs.readFileSync('.github/workflows/migration-safety.yml','utf8');
+  const audit=safety.slice(safety.indexOf('- name: Audit current production index'));
+  assert.match(audit,/commits\/main/);
+  assert.ok(audit.includes('${live_sha}/dev'));
+  assert.doesNotMatch(audit,/kyotei-ai-v8-live\/main\/dev/);
+  assert.ok(audit.indexOf('live_sha=')<audit.indexOf('for file in'));
+  assert.match(audit,/current-live-source-sha\.txt/);
+  assert.match(audit,/current-live-stored-totals\.json/);
+  assert.match(audit,/current-live-display-coverage\.json/);
+});
 test('production prediction endpoint stays pinned until explicit data migration',()=>{
   assert.match(sync,/raw\.githubusercontent\.com\/konyan3150-lgtm\/kyotei-ai-v8-live\/main\//);
   assert.match(sync,/kyotei_v8_dev_result_/);
