@@ -75,7 +75,7 @@
     const closed=(typeof hasOfficialResult==='function'&&hasOfficialResult(r))||(Number.isFinite(close)&&close<=Date.now());
     const stored=savedRaceRecord(rno);
     const authoritative=stored?.source==='server';
-    const savedMode=stored?.modes?.[basePredictionMode];
+    const savedMode=stored?.modes?.[basePredictionMode]||((stored?.mode||'hit')===basePredictionMode&&Array.isArray(stored?.picks)?{picks:stored.picks}:null);
     if((closed||authoritative)&&savedMode){
       const savedPicks=Array.isArray(savedMode.picks)?savedMode.picks:[];
       el.innerHTML=savedPicks.length
