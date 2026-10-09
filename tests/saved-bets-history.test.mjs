@@ -40,7 +40,7 @@ test('missing or cancelled snapshots cannot be treated as saved purchases',()=>{
 test('history rendering preserves separate base and value records',()=>{
   const history=fs.readFileSync('overrides/history.js','utf8');
   assert.match(history,/view==='base'/);
-  assert.match(history,/rec\.modes\?\.\[mode\]/);
+  assert.match(history,/rec\?\.modes\?\.\[mode\]/);
   assert.match(history,/rec\?\.value_modes\?\.\[mode\]/);
   assert.match(history,/period==='1'&&program/);
 });
