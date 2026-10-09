@@ -21,6 +21,8 @@ jobs:
         run: |
           node --check overrides/server-sync.js
           node --check tests/production-cutover-guards.test.mjs
+          node --check scripts/production-history-totals.mjs
+          node --check scripts/check-production-baseline.mjs
           node --test tests/production-cutover-guards.test.mjs
       - name: Fetch frozen production history snapshot (read-only)
         run: |
@@ -35,6 +37,8 @@ jobs:
         run: node scripts/audit-production-history.mjs /tmp/v8-live-audit
       - name: Compute historical investment and payout totals
         run: node scripts/production-history-totals.mjs /tmp/v8-live-audit | tee "$RUNNER_TEMP/production-history-totals.json"
+      - name: Enforce frozen historical totals and checksum
+        run: node scripts/check-production-baseline.mjs "$RUNNER_TEMP/production-history-totals.json"
       - name: Upload audit baseline artifact
         uses: actions/upload-artifact@v4
         with:
