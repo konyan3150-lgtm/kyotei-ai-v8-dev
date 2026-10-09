@@ -72,6 +72,11 @@ jobs:
       - name: Verify homepage with real feeds (read-only)
         timeout-minutes: 8
         run: node tests/homepage-live-browser.cjs
+      - name: Build and verify lightweight review preview
+        timeout-minutes: 8
+        run: |
+          python3 scripts/build-review-preview.py site site/review --revision "${{ github.sha }}" > /tmp/review-files.json
+          HOMEPAGE_URL=http://127.0.0.1:8765/review/index.html node tests/homepage-live-browser.cjs
       - name: Upload inspectable staging files (never publish)
         if: always()
         uses: actions/upload-artifact@v4
