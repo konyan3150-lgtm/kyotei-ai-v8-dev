@@ -25,7 +25,7 @@ jobs:
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
           node --check scripts/history-display-coverage.mjs
-          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs tests/homepage-saved-window.test.mjs tests/production-settlement.test.mjs
           node experiments/production-update/update_server_predictions.mjs --self-test
       - name: Verify saved records, monetary integrity and refresh behavior
         run: |
