@@ -30,4 +30,16 @@ Latest inspected report at 2026-10-09T23:34:16.866Z (2026-10-10 08:34 JST): `cap
 
 ## Operational application
 
-The fix is first recorded on migration/stage-live-cutover-20261009 with migration safety gates. The same parser, regression test and fixture can be applied to development main for the existing scheduled collector. No production promotion is authorized by this continuation.
+The fix is first recorded on migration/stage-live-cutover-20261009 with migration safety gates. The same parser, regression test and fixture were applied to development main in `f3168f3cf670a79e4fee02546039d9568525b628` for the existing scheduled collector. No production promotion is authorized by this continuation.
+
+## Observed automatic recovery
+
+- Staging fix: `eaac04e7a87b3373127eea5e3d5d6c9bd66e3646`.
+- GitHub migration safety runs [38006333748](https://github.com/konyan3150-lgtm/kyotei-ai-v8-dev/actions/runs/38006333748) and [38006330458](https://github.com/konyan3150-lgtm/kyotei-ai-v8-dev/actions/runs/38006330458): success.
+- Local verification expanded to 18 JS gate scripts and 8 Python tests, all passing. The Python refresh tests required installation of the workflow-pinned lhafile==0.3.1 dependency in the local environment.
+- Automatic collection data checkpoint `0998f116d61dae7bbfdd63a9f8be795fbf3a9cb6`: 834 saved, 772 normally settled, 60 excluded, 2 pending; health ok with no overdue/missing/stale records.
+- Cached official evidence `dev/official-result-fallback/20261008_14_5.json`: parsed non-established trifecta, 100-yen refund per 100-yen ticket, refund boats 2 and 4, six verified finishers. This race is confirmed excluded, not a loss or hit.
+- Byte-equivalent parsed-record comparison against the original source verified that all 833 original keys remain and all 830 previously final records (771 normal + 59 excluded) remain deeply identical. Every old field on the recovered record except the now-resolved fetch error also remains identical.
+- One newly completed current-day race explains movement of overall ROI. At the checkpoint baseline ROI 85.6692573% and candidate 86.0621762%; this is not evidence of improved profitability.
+
+- Updated scheduled collector run [38006380894](https://github.com/konyan3150-lgtm/kyotei-ai-v8-dev/actions/runs/38006380894): completed successfully after three bounded passes.
