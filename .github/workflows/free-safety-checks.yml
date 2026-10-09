@@ -10,18 +10,18 @@ permissions:
 
 jobs:
   safety-checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          fetch-depth: 0
+          fetch-depth: 2
       - name: Check whitespace errors
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            git diff --check "${{ github.event.pull_request.base.sha }}" HEAD
+            git diff --check HEAD^1 HEAD
           else
             echo "Manual run: no PR base to compare; skipping diff check"
           fi
@@ -30,6 +30,15 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, subprocess, sys
+          def bad_constant(value):
+              raise ValueError(f'Non-standard JSON constant: {value}')
+          def unique_pairs(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      raise ValueError(f'Duplicate JSON key: {key}')
+                  result[key] = value
+              return result
           files = subprocess.check_output(['git','ls-files','-z']).decode().split('\0')
           errors = []
           for f in files:
@@ -37,7 +46,7 @@ jobs:
                   continue
               try:
                   with open(f, encoding='utf-8') as fh:
-                      json.load(fh)
+                      json.load(fh, parse_constant=bad_constant, object_pairs_hook=unique_pairs)
               except Exception as exc:
                   errors.append(f'{f}: {exc}')
           if errors:
@@ -49,7 +58,7 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib, subprocess, sys
+          import pathlib, re, subprocess, sys
           extensions = {'.js', '.mjs', '.cjs', '.json', '.html', '.css', '.py', '.yml', '.yaml'}
           paths = subprocess.check_output(['git', 'ls-files', '-z']).decode('utf-8', 'surrogateescape').split('\0')
           errors = []
@@ -59,7 +68,7 @@ jobs:
               try:
                   with open(name, encoding='utf-8') as stream:
                       for line_number, line in enumerate(stream, 1):
-                          if line.startswith(('<<<<<<< ', '=======', '>>>>>>> ')):
+                          if re.match(r'^(<{7}|>{7})( |$)|^={7}
                               errors.append(f'{name}:{line_number}: unresolved merge marker')
               except (UnicodeError, OSError) as exc:
                   errors.append(f'{name}: {exc}')
@@ -72,8 +81,8 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
-          deleted="$(git diff --name-only --diff-filter=D "$base" HEAD -- 'dev/expert-shadow-archive/*.json')"
+          base="HEAD^1"
+          deleted="$(git diff --no-renames --name-only --diff-filter=D "$base" HEAD -- 'dev/expert-shadow-archive/*.json')"
           if [[ -n "$deleted" ]]; then
             echo "::error::Expert shadow archive deletion blocked:"
             echo "$deleted"
@@ -121,7 +130,96 @@ jobs:
           python3 - <<'PY'
           import json, subprocess, pathlib, sys
           target = 'dev/expert-shadow-evaluation.json'
-          base = '${{ github.event.pull_request.base.sha }}'
+          base = 'HEAD^1'
+          try:
+              old = json.loads(subprocess.check_output(['git', 'show', f'{base}:{target}'], text=True))
+          except subprocess.CalledProcessError:
+              print('No baseline evaluation found; skipping historical comparison')
+              sys.exit(0)
+          path = pathlib.Path(target)
+          if not path.exists():
+              print(f'::error::{target} was deleted')
+              sys.exit(1)
+          new = json.loads(path.read_text(encoding='utf-8'))
+          errors = []
+          for arm in ('baseline', 'candidate'):
+              before = old.get('value_arms', {}).get(arm, {})
+              after = new.get('value_arms', {}).get(arm, {})
+              for field in ('eligible_races', 'bought_races', 'investment'):
+                  if field in before and (not isinstance(after.get(field), (int, float)) or after[field] < before[field]):
+                      errors.append(f'{arm}.{field} decreased or missing')
+          before_dates = set(old.get('diagnostics', {}).get('by_date', {}))
+          after_dates = set(new.get('diagnostics', {}).get('by_date', {}))
+          for date in sorted(before_dates - after_dates):
+              errors.append(f'historical evaluation date removed: {date}')
+          if errors:
+              print('\n'.join('::error::'+error for error in errors))
+              sys.exit(1)
+          print('Expert evaluation history regression check passed')
+          PY
+, line.rstrip('\\r\\n')):
+                              errors.append(f'{name}:{line_number}: unresolved merge marker')
+              except (UnicodeError, OSError) as exc:
+                  errors.append(f'{name}: {exc}')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('No unresolved merge markers in tracked source files')
+          PY
+      - name: Protect Expert shadow archive files from deletion
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          base="HEAD^1"
+          deleted="$(git diff --no-renames --name-only --diff-filter=D "$base" HEAD -- 'dev/expert-shadow-archive/*.json')"
+          if [[ -n "$deleted" ]]; then
+            echo "::error::Expert shadow archive deletion blocked:"
+            echo "$deleted"
+            exit 1
+          fi
+          echo "No Expert shadow archive JSON files deleted"
+      - name: Validate Expert shadow evaluation accounting
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, math, pathlib, sys
+          path = pathlib.Path('dev/expert-shadow-evaluation.json')
+          if not path.exists():
+              print('Expert evaluation file absent; skipping optional check')
+              sys.exit(0)
+          data = json.loads(path.read_text(encoding='utf-8'))
+          errors = []
+          for name, arm in data.get('value_arms', {}).items():
+              if not isinstance(arm, dict):
+                  errors.append(f'{name}: invalid arm')
+                  continue
+              for key in ('eligible_races', 'bought_races', 'skipped_races', 'hits', 'investment', 'payout'):
+                  value = arm.get(key)
+                  if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) or value < 0:
+                      errors.append(f'{name}: invalid {key}')
+              if any(f'{name}: invalid {key}' in errors for key in ('eligible_races', 'bought_races', 'skipped_races', 'hits', 'investment', 'payout')):
+                  continue
+              if arm['bought_races'] + arm['skipped_races'] != arm['eligible_races']:
+                  errors.append(f'{name}: race accounting mismatch')
+              if arm['hits'] > arm['bought_races']:
+                  errors.append(f'{name}: hits exceed bought races')
+              investment = arm['investment']
+              roi = arm.get('roi')
+              if investment > 0 and (not isinstance(roi, (int, float)) or not math.isclose(roi, arm['payout']/investment, rel_tol=1e-6)):
+                  errors.append(f'{name}: ROI does not match payout / investment')
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('Expert shadow accounting passed')
+          PY
+      - name: Guard against Expert evaluation history regression
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, pathlib, sys
+          target = 'dev/expert-shadow-evaluation.json'
+          base = 'HEAD^1'
           try:
               old = json.loads(subprocess.check_output(['git', 'show', f'{base}:{target}'], text=True))
           except subprocess.CalledProcessError:
