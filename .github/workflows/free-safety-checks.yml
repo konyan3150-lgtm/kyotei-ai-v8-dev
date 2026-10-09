@@ -114,3 +114,37 @@ jobs:
               sys.exit(1)
           print('Expert shadow accounting passed')
           PY
+      - name: Guard against Expert evaluation history regression
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, pathlib, sys
+          target = 'dev/expert-shadow-evaluation.json'
+          base = '${{ github.event.pull_request.base.sha }}'
+          try:
+              old = json.loads(subprocess.check_output(['git', 'show', f'{base}:{target}'], text=True))
+          except subprocess.CalledProcessError:
+              print('No baseline evaluation found; skipping historical comparison')
+              sys.exit(0)
+          path = pathlib.Path(target)
+          if not path.exists():
+              print(f'::error::{target} was deleted')
+              sys.exit(1)
+          new = json.loads(path.read_text(encoding='utf-8'))
+          errors = []
+          for arm in ('baseline', 'candidate'):
+              before = old.get('value_arms', {}).get(arm, {})
+              after = new.get('value_arms', {}).get(arm, {})
+              for field in ('eligible_races', 'bought_races', 'investment'):
+                  if field in before and (not isinstance(after.get(field), (int, float)) or after[field] < before[field]):
+                      errors.append(f'{arm}.{field} decreased or missing')
+          before_dates = set(old.get('diagnostics', {}).get('by_date', {}))
+          after_dates = set(new.get('diagnostics', {}).get('by_date', {}))
+          for date in sorted(before_dates - after_dates):
+              errors.append(f'historical evaluation date removed: {date}')
+          if errors:
+              print('\n'.join('::error::'+error for error in errors))
+              sys.exit(1)
+          print('Expert evaluation history regression check passed')
+          PY
