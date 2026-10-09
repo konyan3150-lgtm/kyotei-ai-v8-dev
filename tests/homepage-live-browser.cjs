@@ -1,5 +1,6 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
+const {savedSampleWindow}=require('./homepage-saved-window.cjs');
 (async()=>{
   fs.mkdirSync('ui-screenshots',{recursive:true});
   const browser=await chromium.launch({headless:true});
@@ -20,7 +21,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
       const venue=String(Number(r.stadium)),race=String(Number(r.race));
       return r.date===day()&&r.modes?.hit?.picks?.length&&r.value_modes?.hit?.picks?.length&&D.programs.stadiums[venue]?.races?.[race];
     }).slice(0,3).map(([key,r])=>({key,venue:String(Number(r.stadium)),race:String(Number(r.race)),record:r})));
-    assert.ok(samples.length>0,'Need a real saved race present in today program');
+    const closingTimes=await page.evaluate(()=>Object.values(D.programs.stadiums).flatMap(s=>Object.values(s.races||{})).map(r=>raceCloseMs(r)));
+    report.saved_sample_status=savedSampleWindow(samples.length,closingTimes);
     report.sample_keys=samples.map(x=>x.key);
     for(const sample of samples){
       await page.evaluate(({venue,race})=>{sid=venue;rno=race;autoRace=false;draw()},sample);
@@ -53,7 +55,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
     await page.waitForFunction(()=>dateOffset===0&&D?.date===day(),{},{timeout:90000});
     assert.deepEqual(errors,[]);
     report.status='passed';
-    console.log('Homepage real-data checks passed: program/model/server records, 3 saved races, V8/EV mode isolation, authoritative money, six racers, responsive layout, date switching, no JS errors.');
+    console.log(`Homepage real-data checks passed: program/model/server records, ${samples.length} saved races (${report.saved_sample_status}), six racers, responsive layout, date switching, no JS errors.`);
   }catch(e){
     report.status='failed';report.error=String(e);
     report.diagnostics=await page.evaluate(()=>Object.fromEntries(['status','modelDiag','serverDiag','selectedRace'].map(id=>[id,document.getElementById(id)?.textContent]))).catch(()=>({}));

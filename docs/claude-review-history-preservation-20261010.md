@@ -17,7 +17,7 @@ The live updater swallowed any JSON read/parse error into a fallback, directly o
 
 ## Validation
 
-- 45 local tests passed: existing 31 plus 14 new preservation/network/workflow regressions.
+- 49 local tests passed: existing 31, 14 new preservation/network/workflow regressions, and 4 real-feed saved-window regressions.
 - Candidate original prediction/expert self-tests passed.
 - Read-only validation of an independent production data snapshot: 2782 records, 2 archives; baseline and verification pass.
 - Recent-index sample: latest 100 index-changing commits ending at source SHA above; all total_record_count values 2782, no decrease or parse error in that sample. This is not a full-history audit and does not prove every record's money stayed unchanged.
@@ -31,3 +31,7 @@ Each file replacement is atomic; a batch of different files is not a single file
 Optional missing feeds are visible warnings but have no persisted health artifact yet. Corrupt existing local stats abort the run; input freshness/provenance is not yet enforced.
 
 Claude proposals 2 (settlement validation/cancellation/legacy saved stakes) and 3 (evaluation leakage/provenance) remain to be independently verified and implemented. No historical records, production models, purchase rules or payouts were repaired or recalculated in this change. Production deployment needs separate user authorization.
+
+## Midnight browser test correction
+
+Initial candidate 3f8b814 passed migration safety (run 37952550311), but browser run 37952543986 failed because no current-day saved sample existed just after JST midnight. Fixture results/validation browser checks passed. The real-feed test now permits an empty sample only when all program close times are known and the first close is still in the future. At/after first close, missing saved samples still fail. It reports the actual sample count and reason, and retains model/program/server connectivity, racer rendering, responsive layout and day-switch verification.
