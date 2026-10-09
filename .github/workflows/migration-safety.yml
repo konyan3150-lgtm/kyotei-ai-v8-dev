@@ -11,7 +11,7 @@ permissions:
 jobs:
   migration-guards:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,8 +22,20 @@ jobs:
           node --check overrides/server-sync.js
           node --check tests/production-cutover-guards.test.mjs
           node --test tests/production-cutover-guards.test.mjs
+      - name: Fetch frozen production history snapshot (read-only)
+        run: |
+          set -euo pipefail
+          root='https://raw.githubusercontent.com/konyan3150-lgtm/kyotei-ai-v8-live/c97667ed28ba764abf50542c521d507eea166f03/dev'
+          mkdir -p /tmp/v8-live-audit/server-predictions-archive
+          for file in server-predictions.json server-predictions-index.json server-predictions-archive/202609.json server-predictions-archive/202610.json; do
+            curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-live-audit/$file"
+            test -s "/tmp/v8-live-audit/$file"
+          done
+      - name: Audit archive counts and monetary fields
+        run: node --test scripts/audit-production-history.mjs /tmp/v8-live-audit
       - name: Report
         if: always()
         run: |
           echo '### V8 migration guard check' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Read-only historical audit against frozen production SHA c97667ed.' >> "$GITHUB_STEP_SUMMARY"
           echo 'No production deployment or production data writes performed.' >> "$GITHUB_STEP_SUMMARY"
