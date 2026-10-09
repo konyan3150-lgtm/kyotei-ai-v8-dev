@@ -25,7 +25,8 @@ jobs:
           node --check scripts/check-production-baseline.mjs
           node --check overrides/odds-value.js
           node --check scripts/history-display-coverage.mjs
-          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs
+          node --test tests/production-cutover-guards.test.mjs tests/saved-bets-history.test.mjs tests/saved-bets-display.test.mjs tests/saved-bets-render-runtime.test.mjs tests/saved-value-render-runtime.test.mjs tests/history-records-runtime.test.mjs tests/history-money-runtime.test.mjs tests/cutover-readiness.test.mjs tests/production-update-integrity.test.mjs
+          node experiments/production-update/update_server_predictions.mjs --self-test
       - name: Verify saved records, monetary integrity and refresh behavior
         run: |
           node tests/prediction-integrity.cjs overrides/server-sync.js
@@ -75,6 +76,7 @@ jobs:
             curl --fail --location --retry 3 --silent --show-error "$root/$file" -o "/tmp/v8-current-live/$file"
           done
           node scripts/check-current-live-index.mjs /tmp/v8-current-live
+          node experiments/production-update/verify_prediction_history.mjs /tmp/v8-current-live "$RUNNER_TEMP/current-live-preservation-baseline.json" --save-baseline
           node scripts/audit-production-history.mjs /tmp/v8-current-live
           node scripts/production-history-totals.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-stored-totals.json"
           node scripts/history-display-coverage.mjs /tmp/v8-current-live > "$RUNNER_TEMP/current-live-display-coverage.json"
