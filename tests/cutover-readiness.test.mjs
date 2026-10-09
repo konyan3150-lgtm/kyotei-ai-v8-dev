@@ -22,8 +22,8 @@ test('cutover plan includes localStorage and rollback protection',()=>{
 });
 
 test('staging UI artifact workflow cannot publish Pages or use floating upstream',()=>{
-  assert.match(staging,/permissions:\\s*\\n\\s*contents: read/);
+  assert.match(staging,/permissions:\s*\n\s*contents: read/);
   assert.match(staging,/6c7f1841cb8fc9611a6c6f2dabe2d0135b0a671b/);
-  assert.match(staging,/actions\\/upload-artifact@v4/);
-  assert.doesNotMatch(staging,/actions\\/deploy-pages|actions\\/upload-pages-artifact|pages: write|id-token: write|git push/);
+  assert.match(staging,/actions\/upload-artifact@v4/);
+  assert.doesNotMatch(staging,/actions\/deploy-pages|actions\/upload-pages-artifact|pages: write|id-token: write|git push/);
 });
