@@ -35,3 +35,14 @@ Claude proposals 2 (settlement validation/cancellation/legacy saved stakes) and 
 ## Midnight browser test correction
 
 Initial candidate 3f8b814 passed migration safety (run 37952550311), but browser run 37952543986 failed because no current-day saved sample existed just after JST midnight. Fixture results/validation browser checks passed. The real-feed test now permits an empty sample only when all program close times are known and the first close is still in the future. At/after first close, missing saved samples still fail. It reports the actual sample count and reason, and retains model/program/server connectivity, racer rendering, responsive layout and day-switch verification.
+
+## GitHub evidence at aca52e056a29f87b66aca7c1baf9758de32a5a90
+
+- Safety: https://github.com/konyan3150-lgtm/kyotei-ai-v8-dev/actions/runs/37952971686 — success.
+- Staging browser: https://github.com/konyan3150-lgtm/kyotei-ai-v8-dev/actions/runs/37952964569 — success, full and lightweight real-feed views.
+- Midnight observations correctly report zero saved samples before the first close; this does not claim current-day saved-ticket parity was exercised in those midnight runs. Fixture saved-ticket checks and independent archive audits still run.
+- Implementation commit: 3f8b8142406d65846063beabf86bf423666cd05e.
+- Midnight boundary correction: aca52e056a29f87b66aca7c1baf9758de32a5a90.
+
+Additional read-only field audit at live 0ce01214: 2782 unique records, zero cancelled records, zero cancelled-and-settled records, zero EV modes with missing/zero item stakes. No official page reconciliation or historical correction was performed.
+Reading previously omitted compare_aptitude_ab.mjs confirms it uses static old/fresh snapshots, but line 39 already labels the output as sensitivity rather than leakage-free causal uplift. Keep that distinction in the next review; it is not evidence of valid out-of-sample improvement.
