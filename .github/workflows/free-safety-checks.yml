@@ -68,3 +68,15 @@ jobs:
               sys.exit(1)
           print('No unresolved merge markers in tracked source files')
           PY
+      - name: Protect Expert shadow archive files from deletion
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          deleted="$(git diff --name-only --diff-filter=D "$base" HEAD -- 'dev/expert-shadow-archive/*.json')"
+          if [[ -n "$deleted" ]]; then
+            echo "::error::Expert shadow archive deletion blocked:"
+            echo "$deleted"
+            exit 1
+          fi
+          echo "No Expert shadow archive JSON files deleted"
