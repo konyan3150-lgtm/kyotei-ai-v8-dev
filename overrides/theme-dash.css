@@ -1,0 +1,109 @@
+/* DEV design "C 計器盤風": look-only theme loaded after every other stylesheet.
+   No prediction, saving or money logic depends on anything here. */
+:root{
+  --bg:#101317;--panel:#171B20;--panel2:#1D2228;--line:#252B33;--line2:#2D343D;
+  --ink:#E3E7EC;--muted:#8A939E;--dim:#5E6670;
+  --accent:#FFB547;--good:#59D98E;--warn:#FF8A5C;--info:#6FB7FF;--violet:#B79BFF;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
+}
+html,body{background:var(--bg)!important;background-image:none!important;color:var(--ink);font-family:var(--sans)}
+.wrap{background:var(--bg)!important;background-image:none!important}
+
+/* Header */
+.head{align-items:center;margin:4px 2px 12px}
+.brand h1{font-size:20px;font-weight:800;letter-spacing:.02em}
+.brand .subhead{color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:.02em}
+.badge{background:transparent;border:1.5px solid var(--accent);color:var(--accent);border-radius:6px;font-family:var(--mono);font-weight:600;padding:5px 8px}
+
+/* Panels */
+.panel,.pickerpanel{background:var(--panel)!important;border:1px solid var(--line)!important;border-radius:8px!important;box-shadow:none!important}
+.title{font-size:14px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+.status{color:var(--good);font-size:12px}
+.foot,.venuenote,.techniquenote,.coursenote{color:var(--dim)}
+.metric,.stat,.venueprofile>div,.tidemetric,.livechange,.modestat,.history-summary>div,.history-item,.techniquelead,.modehint,.recommendation-box,.modeaudit,.mode-money,.mode-metrics>div{background:var(--bg)!important;border-color:var(--line)!important;border-radius:6px!important}
+.metric small,.stat small,.venueprofile small,.tidemetric small,.livechange small,.modestat small,.modestat span,.history-summary small{color:var(--muted)!important}
+.stat b,.metric b,.venueprofile b,.tidemetric b,.history-summary b,.modestat b,.recommend-score b,.mode-metrics b{font-family:var(--mono);font-weight:600;color:var(--ink)!important}
+.venueprofile b,.tidemetric b{color:var(--accent)!important}
+.livechange b{color:var(--ink)!important}
+.livewind{background:var(--bg)!important;border-color:var(--line)!important}
+.livewind b{color:var(--info)!important}
+.tideempty{border-color:var(--line2)!important;color:var(--dim)!important}
+
+/* Buttons and mode switches */
+button{background:var(--panel);border:1px solid var(--line2);color:var(--ink);border-radius:6px;font-family:var(--sans)}
+.modes button{font-weight:700}
+.modes button.active,.chipbtn.active{background:var(--panel2)!important;border:1px solid var(--accent)!important;color:var(--ink)!important;box-shadow:inset 0 -2px 0 var(--accent)!important}
+.chipbtn{background:var(--bg);border:1px solid var(--line2);color:var(--ink);border-radius:6px}
+.venuechip .vnext{font-family:var(--mono);font-weight:500}
+.venuechip .vnext.sale{color:var(--good)}
+.venuechip .vnext.soon{color:var(--accent)}
+.venuechip .vnext.closed{color:var(--warn)}
+
+/* Race strip: keep every status color, retuned to the dark panel. */
+#raceScroll .racechip{border-radius:4px!important;font-family:var(--mono)!important;font-weight:600!important;background:var(--bg)!important;border-color:var(--line2)!important;color:var(--ink)!important}
+#raceScroll .racechip.race-ended,#raceScroll .racechip.race-no-recommendation:not(.active){background:var(--bg)!important;border-color:var(--line)!important;color:var(--dim)!important;opacity:1}
+#raceScroll .racechip.race-buy:not(.active){background:#13261C!important;border-color:var(--good)!important;color:var(--ink)!important}
+#raceScroll .racechip.race-skip:not(.active),#raceScroll .racechip.race-miss:not(.active){background:#121E2B!important;border-color:var(--info)!important;color:var(--ink)!important}
+#raceScroll .racechip.race-hit:not(.active),#raceScroll .racechip.race-close:not(.active){background:#2A1716!important;border-color:var(--warn)!important;color:var(--ink)!important}
+#raceScroll .racechip.race-reference:not(.active){background:#211A30!important;border-color:var(--violet)!important;color:var(--ink)!important}
+#raceScroll .racechip.race-pending:not(.active){background:#2A2111!important;border-color:var(--accent)!important;color:var(--ink)!important}
+#raceScroll .racechip.active{background:var(--ink)!important;border:2px solid var(--ink)!important;color:var(--bg)!important;box-shadow:0 0 0 2px var(--accent)!important;filter:none;transform:translateY(-2px)}
+#raceScroll .racechip.active::after{background:var(--accent)!important;color:var(--bg)!important}
+.selectedrace{background:var(--panel2)!important;border:1px solid var(--accent)!important;border-radius:6px!important;font-size:13px}
+.cutoffbar .pill{background:transparent!important;border:1px solid var(--accent)!important;color:var(--accent)!important;border-radius:6px!important;font-family:var(--mono);font-size:15px;font-weight:600}
+.racelegend{border-top-color:var(--line)!important;color:var(--muted)!important}
+.racelegend b{color:var(--ink)!important}
+
+/* Tables */
+.tablewrap{background:var(--bg)!important;border-color:var(--line)!important;border-radius:6px!important}
+.data th,.bettable th{background:var(--panel2)!important;color:var(--muted)!important;font-weight:600}
+.data td,.bettable td{border-color:var(--line)!important}
+.bettable td,.data td{font-family:var(--mono)}
+.value-table .ev-high,.ev-high{color:var(--accent)!important}
+.motor,.coursecell,.scoretable .scorebig{color:var(--info)!important}
+.coursegood{color:var(--good)!important}
+.scoreHi{color:var(--warn)!important}
+.scoresubtitle,.scorenote{background:var(--panel2)!important;border-color:var(--line)!important;color:var(--muted)!important}
+
+/* Lane colors (official boat colors) */
+.l1{background:#F4F4F2!important;color:#111!important}
+.l2{background:#1A1A1A!important;color:#fff!important;box-shadow:inset 0 0 0 1px #3A424C}
+.l3{background:#D7263D!important;color:#fff!important}
+.l4{background:#1F5FD1!important;color:#fff!important}
+.l5{background:#F2C230!important;color:#111!important}
+.l6{background:#1E9A53!important;color:#fff!important}
+.lanechip{border-radius:3px;font-family:var(--mono);font-weight:600}
+.lanecombo{display:inline-flex;gap:2px;vertical-align:middle}
+.lanecombo .lanechip{width:20px;height:22px;font-size:12px}
+
+/* Recommendation box */
+.recommend-title{color:var(--ink);font-size:12px}
+.recommend-title strong.buy,.recommend-chip.buy b{background:transparent!important;color:var(--good)!important;box-shadow:inset 0 0 0 1px var(--good)}
+.recommend-title strong.caution,.recommend-chip.caution b{background:transparent!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
+.recommend-title strong.skip,.recommend-chip.skip b{background:transparent!important;color:var(--warn)!important;box-shadow:inset 0 0 0 1px var(--warn)}
+.recommend-chip{background:var(--panel)!important;border-color:var(--line)!important}
+.recommend-chip.active{border-color:var(--accent)!important;box-shadow:none!important}
+.recommend-chip span{color:var(--muted);font-size:9px}
+.recommend-score{color:var(--muted);font-size:10px}
+.recommend-score b{font-size:22px}
+.recommendation-box ul{color:var(--muted);font-size:10px}
+.recommend-stats{border-top-color:var(--line)!important;color:var(--info)!important;font-family:var(--mono);font-size:10px}
+.dash-meter{height:6px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}
+.dash-meter i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.odds-head{color:var(--ink);font-size:12px}
+.odds-head b{background:transparent!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
+.odds-head span,.value-note{color:var(--dim);font-family:var(--mono)}
+.odds-wait{background:var(--bg)!important;border-color:var(--line2)!important;color:var(--muted)!important}
+
+/* Saved bets / history */
+.audit-picks span,.techniquechip{background:var(--bg)!important;border-color:var(--line2)!important;color:var(--ink)!important;font-family:var(--mono)}
+.audit-picks span.winner{border-color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)!important}
+.audit-picks span.has-lanes{padding:3px!important}
+.audit-verdict{background:var(--bg)!important;border-color:var(--line2)!important}
+.history-summary .roi,.modestat .mode-metrics .mode-roi{color:var(--info)!important}
+
+/* Bottom navigation */
+.bottomnav{background:#0C0F12!important;border-top:1px solid var(--line)!important}
+.bottomnav button{color:var(--dim)!important}
+.bottomnav button.active{color:var(--accent)!important;background:transparent!important}

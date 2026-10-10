@@ -39,6 +39,8 @@ on:
       - "overrides/app2.js"
       - "overrides/racer-aptitude.js"
       - "overrides/course-stats.js"
+      - "overrides/theme-dash.css"
+      - "overrides/lane-chips.js"
       - "overrides/history.js"
       - "tests/history-venues.cjs"
       - "tests/data-refresh.cjs"
@@ -83,6 +85,7 @@ jobs:
           cp overrides/history.js site/
           cp overrides/record-audit.js site/
           cp overrides/racer-aptitude.js overrides/course-stats.js site/
+          cp overrides/theme-dash.css overrides/lane-chips.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
@@ -104,6 +107,11 @@ jobs:
           if marker not in s:
               raise RuntimeError('Development homepage insertion point missing')
           s = s.replace(marker, link + marker, 1)
+          # DEV look-only theme (design C). Loaded last so it only restyles; logic files are untouched.
+          if '</head>' not in s or '</body>' not in s:
+              raise RuntimeError('Theme injection point missing')
+          s = s.replace('</head>', '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&amp;display=swap"><link rel="stylesheet" href="theme-dash.css?v=1"></head>', 1)
+          s = s.replace('</body>', '<script src="lane-chips.js?v=1"></script></body>', 1)
           p.write_text(s)
           import hashlib, re
           public = Path('site')
