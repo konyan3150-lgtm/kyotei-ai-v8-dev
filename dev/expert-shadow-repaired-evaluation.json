@@ -709,9 +709,9 @@
   "cohort": "expert-shadow-official-v1",
   "input_provenance": {
     "cohort": "expert-shadow-official-v1",
-    "history_through": "2026-10-09",
-    "starts": 1830738,
-    "aptitude_sha256": "3ea5e46eef8e2bd866332ed169a22f18007af8c1fab52beac1270cec65647c73",
+    "history_through": "2026-10-10",
+    "starts": 1831674,
+    "aptitude_sha256": "c8e095f36fe29f7e4801f89b05e1550b19e1cc9b0fb3409cb38966ffc2a0cef7",
     "base_snapshot_sha256": "e571676c1484b4e7443f8344ad343d49e681f8eed14af6be0b9f089ab5a06d8a",
     "model_sha256": "357aeb0b6e6c452f63e9fd35240252202140cdadc62e6e215b1c0b66d671bdcc",
     "auxiliary_sha256": {
@@ -1780,20 +1780,20 @@
   "paired_hit_difference": 1,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-10-10T14:59:21.435Z",
+    "checked_at": "2026-10-10T15:18:54.191Z",
     "eligible_preclose_races": 0,
     "captured_preclose_races": 0,
     "missing_preclose_records": [],
     "stale_preclose_records": [],
     "overdue_results": [],
-    "original_exhibition_status": "no_preclose_values",
-    "program_status": "available",
+    "original_exhibition_status": "unavailable",
+    "program_status": "program_unpublished",
     "status": "ok",
     "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent.",
     "revision_rejections": []
   },
   "collection_daily": {
-    "checked_at": "2026-10-10T14:59:21.435Z",
+    "checked_at": "2026-10-10T15:18:54.192Z",
     "days": {
       "20261003": {
         "saved": 134,
@@ -1902,15 +1902,10 @@
         "cancelled": 0,
         "excluded": 10,
         "invalid_time": 0,
-        "closed_program_races": 156,
-        "recorded_closed_races": 155,
-        "unrecorded_closed_races": 1,
-        "unrecorded": [
-          {
-            "stadium": 23,
-            "race": 3
-          }
-        ]
+        "closed_program_races": null,
+        "recorded_closed_races": null,
+        "unrecorded_closed_races": null,
+        "unrecorded": []
       }
     },
     "limitation": "Unrecorded closed races are coverage gaps, not proof of collector failure. Historical program denominators are unknown. Cancelled and excluded records are separate. No predictions reconstructed."
@@ -3177,9 +3172,10 @@
       "20261006",
       "20261007",
       "20261008",
-      "20261009"
+      "20261009",
+      "20261010"
     ],
-    "train_races": 495,
+    "train_races": 571,
     "model_fitted_at": null,
     "selected": null,
     "production_changed": false,
@@ -3942,27 +3938,18 @@
   },
   "collection_gaps": {
     "reasons": {
-      "not_observed_unknown": 1,
+      "not_observed_unknown": 0,
       "invalid_model_rows": 0,
       "snapshot_rejected": 0,
       "revision_rejected": 0,
       "observed_without_capture": 0
     },
-    "races": [
-      {
-        "key": "20261010_23_3",
-        "reason": "not_observed_unknown",
-        "last_observed_at": null
-      }
-    ],
+    "races": [],
     "limitation": "Only observed attempts establish a failure reason. No observation cannot distinguish collection start time, missed scheduling, or unavailable input. Historical predictions are never reconstructed."
   },
   "input_observations": {
-    "date": "20261010",
-    "observed_races": 155,
-    "official_preview_status": {
-      "preclose_record": 37,
-      "no_record": 118
-    }
+    "date": "20261011",
+    "observed_races": 0,
+    "official_preview_status": {}
   }
 }
