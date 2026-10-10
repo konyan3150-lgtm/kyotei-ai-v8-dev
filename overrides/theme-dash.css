@@ -107,3 +107,34 @@ button{background:var(--panel);border:1px solid var(--line2);color:var(--ink);bo
 .bottomnav{background:#0C0F12!important;border-top:1px solid var(--line)!important}
 .bottomnav button{color:var(--dim)!important}
 .bottomnav button.active{color:var(--accent)!important;background:transparent!important}
+
+/* ---- v2: easier tables and panels ---- */
+.tablewrap table td,.tablewrap table th,.bettable td,.bettable th{border-right:0!important;border-left:0!important}
+.tablewrap table td,.bettable td{border-top:1px solid var(--line)!important;padding:8px 3px!important;font-size:12.5px;vertical-align:middle}
+.tablewrap table th,.bettable th{padding:7px 3px!important;font-size:11px!important;letter-spacing:.02em;border-bottom:1px solid var(--line2)!important}
+.tablewrap table tbody tr:nth-child(even) td,.bettable tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.data td.name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;letter-spacing:-.02em;font-family:var(--sans);font-weight:700}
+.data .lanechip,.bettable .lanechip{width:24px;height:24px;font-size:13px}
+.subvalue{color:var(--muted)!important;font-family:var(--mono)}
+/* Meeting (今節成績): one line per boat, scroll sideways if needed */
+#meetingContext{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+#meetingContext .bettable{table-layout:auto!important;min-width:100%!important}
+#meetingContext .bettable td,#meetingContext .bettable th{white-space:nowrap;font-family:var(--mono);font-size:11.5px!important;padding:7px 6px!important;text-align:center}
+#meetingContext .bettable th{background:var(--panel2)!important}
+/* Expert panel: one clear headline, quiet details */
+#expertDiag{font-size:13px;line-height:1.6}
+#expertDiag b{display:block;font-size:15px;color:var(--accent)}
+#expertDiag small{display:block;font-size:12px;color:var(--muted);font-family:var(--mono);letter-spacing:-.01em}
+#expertAccum,#expertAccum *{font-size:11px!important;color:var(--dim)!important;line-height:1.55!important}
+/* Score heat (V8 breakdown): stronger = warmer */
+.heat{color:var(--ink)!important;font-family:var(--mono)}
+.heat.top{color:var(--accent)!important;font-weight:600}
+#v8summary .scorebig{font-family:var(--mono);font-weight:600}
+/* Stat tiles and alerts without emoji */
+.stat{padding:9px 4px!important}
+.stat b{font-size:17px}
+.ev-race-alert{display:inline-block;margin:0 0 6px;padding:3px 8px;border-radius:4px;background:transparent!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent);font-size:11px;font-weight:700}
+.ev-stake-badge{background:transparent!important;font-size:10px;font-weight:700;color:var(--muted)!important}
+.ev-stake-badge.ev-stake-strong{color:var(--warn)!important}
+.ev-stake-badge.ev-stake-thick{color:var(--accent)!important}
+.techniquelead>small{color:var(--muted)!important}
