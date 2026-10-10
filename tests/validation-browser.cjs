@@ -6,9 +6,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   const fixture={saved:2,settled:0,pending:2,cancelled:0,invalid:0,arms:{baseline:arm,candidate:arm},value_arms:{baseline:{eligible_races:0,bought_races:0,hits:0,investment:0,payout:0,roi:null},candidate:{eligible_races:0,bought_races:0,hits:0,investment:0,payout:0,roi:null}},
     calibration:{status:'collecting',train_dates:[],test_dates:[],train_races:0,test_races:0},variants:{captured:2,settled:1,st_eligible:2,st_missing:0,arms:{st:{st_25:{races:1,hit_rate:1,roi:2}},budget:{six_equal:{races:1,hit_rate:1,roi:2},three_equal:{races:1,hit_rate:1,roi:4}}}},realtime:{preserved_previous_snapshots:1},health:{checked_at:new Date().toISOString(),status:'ok',eligible_preclose_races:1,captured_preclose_races:1,original_exhibition_status:'no_preclose_values'},
     diagnostics:{paired_intervals:{status:'insufficient_sample',races:0,dates:0},by_expert:{}},drift:{status:'collecting_reference',reference_races:2,recent_races:0}};
+  fixture.odds_cap={test_races:0,test_dates:[],ready_for_review:false,arms:{}};
   await page.route('https://raw.githubusercontent.com/**',route=>{urls.push(route.request().url());return fail?route.abort():route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(fixture)});});
   await page.goto(process.env.DASHBOARD_URL||'http://127.0.0.1:8765/validation.html');await page.waitForFunction(()=>document.querySelector('#counts').children.length===6);
   assert.equal(await page.locator('.count').count(),6);assert.equal(await page.locator('#variantsTable tr').count(),3);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  assert.ok((await page.locator('#readiness').innerText()).includes('150R必要'));assert.ok((await page.locator('#readiness').innerText()).includes('2026年10月11日'));
   fs.mkdirSync('ui-screenshots',{recursive:true});await page.screenshot({path:'ui-screenshots/validation-mobile.png',fullPage:true});
   await page.locator('#ev').click();assert.equal(await page.locator('#ev').getAttribute('aria-pressed'),'true');assert.ok((await page.locator('#comparisonNote').innerText()).includes('最大4点'));
   fixture.collection_daily={days:{20261007:{saved:2,preclose_saved:2,settled:1,pending:1,overdue:1,unrecorded_closed_races:3},20261006:{saved:1,preclose_saved:1,settled:1,pending:0,overdue:0,unrecorded_closed_races:null}}};
@@ -20,7 +22,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   const bucket={lower:500,upper:null,tickets:318,races:160,dates:5,predicted_probability:.005,observed_ticket_hit_rate:0,estimated_roi:4.2,roi:0,profit:-31800};
   fixture.odds_calibration={status:'collecting_training',train_dates:['20261003','20261004','20261005','20261006','20261007'],train_races:355,model_fitted_at:null,test_dates:[],test_races:0,ready_for_review:false};
   fixture.odds_diagnostics={counts:{eligible_races:355,odds_missing_stale_or_postclose:154,odds_incomplete:1},scopes:{six_equal:{summary:{races:355,tickets:2130,dates:5},by_odds:[bucket],by_probability:[{...bucket,lower:0,upper:.01}]},ev_saved:{summary:{races:354,tickets:1416,dates:5},by_odds:[bucket],by_probability:[{...bucket,lower:0,upper:.01}]},all_combinations:{summary:{races:355,tickets:42600,dates:5},by_odds:[{...bucket,roi:undefined,profit:undefined,estimated_roi:undefined}],by_probability:[]}}};
+  fixture.odds_cap={test_races:1,test_dates:['20261011'],ready_for_review:false,arms:Object.fromEntries(['reference','cap_100','cap_50','cap_30'].map((key,i)=>[key,{bought_races:1,skipped_races:0,hit_rate:1,roi:760/(400-i*100),profit:760-(400-i*100),investment:400-i*100,payout:760,risk:{max_drawdown:0,max_consecutive_misses:0}}]))};
   await page.locator('#refresh').click();await page.waitForFunction(()=>document.querySelector('#dailyCollection').children.length===2);
+  assert.ok((await page.locator('#readiness').innerText()).includes('30倍未満'));assert.ok((await page.locator('#readiness').innerText()).includes('投資 ¥100・払戻 ¥760'));assert.ok((await page.locator('#readiness').innerText()).includes('判断保留。'));
   await page.locator('summary').filter({hasText:'日別の保存'}).click();
   assert.ok((await page.locator('#dailyCollection').innerText()).includes('未確認'));
   assert.ok((await page.locator('#gapNote').innerText()).includes('原因未確認 3R'));

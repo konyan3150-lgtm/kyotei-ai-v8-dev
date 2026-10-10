@@ -14,7 +14,7 @@ The supplied tests passed but accepted malformed probability mass, duplicate com
 
 - Supplied tests passed before changes; extended odds-cap tests and nine related JS gate scripts passed after changes.
 - Migration history/purchase/money regression suite: 88 passed, 0 failed.
-- Read-only replay of current development archives: old records generate no captures and no comparison rows, with unchanged serialized records. Existing saved tickets and money are not rewritten.
+- Read-only replay of 837 records at development main df3624d8fbdc38e18f7ebd6297d6fbca23794056: old records generate no captures and no comparison rows, with unchanged serialized records. Existing saved tickets and money are not rewritten.
 - No model retraining, no production files, no historical-data writes.
 - A comparison of ROI alone is not a profitability claim. Different caps can spend different amounts; report investment, payout, profit, bought/skipped count and drawdown together. Multiple alternatives and repeated inspection remain exploratory; adoption would need separate future confirmation and user authorization.
 
