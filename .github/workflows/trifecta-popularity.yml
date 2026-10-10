@@ -28,16 +28,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install lhafile==0.3.1
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: /tmp/official-aptitude-cache
-          key: official-k-popularity-${{ inputs.start || '20210401' }}-${{ inputs.end || '20260930' }}-v1
+          key: official-k-popularity-${{ github.run_id }}
           restore-keys: |
             official-k-popularity-
             official-aptitude-
       - name: Test parser
         run: python -m unittest discover -s experiments -p test_trifecta_popularity.py
       - name: Collect official K files and summarize (read-only research)
+        timeout-minutes: 200
         run: python experiments/trifecta_popularity.py --start "${{ inputs.start || '20210401' }}" --end "${{ inputs.end || '20260930' }}"
       - name: Check parse coverage
         run: |
@@ -61,6 +62,12 @@ jobs:
             if git push origin HEAD:main; then exit 0; fi
           done
           exit 1
+      - name: Keep downloaded official files even if the run fails or times out
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-k-popularity-${{ github.run_id }}
       - name: Keep outputs on failure
         if: failure()
         uses: actions/upload-artifact@v4

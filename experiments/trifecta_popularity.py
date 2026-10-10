@@ -81,7 +81,10 @@ def main():
     p.add_argument('--pause', type=float, default=0.5)
     a = p.parse_args(); out = Path(a.out_dir); out.mkdir(parents=True, exist_ok=True); cache = Path(a.cache)
     rows, excluded, failures, sources = [], 0, [], {}
-    for day in days(a.start, a.end):
+    started = time.time(); all_days = list(days(a.start, a.end))
+    for i, day in enumerate(all_days, 1):
+        if i % 30 == 0 or i == len(all_days):
+            print(f'progress {i}/{len(all_days)} days, {len(rows)} races, {len(failures)} source failures, {time.time()-started:.0f}s', flush=True)
         cached = (cache / 'K' / day[:6] / f'k{day[2:]}.lzh').exists()
         try:
             text, sha = archive(day, 'K', cache)
