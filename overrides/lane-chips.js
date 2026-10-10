@@ -24,7 +24,7 @@
     for(const td of document.querySelectorAll('.breakdown td:not([data-heat])')){
       td.dataset.heat='1';const t=(td.textContent||'').trim();if(!/^\d{1,3}$/.test(t)||td.querySelector('.lanechip'))continue;
       const v=Math.max(0,Math.min(100,Number(t)));td.classList.add('heat');if(v>=100)td.classList.add('top');
-      td.style.background=`rgba(255,181,71,${(v/100*0.32).toFixed(3)})`;
+      td.style.background=`rgba(127,167,201,${(v/100*0.32).toFixed(3)})`;
     }
   }
   const EMOJI=/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\uFE0F?\s*/gu;
