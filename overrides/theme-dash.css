@@ -138,3 +138,14 @@ button{background:var(--panel);border:1px solid var(--line2);color:var(--ink);bo
 .ev-stake-badge.ev-stake-strong{color:var(--warn)!important}
 .ev-stake-badge.ev-stake-thick{color:var(--accent)!important}
 .techniquelead>small{color:var(--muted)!important}
+
+/* ---- Tabs (pages.js): show only the panels of the current tab ---- */
+body[data-page="home"] .wrap [data-page]:not([data-page~="home"]),
+body[data-page="prediction"] .wrap [data-page]:not([data-page~="prediction"]),
+body[data-page="bets"] .wrap [data-page]:not([data-page~="bets"]),
+body[data-page="results"] .wrap [data-page]:not([data-page~="results"]),
+body[data-page="settings"] .wrap [data-page]:not([data-page~="settings"]){display:none!important}
+/* Outside ホーム the race picker stays as a compact bar */
+body:not([data-page="home"]) .pickerpanel .racelegend{display:none!important}
+body:not([data-page="home"]) .pickerpanel .datechips{display:none!important}
+.v8grid:empty{display:none}
