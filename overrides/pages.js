@@ -8,7 +8,7 @@
   const has=(el,sel)=>!!el.querySelector(sel);
   function pageFor(el){
     if(el.id==='homeSection')return 'home';
-    if(el.id==='betSection')return 'home bets'; // 期待値/V8 switch also on 買い目
+    if(el.id==='betSection')return 'home bets results'; // 期待値/V8 switch also on 買い目 and 結果
     if(el.classList.contains('pickerpanel'))return 'home prediction bets';
     if(el.id==='historyPanel')return 'results';
     if(el.id==='settingsSection'||has(el,'#serverDiag,#exportDataBtn'))return 'settings';

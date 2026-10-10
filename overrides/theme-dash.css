@@ -3,7 +3,7 @@
 :root{
   --bg:#101317;--panel:#171B20;--panel2:#1D2228;--line:#252B33;--line2:#2D343D;
   --ink:#E3E7EC;--muted:#8A939E;--dim:#5E6670;
-  --accent:#7FA7C9;--good:#59D98E;--warn:#FF8A5C;--info:#62C2CF;--violet:#B79BFF;
+  --accent:#7FA7C9;--caution:#FFB547;--good:#59D98E;--warn:#FF8A5C;--info:#62C2CF;--violet:#B79BFF;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
 }
@@ -80,7 +80,7 @@ button{background:var(--panel);border:1px solid var(--line2);color:var(--ink);bo
 /* Recommendation box */
 .recommend-title{color:var(--ink);font-size:12px}
 .recommend-title strong.buy,.recommend-chip.buy b{background:transparent!important;color:var(--good)!important;box-shadow:inset 0 0 0 1px var(--good)}
-.recommend-title strong.caution,.recommend-chip.caution b{background:transparent!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1px var(--accent)}
+.recommend-title strong.caution,.recommend-chip.caution b{background:transparent!important;color:var(--caution)!important;box-shadow:inset 0 0 0 1px var(--caution)}
 .recommend-title strong.skip,.recommend-chip.skip b{background:transparent!important;color:var(--warn)!important;box-shadow:inset 0 0 0 1px var(--warn)}
 .recommend-chip{background:var(--panel)!important;border-color:var(--line)!important}
 .recommend-chip.active{border-color:var(--accent)!important;box-shadow:none!important}
@@ -150,3 +150,10 @@ body[data-page="settings"] .wrap [data-page]:not([data-page~="settings"]){displa
 body:not([data-page="home"]) .pickerpanel .racelegend{display:none!important}
 body:not([data-page="home"]) .pickerpanel .datechips{display:none!important}
 .v8grid:empty{display:none}
+
+/* Caution stays amber; combination column wide enough for three boat chips */
+.value-table th:first-child,.value-table td:first-child{width:25%}
+.value-table .lanecombo .lanechip,.bettable .lanecombo .lanechip{width:17px;height:20px;font-size:11px}
+.value-table td,.value-table th{padding-left:2px!important;padding-right:2px!important}
+/* On 結果 the 期待値/V8 switch sits above the history so its mode is clear */
+body[data-page="results"] #betSection .title::after{content:"（結果の集計対象）";font-size:11px;font-weight:500;color:var(--muted);margin-left:4px}
