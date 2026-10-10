@@ -42,6 +42,7 @@ on:
       - "overrides/theme-dash.css"
       - "overrides/lane-chips.js"
       - "overrides/pages.js"
+      - "overrides/pre-race-decision.js"
       - "overrides/history.js"
       - "tests/history-venues.cjs"
       - "tests/data-refresh.cjs"
@@ -87,6 +88,7 @@ jobs:
           cp overrides/record-audit.js site/
           cp overrides/racer-aptitude.js overrides/course-stats.js site/
           cp overrides/theme-dash.css overrides/lane-chips.js overrides/pages.js site/
+          cp overrides/pre-race-decision.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
@@ -100,6 +102,9 @@ jobs:
           s = s.replace('src="app2.js?', 'src="app2.js?program-date-20261007&')
           s = s.replace('src="app2.js?', 'src="app2.js?load-time-20261007&')
           s = s.replace('src="app2.js?', 'src="app2.js?payout-state-20261010&')
+          if 'src="pre-race-decision.js?' not in s:
+              raise RuntimeError('pre-race-decision injection point missing')
+          s = s.replace('src="pre-race-decision.js?', 'src="pre-race-decision.js?saved-decision-20261011&')
           s = s.replace('server-sync.js?', 'server-sync.js?archive-timeout-20261007&')
           s = s.replace('server-sync.js?', 'server-sync.js?refresh-20261006&')
           for asset in ['server-sync.js', 'odds-value.js', 'recommendation.js']:
