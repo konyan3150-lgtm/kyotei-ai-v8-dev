@@ -111,7 +111,7 @@ jobs:
           # DEV look-only theme (design C). Loaded last so it only restyles; logic files are untouched.
           if '</head>' not in s or '</body>' not in s:
               raise RuntimeError('Theme injection point missing')
-          s = s.replace('</head>', '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&amp;display=swap"><link rel="stylesheet" href="theme-dash.css?v=8"></head>', 1)
+          s = s.replace('</head>', '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&amp;display=swap"><link rel="stylesheet" href="theme-dash.css?v=9"></head>', 1)
           s = s.replace('</body>', '<script src="lane-chips.js?v=3"></script><script src="pages.js?v=2"></script></body>', 1)
           p.write_text(s)
           import hashlib, re
