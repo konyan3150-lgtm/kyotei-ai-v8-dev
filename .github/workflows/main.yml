@@ -37,6 +37,8 @@ on:
       - "overrides/value-record-state.js"
       - "tests/value-record-state.cjs"
       - "overrides/app2.js"
+      - "overrides/racer-aptitude.js"
+      - "overrides/course-stats.js"
       - "overrides/history.js"
       - "tests/history-venues.cjs"
       - "tests/data-refresh.cjs"
@@ -80,6 +82,7 @@ jobs:
           cp overrides/app2.js site/
           cp overrides/history.js site/
           cp overrides/record-audit.js site/
+          cp overrides/racer-aptitude.js overrides/course-stats.js site/
           python3 - <<'PYTHON'
           from pathlib import Path
           p = Path('site/index.html')
