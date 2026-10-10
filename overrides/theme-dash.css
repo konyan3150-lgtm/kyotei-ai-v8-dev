@@ -157,3 +157,16 @@ body:not([data-page="home"]) .pickerpanel .datechips{display:none!important}
 .value-table td,.value-table th{padding-left:2px!important;padding-right:2px!important}
 /* On 結果 the 期待値/V8 switch sits above the history so its mode is clear */
 body[data-page="results"] #betSection .title::after{content:"（結果の集計対象）";font-size:11px;font-weight:500;color:var(--muted);margin-left:4px}
+
+/* Payout pill next to 締切: show the saved-pick outcome (classes set by the page) */
+#selectedPayout.payout-hit{background:#2A1716!important;border-color:var(--warn)!important;color:#FFC2AE!important;font-weight:700}
+#selectedPayout.payout-miss{background:var(--bg)!important;border-color:var(--line2)!important;color:var(--dim)!important}
+#selectedPayout.payout-ref{background:#211A30!important;border-color:var(--violet)!important;color:#D9CCFF!important}
+#selectedPayout.payout-skip{background:var(--bg)!important;border-color:var(--line2)!important;color:var(--muted)!important}
+#selectedPayout.payout-wait{background:#2A2111!important;border-color:var(--caution)!important;color:var(--caution)!important}
+#selectedPayout[class*="payout-"]::before{display:block;font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:.04em;line-height:1.2;text-align:center}
+#selectedPayout.payout-hit::before{content:"的中"}
+#selectedPayout.payout-miss::before{content:"不的中"}
+#selectedPayout.payout-ref::before{content:"参考的中"}
+#selectedPayout.payout-skip::before{content:"推奨なし"}
+#selectedPayout.payout-wait::before{content:"反映待ち"}
