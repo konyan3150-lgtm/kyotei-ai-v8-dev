@@ -1,0 +1,79 @@
+name: Long-run popularity check for every bet type from official K files
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: First date (YYYYMMDD)
+        default: "20210401"
+      end:
+        description: Last date (YYYYMMDD)
+        default: "20260930"
+  push:
+    branches: [main]
+    paths: [".github/workflows/bettype-popularity.yml", "experiments/bettype_popularity.py", "experiments/test_bettype_popularity.py"]
+permissions:
+  contents: write
+concurrency:
+  group: bettype-popularity
+  cancel-in-progress: false
+jobs:
+  bettype:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install lhafile==0.3.1
+      - uses: actions/cache/restore@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-k-popularity-${{ github.run_id }}
+          restore-keys: |
+            official-k-popularity-
+            official-aptitude-
+      - name: Test parser
+        run: python -m unittest discover -s experiments -p test_bettype_popularity.py
+      - name: Collect official K files and summarize (read-only research)
+        timeout-minutes: 200
+        run: python experiments/bettype_popularity.py --start "${{ inputs.start || '20210401' }}" --end "${{ inputs.end || '20260930' }}"
+      - name: Check parse coverage
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('dev/bettype-popularity/summary.json'))
+          print({'days':x['days_with_source'],'failures':x['source_failures']})
+          for k,t in x['types'].items():
+              total=t['races']+t['excluded_races']
+              print(k,t['races'],t['excluded_races'])
+              if not t['races'] or t['excluded_races']>0.05*total:
+                  raise SystemExit(f'Too many excluded {k} races: parser may not match the official format. Nothing committed.')
+          PY
+      - name: Save research data only
+        run: |
+          git add dev/bettype-popularity/summary.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Save long-run bet-type popularity research summary"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - name: Keep downloaded official files even if the run fails or times out
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/official-aptitude-cache
+          key: official-k-popularity-${{ github.run_id }}
+      - name: Keep outputs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bettype-popularity-${{ github.run_id }}
+          path: dev/bettype-popularity
+          retention-days: 7
