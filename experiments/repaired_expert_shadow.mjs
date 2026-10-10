@@ -9,6 +9,7 @@ import {officialFallback} from './official_result_fallback.mjs';
 import fs from 'node:fs';
 import {calibrationReadiness} from './prospective_calibration.mjs';
 import {captureVariants,collectRevision,evaluateVariants} from './preclose_variants.mjs';
+import {oddsCapCapture,oddsCapReport} from './odds_cap.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
@@ -152,7 +153,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6){observeCapture(inputObservations.records,k,observation,'invalid_model_rows');continue;}
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.learning_inputs=captureLearningInputs({race,rows,date,stadium:sid,capturedAt:rec.saved_at,recent});rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v3-learning-inputs';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
+    if(rec){rec.learning_inputs=captureLearningInputs({race,rows,date,stadium:sid,capturedAt:rec.saved_at,recent});rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;const capped=oddsCapCapture(rec);if(capped)rec.odds_cap_shadow=capped;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v3-learning-inputs';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
     else observeCapture(inputObservations.records,k,observation,'snapshot_rejected');
   }
   let fallbackAttempts=0;
@@ -196,6 +197,7 @@ export async function run() {
   report.odds_diagnostics=oddsDiagnostics(all);
   report.odds_deterioration=oddsDeterioration(all);
   report.odds_calibration=oddsCalibrationReport(all,calibrationPrepared);
+  report.odds_cap=oddsCapReport(all);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
   report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};

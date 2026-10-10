@@ -20,6 +20,9 @@ jobs:
       - name: Verify migration safety invariants
         run: |
           node --check experiments/official_result_fallback.mjs
+          node --check experiments/odds_cap.mjs
+          node --check validation.mjs
+          node experiments/test_odds_cap.mjs
           node experiments/test_official_result_fallback.mjs
           node experiments/test_prospective_input.mjs
           node experiments/test_exhibition_health.mjs
