@@ -46,6 +46,10 @@ function render(){
       if(re.test_races)for(const [key,label] of [['reference','補正後の既存条件'],['conservative','下落を見込む条件']]){const a=re.arms[key];item(label,`購入 ${a.bought_races}R・見送り ${a.skipped_races}R／的中率 ${percentage(a.hit_rate)}・回収率 ${percentage(a.roi)}／仮想収支 ${money(a.profit)}・投資 ${money(a.investment)}・払戻 ${money(a.payout)}／最大下落 ${money(a.risk.max_drawdown)}・最大連続不的中 ${a.risk.max_consecutive_misses}R`);}
     }
   }
+  const cap=d.odds_cap;if(cap){
+    item('高配当の上限オッズ',`2026年10月11日から締切前に新規保存した記録が対象。既存の期待値条件のまま、締切前オッズが100倍・50倍・30倍未満の券だけに絞る固定条件を同じレースで比較。1R最大400円。同じ対象 ${cap.test_races}R・${cap.test_dates?.length||0}/5日（150R必要）。${cap.ready_for_review?'比較確認可能。':'判断保留。'}本番には未反映。`);
+    if(cap.test_races)for(const [key,label] of [['reference','上限なし（既存条件）'],['cap_100','100倍未満'],['cap_50','50倍未満'],['cap_30','30倍未満']]){const a=cap.arms?.[key];if(a)item(label,`購入 ${a.bought_races}R・見送り ${a.skipped_races}R／的中率 ${percentage(a.hit_rate)}・回収率 ${percentage(a.roi)}／仮想収支 ${money(a.profit)}・投資 ${money(a.investment)}・払戻 ${money(a.payout)}／最大下落 ${money(a.risk.max_drawdown)}・最大連続不的中 ${a.risk.max_consecutive_misses}R`);}
+  }
   const p=d.diagnostics?.paired_intervals,dr=d.drift;item('改善の判断',p?.status==='descriptive_interval'?'差のばらつきを集計中。将来期間での確認が必要。':`データ不足：確定 ${p?.races??0}/100R・${p?.dates??0}/5日`);
   item('傾向変化の検知',dr?.status==='distribution_change_detected'?'データの分布変化を検知。内容確認が必要。':dr?.status==='stable'?'今回の基準では大きな変化なし':`基準 ${dr?.reference_races??0}/200R・比較 ${dr?.recent_races??0}/50R`);
   renderVariants();renderGroups();renderDaily();renderShadowSelection();renderOdds();
