@@ -20,6 +20,8 @@ on:
       - "experiments/test_robust_ev.mjs"
       - "experiments/odds_cap.mjs"
       - "experiments/test_odds_cap.mjs"
+      - "experiments/final_odds_ev.mjs"
+      - "experiments/test_final_odds_ev.mjs"
       - "experiments/test_odds_calibration.mjs"
       - "experiments/odds_diagnostics.mjs"
       - "experiments/test_odds_diagnostics.mjs"
@@ -153,6 +155,7 @@ jobs:
           node experiments/test_odds_calibration.mjs
           node experiments/test_robust_ev.mjs
           node experiments/test_odds_cap.mjs
+          node experiments/test_final_odds_ev.mjs
           node experiments/test_odds_diagnostics.mjs
           node tests/selection-analysis.mjs
           npm install --no-save --ignore-scripts playwright
