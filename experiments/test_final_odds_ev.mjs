@@ -58,6 +58,27 @@ for(const change of [x=>delete x.final_odds_shadow,x=>x.final_odds_shadow.arms.b
   x=>{x.closed_at='2026-10-13 09:59:00'},x=>x.baseline_distribution[0].odds=99]){const bad=structuredClone(hit);change(bad);assert.equal(finalOddsReport({bad}).test_races,0);}
 for(const outcome of [{result:'1-1-2',amount:100},{result:'bad',amount:100},{result:'1-2-3',amount:0},{result:'1-2-3',amount:1.5},{excluded:true,result:'1-2-3',amount:100}])assert.equal(finalOddsReport({bad:{...hit,outcome}}).test_races,0);
 
+// No ticket under the cap with otherwise valid input: counted as a skip, report does not stop (ChatGPT review 2026-10-12).
+const flat=structuredClone(base);for(const x of flat.baseline_distribution){x.prob=1/120;x.odds=80;}
+const flatBefore=JSON.stringify(flat),fc=finalOddsCapture(flat);
+assert.ok(fc);assert.deepEqual(fc.arms.final_085_cap50,{items:[],investment:0});assert.equal(JSON.stringify(flat),flatBefore);
+assert.equal(fc.arms.reference.items.length,0);                         // 1/120 x 0.75 x 80 = 0.5 < 1.08
+const flatRec={...flat,final_odds_shadow:fc,outcome:{result:'1-2-3',amount:8000}},flatRecBefore=JSON.stringify(flatRec);
+const flatRep=finalOddsReport({flat:flatRec});assert.equal(JSON.stringify(flatRec),flatRecBefore);
+assert.equal(flatRep.test_races,1);
+const capArm=flatRep.arms.final_085_cap50;
+assert.equal(capArm.investment,0);assert.equal(capArm.payout,0);assert.equal(capArm.skipped_races,1);assert.equal(capArm.bought_races,0);assert.equal(capArm.roi,null);
+// Mixing a skipped-cap race with a normal race leaves the other arms' results unchanged.
+const mixed=finalOddsReport({a:hit,flat:flatRec});
+for(const name of ['reference','band_cal','band_cal_final085'])assert.equal(mixed.arms[name].payout,rep.arms[name].payout,name);
+assert.equal(mixed.arms.final_085_cap50.skipped_races,1+rep.arms.final_085_cap50.skipped_races);
+// Invalid inputs are still rejected, and a stored null/malformed arm is not counted.
+assert.equal(finalOddsCapture({...flat,odds_snapshot_at:'2026-10-13T00:40:00Z'}),null);
+assert.equal(finalOddsCapture({...flat,baseline_distribution:flat.baseline_distribution.map((x,i)=>i?x:{...x,odds:0})}),null);
+assert.equal(finalOddsCapture({...flat,baseline_distribution:flat.baseline_distribution.slice(1)}),null);
+for(const broken of [null,{investment:0},{items:null,investment:0},{items:[]}]){const bad=structuredClone(flatRec);bad.final_odds_shadow.arms.final_085_cap50=broken;
+  assert.doesNotThrow(()=>finalOddsReport({bad}));assert.equal(finalOddsReport({bad}).test_races,0);}
+
 // Policy is frozen and ready only after 5 dates and 150 races.
 assert.ok(Object.isFrozen(FINAL_ODDS_POLICY)&&Object.isFrozen(FINAL_ODDS_POLICY.arms)&&Object.isFrozen(FINAL_ODDS_POLICY.band_ratios)&&Object.values(FINAL_ODDS_POLICY.arms).every(Object.isFrozen));
 assert.deepEqual(FINAL_ODDS_POLICY.band_ratios,[1.862,1.364,1.082,.93,.609,.406]);assert.deepEqual(Object.keys(FINAL_ODDS_POLICY.arms),['band_cal','band_cal_final085','final_085_cap50']);
