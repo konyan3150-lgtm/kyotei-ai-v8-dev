@@ -31,6 +31,8 @@ function arm(distribution,{calibrate=false,factor=1,cap=null},r){
     probs=raw.map(x=>({...x,prob:x.prob/mass}));
   }
   const pool=probs.filter(x=>cap==null||x.odds<cap);
+  // Valid input with no ticket under the cap is a skip (nothing bought), not an invalid capture.
+  if(!pool.length)return {items:[],investment:0};
   const scaled=distribution.map(x=>({...x,odds:x.odds*factor}));
   const t=evTickets(pool,scaled,r.odds_snapshot_at,r.saved_at);
   if(t.status!=='shadow_estimate_uncalibrated')return null;
@@ -47,13 +49,14 @@ export function finalOddsCapture(r){
   if(!Array.isArray(distribution)||distribution.length!==120||distribution.some(x=>!Number.isFinite(x.odds)||x.odds<=0||!Number.isFinite(x.prob)))return null;
   const arms={reference:arm(distribution,{},r)};
   if(!arms.reference)return null;
-  for(const [name,spec] of Object.entries(FINAL_ODDS_POLICY.arms))arms[name]=arm(distribution,spec,r);
+  for(const [name,spec] of Object.entries(FINAL_ODDS_POLICY.arms)){arms[name]=arm(distribution,spec,r);if(!arms[name])return null;}
   return {version:FINAL_ODDS_POLICY.version,captured_at:r.saved_at,odds_snapshot_at:r.odds_snapshot_at,arms};
 }
 
 export function finalOddsValid(r){
   const saved=r.final_odds_shadow;
   if(!saved||saved.version!==FINAL_ODDS_POLICY.version||saved.captured_at!==r.saved_at)return false;
+  if(!ARMS.every(name=>Array.isArray(saved.arms?.[name]?.items)&&Number.isFinite(saved.arms[name].investment)))return false;
   const close=Date.parse(String(r.closed_at).replace(' ','T')+'+09:00');
   if(!Number.isFinite(close)||Date.parse(r.saved_at)>=close)return false;
   return JSON.stringify(saved)===JSON.stringify(finalOddsCapture(r));
