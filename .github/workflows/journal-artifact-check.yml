@@ -1,30 +1,29 @@
-name: Journal artifact service check (isolated)
-# Isolated check of the production journal artifact flow on GitHub's service: unique names per run attempt,
-# upload -> download (restore) -> re-run of the same run. Runs only on this branch; touches no production data.
+name: Journal storage service check (isolated)
+# Isolated check, on GitHub, of the journal storage used by the production update workflow:
+# 1) artifacts: does a re-run keep the earlier attempt's artifact? (result: no -> not used)
+# 2) git branch ops/preclose-journal: save -> restore in a re-run of the same run.
+# Runs only on this branch of the DEV repository; touches no production data.
 on:
   push:
     branches: [journal-artifact-check]
     paths: [".github/workflows/journal-artifact-check.yml", "journal-check/**"]
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   check:
     if: github.ref == 'refs/heads/journal-artifact-check'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      GH_TOKEN: ${{ github.token }}
-      JOURNAL_WORKFLOW_PATH: .github/workflows/journal-artifact-check.yml
-      JOURNAL_BRANCH: journal-artifact-check
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-      - name: Restore (union of earlier journal artifacts of this workflow)
+      - name: Restore from the journal branch
+        id: restore
         run: node journal-check/journal_store.mjs restore "$RUNNER_TEMP/v8-journal/preclose-journal.json"
-      - name: Previous attempts' journals must be restored
+      - name: Earlier attempts of this run must be restored
         run: |
           node --input-type=module -e "
           import {readJournal} from './journal-check/carry_preclose_saves.mjs';
@@ -34,16 +33,7 @@ jobs:
         run: |
           node --input-type=module -e "
           import {readJournal,writeJournal} from './journal-check/carry_preclose_saves.mjs';
-          const j=readJournal(process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json');j.entries['check-'+process.env.GITHUB_RUN_ID+'-'+process.env.GITHUB_RUN_ATTEMPT]={type:'record',snapshot:{note:'service check'},captured_at:new Date().toISOString()};writeJournal(process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json',j);"
-      - name: Status
-        id: journal
-        if: always()
-        run: node journal-check/journal_store.mjs status "$RUNNER_TEMP/v8-journal/preclose-journal.json"
-      - name: Upload (unique name per attempt)
-        if: always() && steps.journal.outputs.keep != 'false'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.journal.outputs.name || format('preclose-journal-{0}-{1}', github.run_id, github.run_attempt) }}
-          path: ${{ runner.temp }}/v8-journal/preclose-journal.json
-          retention-days: 1
-          if-no-files-found: error
+          const f=process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json',j=readJournal(f);j.entries['check-'+process.env.GITHUB_RUN_ID+'-'+process.env.GITHUB_RUN_ATTEMPT]={type:'record',snapshot:{note:'service check'},captured_at:new Date().toISOString()};writeJournal(f,j);"
+      - name: Save to the journal branch (read back from origin)
+        if: always() && steps.restore.outcome == 'success'
+        run: node journal-check/journal_store.mjs save "$RUNNER_TEMP/v8-journal/preclose-journal.json"
