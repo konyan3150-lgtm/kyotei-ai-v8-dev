@@ -17,29 +17,28 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       JOURNAL_WORKFLOW_PATH: .github/workflows/journal-artifact-check.yml
       JOURNAL_BRANCH: journal-artifact-check
-      J: ${{ runner.temp }}/v8-journal/preclose-journal.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
       - name: Restore (union of earlier journal artifacts of this workflow)
-        run: node journal-check/journal_store.mjs restore "$J"
+        run: node journal-check/journal_store.mjs restore "$RUNNER_TEMP/v8-journal/preclose-journal.json"
       - name: Previous attempts' journals must be restored
         run: |
           node --input-type=module -e "
           import {readJournal} from './journal-check/carry_preclose_saves.mjs';
-          const j=readJournal(process.env.J),keys=Object.keys(j.entries);console.log('restored keys',keys);
+          const j=readJournal(process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json'),keys=Object.keys(j.entries);console.log('restored keys',keys);
           for(let a=1;a<Number(process.env.GITHUB_RUN_ATTEMPT);a++){const k='check-'+process.env.GITHUB_RUN_ID+'-'+a;if(!keys.includes(k)){console.error('missing',k);process.exit(1);}}"
       - name: Add an entry for this attempt
         run: |
           node --input-type=module -e "
           import {readJournal,writeJournal} from './journal-check/carry_preclose_saves.mjs';
-          const j=readJournal(process.env.J);j.entries['check-'+process.env.GITHUB_RUN_ID+'-'+process.env.GITHUB_RUN_ATTEMPT]={type:'record',snapshot:{note:'service check'},captured_at:new Date().toISOString()};writeJournal(process.env.J,j);"
+          const j=readJournal(process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json');j.entries['check-'+process.env.GITHUB_RUN_ID+'-'+process.env.GITHUB_RUN_ATTEMPT]={type:'record',snapshot:{note:'service check'},captured_at:new Date().toISOString()};writeJournal(process.env.RUNNER_TEMP+'/v8-journal/preclose-journal.json',j);"
       - name: Status
         id: journal
         if: always()
-        run: node journal-check/journal_store.mjs status "$J"
+        run: node journal-check/journal_store.mjs status "$RUNNER_TEMP/v8-journal/preclose-journal.json"
       - name: Upload (unique name per attempt)
         if: always() && steps.journal.outputs.keep != 'false'
         uses: actions/upload-artifact@v4
