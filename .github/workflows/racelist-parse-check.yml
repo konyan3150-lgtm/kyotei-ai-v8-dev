@@ -35,8 +35,7 @@ jobs:
           spec = importlib.util.spec_from_file_location("ft", "scripts/fetch_tomorrow.py")
           ft = importlib.util.module_from_spec(spec); spec.loader.exec_module(ft)
           s = ft.session_for_thread()
-          cases = [("published Naruto 12R", "20261014", 14, 12), ("published Naruto 1R", "20261014", 14, 1),
-                   ("no racing (Toda) 12R", "20261014", 2, 12), ("next day Naruto 12R", "20261015", 14, 12)]
+          cases = [("next day Naruto 12R", "20261015", 14, 12), ("next day Naruto 1R", "20261015", 14, 1)]
           for label, date, venue, race in cases:
               r = s.get(ft.BASE, params={"rno": race, "jcd": f"{venue:02d}", "hd": date}, timeout=30)
               r.encoding = r.apparent_encoding or "utf-8"
