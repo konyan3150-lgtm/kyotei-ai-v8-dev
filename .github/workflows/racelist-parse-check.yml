@@ -1,0 +1,56 @@
+name: Racelist parse check (isolated, read-only)
+# Fetches official racelist pages with the production fetch_tomorrow.py (same requests session, UA and parse_race)
+# and prints what it sees. Read-only: writes no program file, no history, nothing is committed.
+on:
+  push:
+    branches: [diag/racelist-parse]
+    paths: [".github/workflows/racelist-parse-check.yml"]
+permissions:
+  contents: read
+jobs:
+  check:
+    if: github.ref == 'refs/heads/diag/racelist-parse'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Production fetch_tomorrow.py (main of the live repository)
+        uses: actions/checkout@v4
+        with:
+          repository: konyan3150-lgtm/kyotei-ai-v8-live
+          ref: main
+          path: live
+          sparse-checkout: scripts/fetch_tomorrow.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
+      - name: Fetch and parse (no files written)
+        working-directory: live
+        run: |
+          git log -1 --format='live main %h %ci' || true
+          python - <<'PY'
+          import importlib.util, hashlib
+          from bs4 import BeautifulSoup
+          spec = importlib.util.spec_from_file_location("ft", "scripts/fetch_tomorrow.py")
+          ft = importlib.util.module_from_spec(spec); spec.loader.exec_module(ft)
+          s = ft.session_for_thread()
+          cases = [("published Naruto 12R", "20261014", 14, 12), ("published Naruto 1R", "20261014", 14, 1),
+                   ("no racing (Toda) 12R", "20261014", 2, 12), ("next day Naruto 12R", "20261015", 14, 12)]
+          for label, date, venue, race in cases:
+              r = s.get(ft.BASE, params={"rno": race, "jcd": f"{venue:02d}", "hd": date}, timeout=30)
+              r.encoding = r.apparent_encoding or "utf-8"
+              html = r.text; soup = BeautifulSoup(html, "lxml")
+              title = soup.title.get_text(" ", strip=True) if soup.title else ""
+              print(f"== {label}: status {r.status_code}, final url {r.url}, history {[h.status_code for h in r.history]}, "
+                    f"len {len(html)}, sha1 {hashlib.sha1(html.encode()).hexdigest()[:10]}, title {title!r}, tr {len(soup.select('tr'))}")
+              try:
+                  parsed = ft.parse_race(html, date, venue, race)
+                  rs = parsed["racers"]
+                  print(f"   parsed OK: racers {len(rs)}, closed_at {parsed['closed_at']}, title {parsed['title']!r}")
+                  for k in sorted(rs, key=int)[:2]:
+                      x = rs[k]; print(f"   racer {k}: {x['registration_number']} {x['rank_number']} {x['name']} motor {x['motor_number']} boat {x['boat_number']} nat {x['national_win_rate']}")
+              except Exception as e:
+                  print(f"   parse failed: {e}")
+          v = ft.active_venues("20261015"); print("== active_venues(20261015):", v)
+          PY
