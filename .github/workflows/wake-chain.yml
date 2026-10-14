@@ -1,0 +1,52 @@
+name: DEV wake chain
+# Starts a target workflow at a fixed JST time via workflow_dispatch, without relying on GitHub's `schedule`.
+# Uses only this job's GITHUB_TOKEN (actions: write on this repository). DEV: the only allowed target is the harmless
+# probe workflow; production is never addressed. See ops/wake-chain/README.md.
+run-name: wake ${{ inputs.target_iso || 'auto' }} hop ${{ inputs.hop || '0' }}
+on:
+  workflow_dispatch:
+    inputs:
+      target_iso: {description: "Target time (ISO). Empty = next target_time JST", required: false, default: ""}
+      target_time: {description: "Target time JST (HH:MM) when target_iso is empty", required: false, default: "07:00"}
+      target_workflow: {description: "Workflow to start (allowlisted)", required: false, default: "wake-probe.yml"}
+      hop: {description: "Hop count (set by the chain)", required: false, default: "0"}
+      parent_run_id: {description: "Run that dispatched this one (set by the chain)", required: false, default: ""}
+      max_sleep_min: {description: "DEV test only: max sleep per run in minutes (default 330)", required: false, default: ""}
+  push:
+    branches: [main]
+    paths: ["ops/wake-chain/**", ".github/workflows/wake-chain.yml", ".github/workflows/wake-probe.yml"]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "24"}
+      - run: node ops/wake-chain/test.mjs
+  wake:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "24"}
+      - name: Test wake chain
+        run: node ops/wake-chain/test.mjs
+      - name: Wait and start the target
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WAKE_SELF_WORKFLOW: wake-chain.yml
+          WAKE_ALLOWED_TARGETS: wake-probe.yml
+          WAKE_TARGET_WORKFLOW: ${{ inputs.target_workflow }}
+          WAKE_TARGET_ISO: ${{ inputs.target_iso }}
+          WAKE_TARGET_TIME: ${{ inputs.target_time }}
+          WAKE_HOP: ${{ inputs.hop }}
+          WAKE_PARENT_RUN_ID: ${{ inputs.parent_run_id }}
+          WAKE_MAX_SLEEP_MIN: ${{ inputs.max_sleep_min }}
+        run: node ops/wake-chain/wake.mjs

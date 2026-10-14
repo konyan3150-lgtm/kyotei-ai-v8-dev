@@ -1,0 +1,14 @@
+name: DEV wake probe
+# Harmless target for testing the wake chain: records when it ran, writes nothing.
+on:
+  workflow_dispatch:
+permissions: {}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: |
+          echo "probe started $(TZ=Asia/Tokyo date -Iseconds) by ${{ github.triggering_actor }} (event ${{ github.event_name }})"
+          echo "probe started $(TZ=Asia/Tokyo date -Iseconds)" >> "$GITHUB_STEP_SUMMARY"
+          sleep 60
