@@ -42,15 +42,15 @@ jobs:
               r.encoding = r.apparent_encoding or "utf-8"
               html = r.text; soup = BeautifulSoup(html, "lxml")
               title = soup.title.get_text(" ", strip=True) if soup.title else ""
-              print(f"== {label}: status {r.status_code}, final url {r.url}, history {[h.status_code for h in r.history]}, "
+              print(f"::notice::== {label}: status {r.status_code}, final url {r.url}, history {[h.status_code for h in r.history]}, "
                     f"len {len(html)}, sha1 {hashlib.sha1(html.encode()).hexdigest()[:10]}, title {title!r}, tr {len(soup.select('tr'))}")
               try:
                   parsed = ft.parse_race(html, date, venue, race)
                   rs = parsed["racers"]
-                  print(f"   parsed OK: racers {len(rs)}, closed_at {parsed['closed_at']}, title {parsed['title']!r}")
+                  print(f"::notice::   {label} parsed OK: racers {len(rs)}, closed_at {parsed['closed_at']}, title {parsed['title']!r}")
                   for k in sorted(rs, key=int)[:2]:
-                      x = rs[k]; print(f"   racer {k}: {x['registration_number']} {x['rank_number']} {x['name']} motor {x['motor_number']} boat {x['boat_number']} nat {x['national_win_rate']}")
+                      x = rs[k]; print(f"::notice::   {label} racer {k}: {x['registration_number']} {x['rank_number']} {x['name']} motor {x['motor_number']} boat {x['boat_number']} nat {x['national_win_rate']}")
               except Exception as e:
-                  print(f"   parse failed: {e}")
-          v = ft.active_venues("20261015"); print("== active_venues(20261015):", v)
+                  print(f"::notice::   {label} parse failed: {e}")
+          v = ft.active_venues("20261015"); print("::notice::active_venues(20261015):", v)
           PY
