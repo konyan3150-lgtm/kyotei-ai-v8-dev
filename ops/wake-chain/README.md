@@ -1,6 +1,8 @@
 # Wake chain (DEV prototype)
 
-Goal: start the production update at 07:00 JST every morning even when GitHub's `schedule` does not fire
+Goal: start the production update at 07:00 JST every morning even when GitHub's `schedule` does not fire.
+Scope: a helper inside GitHub Actions against missing `schedule` starts. It is not independent of GitHub itself
+(an Actions outage stops it too); an external trigger outside GitHub is a separate topic (see ops/external-scheduler)
 (10/14: no scheduled start between 07:00 and 09:53 JST, and none at all after 22:07 JST).
 
 ## How it works
@@ -10,7 +12,9 @@ Goal: start the production update at 07:00 JST every morning even when GitHub's 
   (queued / in progress / waiting / pending / requested) or started within the last 10 minutes.
 - Each dispatch is confirmed: a matching new run must appear within 3 minutes, otherwise the waker fails.
   A 5xx answer can still have created the run (seen in DEV: HTTP 502 with the run created), so the waker first looks
-  for the run and dispatches once more only if none appeared; 4xx answers fail at once.
+  for the run. It dispatches once more only if the run list was read successfully until the deadline and showed no
+  such run. If the list cannot be read (403, 503, timeout, invalid answer) the result is unknown: no second dispatch,
+  the waker fails. 4xx answers to the dispatch fail at once.
 - Targets more than 3 hours past are skipped (`stale_target`), so a delayed chain never starts work at a wrong time.
 
 ## Credentials

@@ -66,17 +66,21 @@ export function github({token,repo,request=fetch}){
 export async function confirmDispatch(gh,workflow,since,{now=Date.now,sleep,confirmMs=DEFAULTS.confirmMs,pollMs=DEFAULTS.pollMs,match=()=>true}={}){
   const deadline=now()+confirmMs;
   while(true){
-    const runs=await gh.runs(workflow,'&event=workflow_dispatch');
+    // A failed or unreadable listing is "unknown", never "no run": it ends the confirmation (no re-dispatch).
+    let runs;
+    try{runs=await gh.runs(workflow,'&event=workflow_dispatch');}
+    catch(e){throw Object.assign(Error(`dispatch of ${workflow} could not be confirmed: ${e?.message||e}`),{confirm:'unknown'});}
     const run=runs.find(r=>Date.parse(r.created_at)>=since-5000&&match(r));
     if(run)return run;
-    if(now()>=deadline)throw Error(`dispatch of ${workflow} not confirmed within ${confirmMs/1000}s`);
+    if(now()>=deadline)throw Object.assign(Error(`dispatch of ${workflow} not confirmed within ${confirmMs/1000}s`),{confirm:'absent'});
     await sleep(pollMs);
   }
 }
 
 // Dispatch and confirm. A 5xx (or network error) answer can still have created the run (seen in DEV: HTTP 502 with
-// the run created), so it is not retried blindly: first look for the run, and dispatch once more only if none appeared.
-// 4xx answers fail at once. Returns {run, dispatch_errors}.
+// the run created), so it is not retried blindly: first look for the run. Dispatch once more only when the run list
+// was read successfully until the deadline and showed no such run ('absent'). A failed/invalid list read ('unknown')
+// fails without another dispatch. 4xx answers to the dispatch fail at once. Returns {run, dispatch_errors}.
 export async function dispatchConfirmed(gh,workflow,inputs,{now,sleep,confirmMs,pollMs,match=()=>true,attempts=2}){
   const errors=[];
   for(let i=1;i<=attempts;i++){
@@ -84,7 +88,7 @@ export async function dispatchConfirmed(gh,workflow,inputs,{now,sleep,confirmMs,
     try{await gh.dispatch(workflow,inputs);}
     catch(e){if(e?.status&&e.status<500)throw e;errors.push(String(e?.message||e));}
     try{return {run:await confirmDispatch(gh,workflow,since,{now,sleep,confirmMs,pollMs,match}),dispatch_errors:errors};}
-    catch(e){if(i===attempts)throw Error(`${e.message}${errors.length?` (dispatch errors: ${errors.join('; ')})`:''}`);}
+    catch(e){if(e?.confirm!=='absent'||i===attempts)throw Error(`${e.message}${errors.length?` (dispatch errors: ${errors.join('; ')})`:''}`);}
   }
 }
 
