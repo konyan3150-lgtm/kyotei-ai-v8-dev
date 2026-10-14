@@ -36,12 +36,14 @@ assert.throws(()=>github({repo:'a/b'}),/GITHUB_TOKEN/);assert.throws(()=>github(
  const bad=github({token:'t',repo:'o/r',request:async()=>({status:403,ok:false})});await assert.rejects(bad.dispatch('x.yml'),/HTTP 403/);}
 
 // Simulated GitHub + clock for whole runs.
-function fakeGitHub({start,targetRuns=[],wakerRuns=[],dispatchFails=false,noAppear=false}){
+function fakeGitHub({start,targetRuns=[],wakerRuns=[],dispatchFails=false,noAppear=false,fiveXX=0,fiveXXCreates=true}){
   let t=start,id=1000;const dispatched=[],sleeps=[];
   const runs={'wake.yml':wakerRuns,'update.yml':targetRuns};
   const gh={runs:async(wf,q='')=>(runs[wf]||[]).filter(r=>!q.includes('workflow_dispatch')||r.event==='workflow_dispatch'),
-    dispatch:async(wf,inputs)=>{if(dispatchFails)throw Error('GitHub POST dispatches HTTP 422');dispatched.push({wf,inputs,at:t});
-      if(!noAppear)(runs[wf]=runs[wf]||[]).unshift({id:++id,status:'queued',event:'workflow_dispatch',created_at:new Date(t).toISOString(),display_title:wf==='wake.yml'?`wake ${inputs.target_iso} hop ${inputs.hop}`:'Update'});}};
+    dispatch:async(wf,inputs)=>{if(dispatchFails)throw Object.assign(Error('GitHub POST dispatches HTTP 422'),{status:422});dispatched.push({wf,inputs,at:t});
+      const err=fiveXX-->0;
+      if(!noAppear&&(!err||fiveXXCreates))(runs[wf]=runs[wf]||[]).unshift({id:++id,status:'queued',event:'workflow_dispatch',created_at:new Date(t).toISOString(),display_title:wf==='wake.yml'?`wake ${inputs.target_iso} hop ${inputs.hop}`:'Update'});
+      if(err)throw Object.assign(Error('GitHub POST dispatches HTTP 502'),{status:502});}};
   return {gh,now:()=>t,sleep:async ms=>{sleeps.push(ms);t+=ms;},dispatched,sleeps,get t(){return t}};
 }
 const self=(o={})=>({selfWorkflow:'wake.yml',targetWorkflow:'update.yml',allowedTargets:['update.yml'],selfId:500,hop:0,targetTime:'07:00',...o});
@@ -70,7 +72,15 @@ const ISO=new Date(jst(15,7)).toISOString();
 {const f=fakeGitHub({start:jst(15,6,59)});await assert.rejects(wake({...f,log:()=>{},self:self({targetWorkflow:'deploy.yml',targetIso:ISO})}),/not allowed/);}
 {const f=fakeGitHub({start:jst(15,6,59),targetRuns:[{id:1,status:'action_required'}]});await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO})}),/unknown run status/);}
 {const f=fakeGitHub({start:jst(14,9)});await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO,hop:3})}),/too many hops/);}
+// 5b) HTTP 502 that still created the run (seen in DEV): confirmed, not dispatched twice, error recorded.
+{const f=fakeGitHub({start:jst(15,6,59),fiveXX:1});const r=await wake({...f,log:()=>{},self:self({targetIso:ISO})});
+ assert.equal(r.result,'dispatched');assert.equal(f.dispatched.length,1);assert.match(r.dispatch_errors[0],/502/);}
+{const f=fakeGitHub({start:jst(14,23,45),fiveXX:1});const r=await wake({...f,log:()=>{},self:self()});assert.equal(r.result,'normalized');assert.equal(f.dispatched.length,1);}
+//     502 without a run: dispatched once more and confirmed; twice without a run: fails with both errors.
+{const f=fakeGitHub({start:jst(15,6,59),fiveXX:1,fiveXXCreates:false});const r=await wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:30000,pollMs:10000}});
+ assert.equal(r.result,'dispatched');assert.equal(f.dispatched.length,2);}
+{const f=fakeGitHub({start:jst(15,6,59),fiveXX:2,fiveXXCreates:false});await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:30000,pollMs:10000}}),/not confirmed.*502.*502/);assert.equal(f.dispatched.length,2);}
 // 6) Stale target (chain delayed > 3 h): no dispatch at a wrong time.
 {const f=fakeGitHub({start:jst(15,10,30)});const r=await wake({...f,log:()=>{},self:self({targetIso:ISO})});assert.equal(r.result,'stale_target');assert.equal(f.dispatched.length,0);}
 assert.ok(DEFAULTS.maxSleepMs<=330*MIN);   // with setup and confirmation well below the 6 h job limit
-console.log('wake chain OK: next target time, bounded hops below the job limit, normalization of untargeted starts, duplicate wakers (before sleeping and before dispatch), no dispatch while the target is active or ran recently, dispatch confirmation, allowlisted target, failures raised, stale targets skipped');
+console.log('wake chain OK: next target time, bounded hops below the job limit, normalization of untargeted starts, duplicate wakers (before sleeping and before dispatch), no dispatch while the target is active or ran recently, dispatch confirmation (5xx checked before one re-dispatch), allowlisted target, failures raised, stale targets skipped');

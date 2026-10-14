@@ -53,7 +53,7 @@ export function github({token,repo,request=fetch}){
   const call=async(path,options={})=>{
     const res=await request(base+path,{...options,headers:{...headers,...(options.body?{'Content-Type':'application/json'}:{})},signal:AbortSignal.timeout(20000)});
     if(res.status===204)return null;
-    if(!res.ok)throw Error(`GitHub ${options.method||'GET'} ${path.split('?')[0]} HTTP ${res.status}`);
+    if(!res.ok)throw Object.assign(Error(`GitHub ${options.method||'GET'} ${path.split('?')[0]} HTTP ${res.status}`),{status:res.status});
     return res.json();
   };
   return {
@@ -74,6 +74,20 @@ export async function confirmDispatch(gh,workflow,since,{now=Date.now,sleep,conf
   }
 }
 
+// Dispatch and confirm. A 5xx (or network error) answer can still have created the run (seen in DEV: HTTP 502 with
+// the run created), so it is not retried blindly: first look for the run, and dispatch once more only if none appeared.
+// 4xx answers fail at once. Returns {run, dispatch_errors}.
+export async function dispatchConfirmed(gh,workflow,inputs,{now,sleep,confirmMs,pollMs,match=()=>true,attempts=2}){
+  const errors=[];
+  for(let i=1;i<=attempts;i++){
+    const since=now();
+    try{await gh.dispatch(workflow,inputs);}
+    catch(e){if(e?.status&&e.status<500)throw e;errors.push(String(e?.message||e));}
+    try{return {run:await confirmDispatch(gh,workflow,since,{now,sleep,confirmMs,pollMs,match}),dispatch_errors:errors};}
+    catch(e){if(i===attempts)throw Error(`${e.message}${errors.length?` (dispatch errors: ${errors.join('; ')})`:''}`);}
+  }
+}
+
 export async function wake({gh,now=Date.now,sleep,log=console.log,self,target:targetIn,limits={}}){
   const L={...DEFAULTS,...limits};
   const {selfWorkflow,targetWorkflow,allowedTargets,selfId,parentId=null,hop=0,targetTime,targetIso,extraInputs={}}=self;
@@ -81,11 +95,11 @@ export async function wake({gh,now=Date.now,sleep,log=console.log,self,target:ta
   const target=targetIso?parseTarget(targetIso,now(),L):nextTarget(now(),targetTime);
   const iso=new Date(target).toISOString();
   const out={target:iso,target_workflow:targetWorkflow,hop,run:selfId};
+  const opts={now,sleep,confirmMs:L.confirmMs,pollMs:L.pollMs};
   const dispatchSelf=async(nextHop,result)=>{
-    const since=now();
-    await gh.dispatch(selfWorkflow,{...extraInputs,target_iso:iso,target_workflow:targetWorkflow,hop:String(nextHop),parent_run_id:String(selfId)});
-    const next=await confirmDispatch(gh,selfWorkflow,since,{now,sleep,confirmMs:L.confirmMs,pollMs:L.pollMs,match:r=>r.id!==selfId&&String(r.display_title||'').includes(iso)});
-    return {...out,result,next_run:next.id};
+    const {run,dispatch_errors}=await dispatchConfirmed(gh,selfWorkflow,{...extraInputs,target_iso:iso,target_workflow:targetWorkflow,hop:String(nextHop),parent_run_id:String(selfId)},
+      {...opts,match:r=>r.id!==selfId&&String(r.display_title||'').includes(iso)});
+    return {...out,result,next_run:run.id,...(dispatch_errors.length?{dispatch_errors}:{})};
   };
   // Started by schedule or by hand (no explicit target): hand over to a run whose title names the target, so that
   // wakers started from several sources can see each other and only the oldest one stays.
@@ -103,9 +117,8 @@ export async function wake({gh,now=Date.now,sleep,log=console.log,self,target:ta
   const d=targetDecision(await gh.runs(targetWorkflow),now(),L);
   if(d.decision!=='dispatch')return {...out,result:d.decision,target_run:d.run};
   const since=now();
-  await gh.dispatch(targetWorkflow);
-  const run=await confirmDispatch(gh,targetWorkflow,since,{now,sleep,confirmMs:L.confirmMs,pollMs:L.pollMs});
-  return {...out,result:'dispatched',target_run:run.id,dispatched_at:new Date(since).toISOString()};
+  const {run,dispatch_errors}=await dispatchConfirmed(gh,targetWorkflow,undefined,opts);
+  return {...out,result:'dispatched',target_run:run.id,dispatched_at:new Date(since).toISOString(),...(dispatch_errors.length?{dispatch_errors}:{})};
 }
 
 if(import.meta.url===`file://${process.argv[1]}`){
