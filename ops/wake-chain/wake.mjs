@@ -118,7 +118,7 @@ if(import.meta.url===`file://${process.argv[1]}`){
   try{
     const gh=github({token:env.GITHUB_TOKEN,repo:env.GITHUB_REPOSITORY});
     const r=await wake({gh,sleep:ms=>new Promise(res=>setTimeout(res,ms)),self,limits});
-    console.log(JSON.stringify({wake:r}));summary(`### wake chain\n\n\`\`\`json\n${JSON.stringify(r,null,2)}\n\`\`\``);
+    console.log(`::notice title=wake chain ${r.result}::${JSON.stringify(r)}`);summary(`### wake chain\n\n\`\`\`json\n${JSON.stringify(r,null,2)}\n\`\`\``);
   }catch(e){
     const msg=String(e?.message||e);console.log(`::error title=wake chain failed::${msg}`);summary(`### wake chain FAILED\n\n${msg}`);process.exit(1);
   }

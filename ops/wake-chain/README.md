@@ -24,7 +24,7 @@ Pages this way). No personal access token, no external service, nothing stored. 
 - These guards reduce duplicates; they are not an exactly-once guarantee.
 
 ## Failure record
-Every run writes its decision as JSON to the job summary and the log. API errors, a rejected or unconfirmed
+Every run writes its decision as JSON to the job summary and as an annotation (readable through the API: check-runs annotations). API errors, a rejected or unconfirmed
 dispatch, a non-allowlisted target, an unknown run status and too many hops fail the run (red in Actions).
 
 ## Starters (for production, not in DEV)
