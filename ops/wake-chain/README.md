@@ -9,6 +9,8 @@ Goal: start the production update at 07:00 JST every morning even when GitHub's 
 - At the target time it dispatches the target workflow via `workflow_dispatch` — unless the target is active
   (queued / in progress / waiting / pending / requested) or started within the last 10 minutes.
 - Each dispatch is confirmed: a matching new run must appear within 3 minutes, otherwise the waker fails.
+  A 5xx answer can still have created the run (seen in DEV: HTTP 502 with the run created), so the waker first looks
+  for the run and dispatches once more only if none appeared; 4xx answers fail at once.
 - Targets more than 3 hours past are skipped (`stale_target`), so a delayed chain never starts work at a wrong time.
 
 ## Credentials
