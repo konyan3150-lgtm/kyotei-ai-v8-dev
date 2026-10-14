@@ -36,10 +36,10 @@ assert.throws(()=>github({repo:'a/b'}),/GITHUB_TOKEN/);assert.throws(()=>github(
  const bad=github({token:'t',repo:'o/r',request:async()=>({status:403,ok:false})});await assert.rejects(bad.dispatch('x.yml'),/HTTP 403/);}
 
 // Simulated GitHub + clock for whole runs.
-function fakeGitHub({start,targetRuns=[],wakerRuns=[],dispatchFails=false,noAppear=false,fiveXX=0,fiveXXCreates=true}){
+function fakeGitHub({start,targetRuns=[],wakerRuns=[],dispatchFails=false,noAppear=false,fiveXX=0,fiveXXCreates=true,listFail=null}){
   let t=start,id=1000;const dispatched=[],sleeps=[];
   const runs={'wake.yml':wakerRuns,'update.yml':targetRuns};
-  const gh={runs:async(wf,q='')=>(runs[wf]||[]).filter(r=>!q.includes('workflow_dispatch')||r.event==='workflow_dispatch'),
+  const gh={runs:async(wf,q='')=>{if(listFail&&dispatched.length&&q.includes('workflow_dispatch'))await listFail();return (runs[wf]||[]).filter(r=>!q.includes('workflow_dispatch')||r.event==='workflow_dispatch');},
     dispatch:async(wf,inputs)=>{if(dispatchFails)throw Object.assign(Error('GitHub POST dispatches HTTP 422'),{status:422});dispatched.push({wf,inputs,at:t});
       const err=fiveXX-->0;
       if(!noAppear&&(!err||fiveXXCreates))(runs[wf]=runs[wf]||[]).unshift({id:++id,status:'queued',event:'workflow_dispatch',created_at:new Date(t).toISOString(),display_title:wf==='wake.yml'?`wake ${inputs.target_iso} hop ${inputs.hop}`:'Update'});
@@ -80,7 +80,19 @@ const ISO=new Date(jst(15,7)).toISOString();
 {const f=fakeGitHub({start:jst(15,6,59),fiveXX:1,fiveXXCreates:false});const r=await wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:30000,pollMs:10000}});
  assert.equal(r.result,'dispatched');assert.equal(f.dispatched.length,2);}
 {const f=fakeGitHub({start:jst(15,6,59),fiveXX:2,fiveXXCreates:false});await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:30000,pollMs:10000}}),/not confirmed.*502.*502/);assert.equal(f.dispatched.length,2);}
+// 5c) The confirmation listing fails (HTTP 403 / 503 / timeout / invalid response): unknown, not "no run" ->
+//     no second dispatch, the waker fails. Also when the dispatch itself answered 5xx without creating a run.
+for(const [name,fail] of [['403',()=>{throw Object.assign(Error('GitHub GET /runs HTTP 403'),{status:403});}],['503',()=>{throw Object.assign(Error('GitHub GET /runs HTTP 503'),{status:503});}],
+  ['timeout',()=>{throw Object.assign(Error('The operation was aborted due to timeout'),{name:'TimeoutError'});}],['invalid',()=>{throw Error('invalid runs response');}]]){
+  for(const opts of [{},{fiveXX:1,fiveXXCreates:false},{noAppear:true}]){
+    const f=fakeGitHub({start:jst(15,6,59),listFail:fail,...opts});
+    await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:30000,pollMs:10000}}),/could not be confirmed/,name);
+    assert.equal(f.dispatched.length,1,`${name}: posted once`);}
+  const f=fakeGitHub({start:jst(14,23,45),listFail:fail});await assert.rejects(wake({...f,log:()=>{},self:self()}),/could not be confirmed/);assert.equal(f.dispatched.length,1);}
+//     A listing that fails once mid-confirmation also stops it (no retry of the list as "absent").
+{let n=0;const f=fakeGitHub({start:jst(15,6,59),noAppear:true,listFail:()=>{if(++n===2)throw Error('GitHub GET /runs HTTP 503');}});
+ await assert.rejects(wake({...f,log:()=>{},self:self({targetIso:ISO}),limits:{confirmMs:60000,pollMs:10000}}),/could not be confirmed/);assert.equal(f.dispatched.length,1);}
 // 6) Stale target (chain delayed > 3 h): no dispatch at a wrong time.
 {const f=fakeGitHub({start:jst(15,10,30)});const r=await wake({...f,log:()=>{},self:self({targetIso:ISO})});assert.equal(r.result,'stale_target');assert.equal(f.dispatched.length,0);}
 assert.ok(DEFAULTS.maxSleepMs<=330*MIN);   // with setup and confirmation well below the 6 h job limit
-console.log('wake chain OK: next target time, bounded hops below the job limit, normalization of untargeted starts, duplicate wakers (before sleeping and before dispatch), no dispatch while the target is active or ran recently, dispatch confirmation (5xx checked before one re-dispatch), allowlisted target, failures raised, stale targets skipped');
+console.log('wake chain OK: next target time, bounded hops below the job limit, normalization of untargeted starts, duplicate wakers (before sleeping and before dispatch), no dispatch while the target is active or ran recently, dispatch confirmation (5xx checked before one re-dispatch only after a successful empty listing; failed listings never re-dispatch), allowlisted target, failures raised, stale targets skipped');
