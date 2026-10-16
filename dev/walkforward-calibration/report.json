@@ -1,0 +1,1014 @@
+{
+ "policy": {
+  "version": "walkforward-calibration-v1",
+  "minPriorRaces": 300,
+  "recentRaces": 300,
+  "eps": 1e-15,
+  "methods": [
+   "raw",
+   "temperature",
+   "temperature_recent",
+   "platt",
+   "isotonic"
+  ],
+  "eceEdges": [
+   0,
+   0.005,
+   0.01,
+   0.02,
+   0.05,
+   0.1,
+   0.2,
+   0.3,
+   1.0000001
+  ]
+ },
+ "generated_from": {
+  "eligible_races": 1369,
+  "dates": [
+   "20261003",
+   "20261004",
+   "20261005",
+   "20261006",
+   "20261007",
+   "20261008",
+   "20261009",
+   "20261010",
+   "20261011",
+   "20261012",
+   "20261013",
+   "20261014",
+   "20261015",
+   "20261016"
+  ],
+  "first_test_date": "20261007",
+  "tested_dates": 10,
+  "tested_races": 983
+ },
+ "summary": {
+  "raw": {
+   "races": 983,
+   "log_loss": 4.017557076456623,
+   "brier": 0.96744097659747,
+   "top1_hit_rate": 0.08646998982706001,
+   "top6_hit_rate": 0.35198372329603256,
+   "ece": 0.0012252540767027937,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 73237,
+     "predicted": 0.0019241442112865681,
+     "observed": 0.0021710337670849435
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 19242,
+     "predicted": 0.007035146095380152,
+     "observed": 0.007951356407857811
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 11618,
+     "predicted": 0.014050669006319584,
+     "observed": 0.012911000172146669
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 10824,
+     "predicted": 0.03150635743981065,
+     "observed": 0.026053215077605323
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 2911,
+     "predicted": 0.0643448291576361,
+     "observed": 0.07454482995534181
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 128,
+     "predicted": 0.11826473522571819,
+     "observed": 0.171875
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "ev": {
+    "races_with_full_odds": 556,
+    "bought_races": 556,
+    "tickets": 2218,
+    "hits": 17,
+    "investment": 221800,
+    "payout": 147080,
+    "roi": 0.6631199278629396,
+    "profit": -74720,
+    "max_drawdown": 118700,
+    "max_consecutive_misses": 84,
+    "worst_day_profit": -25990
+   }
+  },
+  "temperature": {
+   "races": 983,
+   "log_loss": 4.017754092842928,
+   "brier": 0.9675198295076225,
+   "top1_hit_rate": 0.08646998982706001,
+   "top6_hit_rate": 0.35198372329603256,
+   "ece": 0.0011176135628350064,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 72878,
+     "predicted": 0.001941567632165599,
+     "observed": 0.002168006805894783
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 19513,
+     "predicted": 0.007034731156232854,
+     "observed": 0.007840926561779326
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 11733,
+     "predicted": 0.014048961869055946,
+     "observed": 0.012869683797835166
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 10864,
+     "predicted": 0.031487516414430775,
+     "observed": 0.026693667157584682
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 2853,
+     "predicted": 0.06421809244957294,
+     "observed": 0.07360672975814932
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 119,
+     "predicted": 0.11850974249432103,
+     "observed": 0.17647058823529413
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "ev": {
+    "races_with_full_odds": 556,
+    "bought_races": 556,
+    "tickets": 2218,
+    "hits": 16,
+    "investment": 221800,
+    "payout": 133140,
+    "roi": 0.6002705139765555,
+    "profit": -88660,
+    "max_drawdown": 132640,
+    "max_consecutive_misses": 84,
+    "worst_day_profit": -25990
+   }
+  },
+  "temperature_recent": {
+   "races": 983,
+   "log_loss": 4.020125855860603,
+   "brier": 0.9678936349144676,
+   "top1_hit_rate": 0.08646998982706001,
+   "top6_hit_rate": 0.35198372329603256,
+   "ece": 0.0009870634960772204,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 71946,
+     "predicted": 0.0019872455448944645,
+     "observed": 0.002154393572957496
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 20193,
+     "predicted": 0.007031941772272505,
+     "observed": 0.007626405189917298
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 12050,
+     "predicted": 0.014029995631702619,
+     "observed": 0.012863070539419087
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 10941,
+     "predicted": 0.03136418587301124,
+     "observed": 0.027328397769856502
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 2724,
+     "predicted": 0.06362364316010359,
+     "observed": 0.07305433186490455
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 106,
+     "predicted": 0.1179417250260909,
+     "observed": 0.19811320754716982
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "ev": {
+    "races_with_full_odds": 556,
+    "bought_races": 556,
+    "tickets": 2219,
+    "hits": 14,
+    "investment": 221900,
+    "payout": 130380,
+    "roi": 0.5875619648490311,
+    "profit": -91520,
+    "max_drawdown": 135500,
+    "max_consecutive_misses": 156,
+    "worst_day_profit": -25990
+   }
+  },
+  "platt": {
+   "races": 983,
+   "log_loss": 4.017755914884087,
+   "brier": 0.9675039016471721,
+   "top1_hit_rate": 0.08646998982706001,
+   "top6_hit_rate": 0.35198372329603256,
+   "ece": 0.0011713576138897219,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 72968,
+     "predicted": 0.001937588818930825,
+     "observed": 0.0021653327486021267
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 19446,
+     "predicted": 0.007035312306486703,
+     "observed": 0.007919366450683946
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 11705,
+     "predicted": 0.01404981879003334,
+     "observed": 0.012815036309269542
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 10850,
+     "predicted": 0.03148696250044943,
+     "observed": 0.026451612903225806
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 2869,
+     "predicted": 0.0642309119558998,
+     "observed": 0.07424189613105611
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 122,
+     "predicted": 0.11839489737396348,
+     "observed": 0.1721311475409836
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "ev": {
+    "races_with_full_odds": 556,
+    "bought_races": 556,
+    "tickets": 2218,
+    "hits": 16,
+    "investment": 221800,
+    "payout": 133140,
+    "roi": 0.6002705139765555,
+    "profit": -88660,
+    "max_drawdown": 132640,
+    "max_consecutive_misses": 84,
+    "worst_day_profit": -25990
+   }
+  },
+  "isotonic": {
+   "races": 983,
+   "log_loss": 4.004914614639642,
+   "brier": 0.966249609833692,
+   "top1_hit_rate": 0.08646998982706001,
+   "top6_hit_rate": 0.35198372329603256,
+   "ece": 0.0005062922448836059,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 68192,
+     "predicted": 0.0016777429564397792,
+     "observed": 0.0019503754106053497
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 22831,
+     "predicted": 0.0072432443812183046,
+     "observed": 0.007314616092155403
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 16704,
+     "predicted": 0.013671562584936965,
+     "observed": 0.013110632183908046
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 6334,
+     "predicted": 0.030699019938089822,
+     "observed": 0.027470792548152826
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 3579,
+     "predicted": 0.06708591490583485,
+     "observed": 0.06929309863090248
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 296,
+     "predicted": 0.11911903309339747,
+     "observed": 0.125
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 24,
+     "predicted": 0.21015595402446996,
+     "observed": 0.20833333333333334
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "ev": {
+    "races_with_full_odds": 556,
+    "bought_races": 556,
+    "tickets": 2207,
+    "hits": 21,
+    "investment": 220700,
+    "payout": 115400,
+    "roi": 0.5228817399184413,
+    "profit": -105300,
+    "max_drawdown": 131500,
+    "max_consecutive_misses": 89,
+    "worst_day_profit": -26930
+   }
+  }
+ },
+ "daily": [
+  {
+   "date": "20261003",
+   "races": 125,
+   "status": "warm_up",
+   "prior_races": 0
+  },
+  {
+   "date": "20261004",
+   "races": 19,
+   "status": "warm_up",
+   "prior_races": 125
+  },
+  {
+   "date": "20261005",
+   "races": 111,
+   "status": "warm_up",
+   "prior_races": 144
+  },
+  {
+   "date": "20261006",
+   "races": 131,
+   "status": "warm_up",
+   "prior_races": 255
+  },
+  {
+   "date": "20261007",
+   "races": 125,
+   "status": "tested",
+   "prior_races": 386,
+   "methods": {
+    "raw": {
+     "log_loss": 3.9754067619357953,
+     "ev_races": 82,
+     "bought": 82,
+     "investment": 32800,
+     "payout": 8160
+    },
+    "temperature": {
+     "log_loss": 3.9757793314775145,
+     "ev_races": 82,
+     "bought": 82,
+     "investment": 32800,
+     "payout": 8160
+    },
+    "temperature_recent": {
+     "log_loss": 3.976225798777736,
+     "ev_races": 82,
+     "bought": 82,
+     "investment": 32800,
+     "payout": 8160
+    },
+    "platt": {
+     "log_loss": 3.9758631715715986,
+     "ev_races": 82,
+     "bought": 82,
+     "investment": 32800,
+     "payout": 8160
+    },
+    "isotonic": {
+     "log_loss": 3.9576149667196665,
+     "ev_races": 82,
+     "bought": 82,
+     "investment": 32500,
+     "payout": 7720
+    }
+   }
+  },
+  {
+   "date": "20261008",
+   "races": 133,
+   "status": "tested",
+   "prior_races": 511,
+   "methods": {
+    "raw": {
+     "log_loss": 3.9265348068221533,
+     "ev_races": 68,
+     "bought": 68,
+     "investment": 27200,
+     "payout": 71460
+    },
+    "temperature": {
+     "log_loss": 3.92698343169718,
+     "ev_races": 68,
+     "bought": 68,
+     "investment": 27200,
+     "payout": 71460
+    },
+    "temperature_recent": {
+     "log_loss": 3.9321927728604025,
+     "ev_races": 68,
+     "bought": 68,
+     "investment": 27200,
+     "payout": 71460
+    },
+    "platt": {
+     "log_loss": 3.9268392340469944,
+     "ev_races": 68,
+     "bought": 68,
+     "investment": 27200,
+     "payout": 71460
+    },
+    "isotonic": {
+     "log_loss": 3.893931682192679,
+     "ev_races": 68,
+     "bought": 68,
+     "investment": 27200,
+     "payout": 66070
+    }
+   }
+  },
+  {
+   "date": "20261009",
+   "races": 127,
+   "status": "tested",
+   "prior_races": 644,
+   "methods": {
+    "raw": {
+     "log_loss": 3.9970881011307053,
+     "ev_races": 72,
+     "bought": 72,
+     "investment": 28600,
+     "payout": 16580
+    },
+    "temperature": {
+     "log_loss": 3.9970613099549293,
+     "ev_races": 72,
+     "bought": 72,
+     "investment": 28600,
+     "payout": 16580
+    },
+    "temperature_recent": {
+     "log_loss": 3.996984668652537,
+     "ev_races": 72,
+     "bought": 72,
+     "investment": 28600,
+     "payout": 16580
+    },
+    "platt": {
+     "log_loss": 3.9971335704442295,
+     "ev_races": 72,
+     "bought": 72,
+     "investment": 28600,
+     "payout": 16580
+    },
+    "isotonic": {
+     "log_loss": 3.9655780152761126,
+     "ev_races": 72,
+     "bought": 72,
+     "investment": 28000,
+     "payout": 15600
+    }
+   }
+  },
+  {
+   "date": "20261010",
+   "races": 145,
+   "status": "tested",
+   "prior_races": 771,
+   "methods": {
+    "raw": {
+     "log_loss": 3.999869381763773,
+     "ev_races": 76,
+     "bought": 76,
+     "investment": 30400,
+     "payout": 20530
+    },
+    "temperature": {
+     "log_loss": 3.9999473423743455,
+     "ev_races": 76,
+     "bought": 76,
+     "investment": 30400,
+     "payout": 6590
+    },
+    "temperature_recent": {
+     "log_loss": 4.000009728565021,
+     "ev_races": 76,
+     "bought": 76,
+     "investment": 30400,
+     "payout": 6590
+    },
+    "platt": {
+     "log_loss": 3.9999145796015503,
+     "ev_races": 76,
+     "bought": 76,
+     "investment": 30400,
+     "payout": 6590
+    },
+    "isotonic": {
+     "log_loss": 4.004377388073978,
+     "ev_races": 76,
+     "bought": 76,
+     "investment": 30400,
+     "payout": 3470
+    }
+   }
+  },
+  {
+   "date": "20261011",
+   "races": 142,
+   "status": "tested",
+   "prior_races": 916,
+   "methods": {
+    "raw": {
+     "log_loss": 4.154876966287323,
+     "ev_races": 71,
+     "bought": 71,
+     "investment": 28200,
+     "payout": 2210
+    },
+    "temperature": {
+     "log_loss": 4.1544015062382895,
+     "ev_races": 71,
+     "bought": 71,
+     "investment": 28200,
+     "payout": 2210
+    },
+    "temperature_recent": {
+     "log_loss": 4.155910171197842,
+     "ev_races": 71,
+     "bought": 71,
+     "investment": 28200,
+     "payout": 2210
+    },
+    "platt": {
+     "log_loss": 4.154636046752728,
+     "ev_races": 71,
+     "bought": 71,
+     "investment": 28200,
+     "payout": 2210
+    },
+    "isotonic": {
+     "log_loss": 4.155939783558165,
+     "ev_races": 71,
+     "bought": 71,
+     "investment": 28400,
+     "payout": 4640
+    }
+   }
+  },
+  {
+   "date": "20261012",
+   "races": 106,
+   "status": "tested",
+   "prior_races": 1058,
+   "methods": {
+    "raw": {
+     "log_loss": 4.107214456901112,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 14120
+    },
+    "temperature": {
+     "log_loss": 4.105992001824473,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 14120
+    },
+    "temperature_recent": {
+     "log_loss": 4.1048069871790664,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 12330
+    },
+    "platt": {
+     "log_loss": 4.106131892365142,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 14120
+    },
+    "isotonic": {
+     "log_loss": 4.110207097798743,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 14120
+    }
+   }
+  },
+  {
+   "date": "20261013",
+   "races": 45,
+   "status": "tested",
+   "prior_races": 1164,
+   "methods": {
+    "raw": {
+     "log_loss": 3.8061150608724055,
+     "ev_races": 0,
+     "bought": 0,
+     "investment": 0,
+     "payout": 0
+    },
+    "temperature": {
+     "log_loss": 3.8109511130564675,
+     "ev_races": 0,
+     "bought": 0,
+     "investment": 0,
+     "payout": 0
+    },
+    "temperature_recent": {
+     "log_loss": 3.8215421473176074,
+     "ev_races": 0,
+     "bought": 0,
+     "investment": 0,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 3.8103283801187087,
+     "ev_races": 0,
+     "bought": 0,
+     "investment": 0,
+     "payout": 0
+    },
+    "isotonic": {
+     "log_loss": 3.8259144586410128,
+     "ev_races": 0,
+     "bought": 0,
+     "investment": 0,
+     "payout": 0
+    }
+   }
+  },
+  {
+   "date": "20261014",
+   "races": 52,
+   "status": "tested",
+   "prior_races": 1209,
+   "methods": {
+    "raw": {
+     "log_loss": 4.264796049456306,
+     "ev_races": 47,
+     "bought": 47,
+     "investment": 18600,
+     "payout": 0
+    },
+    "temperature": {
+     "log_loss": 4.259553296457107,
+     "ev_races": 47,
+     "bought": 47,
+     "investment": 18600,
+     "payout": 0
+    },
+    "temperature_recent": {
+     "log_loss": 4.247173093488302,
+     "ev_races": 47,
+     "bought": 47,
+     "investment": 18700,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 4.260225747098711,
+     "ev_races": 47,
+     "bought": 47,
+     "investment": 18600,
+     "payout": 0
+    },
+    "isotonic": {
+     "log_loss": 4.215783003061823,
+     "ev_races": 47,
+     "bought": 47,
+     "investment": 18400,
+     "payout": 0
+    }
+   }
+  },
+  {
+   "date": "20261015",
+   "races": 63,
+   "status": "tested",
+   "prior_races": 1261,
+   "methods": {
+    "raw": {
+     "log_loss": 3.6869830878024477,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 970
+    },
+    "temperature": {
+     "log_loss": 3.694089721267883,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 970
+    },
+    "temperature_recent": {
+     "log_loss": 3.7229714270498917,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 3.6930466699236444,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 970
+    },
+    "isotonic": {
+     "log_loss": 3.6392138111187644,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24600,
+     "payout": 3780
+    }
+   }
+  },
+  {
+   "date": "20261016",
+   "races": 45,
+   "status": "tested",
+   "prior_races": 1324,
+   "methods": {
+    "raw": {
+     "log_loss": 4.262458087140863,
+     "ev_races": 40,
+     "bought": 40,
+     "investment": 16000,
+     "payout": 13050
+    },
+    "temperature": {
+     "log_loss": 4.2598782085157545,
+     "ev_races": 40,
+     "bought": 40,
+     "investment": 16000,
+     "payout": 13050
+    },
+    "temperature_recent": {
+     "log_loss": 4.256377928147061,
+     "ev_races": 40,
+     "bought": 40,
+     "investment": 16000,
+     "payout": 13050
+    },
+    "platt": {
+     "log_loss": 4.260249263965647,
+     "ev_races": 40,
+     "bought": 40,
+     "investment": 16000,
+     "payout": 13050
+    },
+    "isotonic": {
+     "log_loss": 4.299786975064818,
+     "ev_races": 40,
+     "bought": 40,
+     "investment": 16000,
+     "payout": 0
+    }
+   }
+  }
+ ],
+ "fits": [
+  {
+   "date": "20261007",
+   "prior_races": 386,
+   "temperature": 0.994705773696684,
+   "temperature_recent": 0.9889792060243819,
+   "platt": {
+    "a": 1.0062125250123588,
+    "b": 0.02457467876197036
+   },
+   "isotonic_blocks": 33
+  },
+  {
+   "date": "20261008",
+   "prior_races": 511,
+   "temperature": 1.009814810833282,
+   "temperature_recent": 1.07370957286334,
+   "platt": {
+    "a": 0.9921932720988378,
+    "b": -0.030842969123850084
+   },
+   "isotonic_blocks": 30
+  },
+  {
+   "date": "20261009",
+   "prior_races": 644,
+   "temperature": 1.0007415573570664,
+   "temperature_recent": 1.0029756662012466,
+   "platt": {
+    "a": 1.0011418373220586,
+    "b": 0.004508731432046579
+   },
+   "isotonic_blocks": 33
+  },
+  {
+   "date": "20261010",
+   "prior_races": 771,
+   "temperature": 1.0057240432715933,
+   "temperature_recent": 1.0090668251359045,
+   "platt": {
+    "a": 0.9965507018531089,
+    "b": -0.013634215216866917
+   },
+   "isotonic_blocks": 33
+  },
+  {
+   "date": "20261011",
+   "prior_races": 916,
+   "temperature": 1.0034337000915818,
+   "temperature_recent": 0.9929240916666986,
+   "platt": {
+    "a": 0.9982858840211413,
+    "b": -0.0067883822465696275
+   },
+   "isotonic_blocks": 34
+  },
+  {
+   "date": "20261012",
+   "prior_races": 1058,
+   "temperature": 1.0192230881478344,
+   "temperature_recent": 1.0568619887673776,
+   "platt": {
+    "a": 0.9837174353069109,
+    "b": -0.06474126985090047
+   },
+   "isotonic_blocks": 35
+  },
+  {
+   "date": "20261013",
+   "prior_races": 1164,
+   "temperature": 1.02351225515769,
+   "temperature_recent": 1.0700027796894662,
+   "platt": {
+    "a": 0.9797263624330953,
+    "b": -0.08077166505639549
+   },
+   "isotonic_blocks": 44
+  },
+  {
+   "date": "20261014",
+   "prior_races": 1209,
+   "temperature": 1.0162607463168514,
+   "temperature_recent": 1.0624600609079335,
+   "platt": {
+    "a": 0.9862198273705616,
+    "b": -0.0548588073728651
+   },
+   "isotonic_blocks": 46
+  },
+  {
+   "date": "20261015",
+   "prior_races": 1261,
+   "temperature": 1.027626971698305,
+   "temperature_recent": 1.1263885437349772,
+   "platt": {
+    "a": 0.9760980568764241,
+    "b": -0.09525787104461757
+   },
+   "isotonic_blocks": 43
+  },
+  {
+   "date": "20261016",
+   "prior_races": 1324,
+   "temperature": 1.016032129254827,
+   "temperature_recent": 1.0421120690551353,
+   "platt": {
+    "a": 0.9866763688246268,
+    "b": -0.05298590962085438
+   },
+   "isotonic_blocks": 41
+  }
+ ],
+ "interpretation": "Descriptive walk-forward on dates inside the pre-registered training window; does not select a method, change the frozen forward tests or production. Saved preclose odds move before close."
+}
