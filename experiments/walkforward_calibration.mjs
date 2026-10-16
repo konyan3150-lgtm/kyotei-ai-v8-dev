@@ -61,12 +61,13 @@ export function fitPlatt(races){
   return {a,b,apply:dist=>normalize(dist.map(x=>({...x,prob:1/(1+Math.exp(-(a*logit(x.prob)+b)))})))};
 }
 export function fitIsotonic(races){
-  const pts=[];
-  for(const r of races)for(const x of r.baseline_distribution)pts.push([x.prob,Number(x.combo===r.outcome.result)]);
-  pts.sort((p,q)=>p[0]-q[0]);
-  const blocks=[];   // pool adjacent violators: {sum,w,lo,hi}
-  for(const [x,y] of pts){
-    blocks.push({sum:y,w:1,lo:x,hi:x});
+  // Observations with the same input probability are first aggregated into (hits, count), so the fit does not depend
+  // on the order of races or of tied tickets; then weighted pool-adjacent-violators over the distinct probabilities.
+  const agg=new Map();
+  for(const r of races)for(const x of r.baseline_distribution){const a=agg.get(x.prob)||{y:0,w:0};a.y+=Number(x.combo===r.outcome.result);a.w++;agg.set(x.prob,a);}
+  const blocks=[];   // {sum,w,lo,hi} over distinct input probabilities in increasing order
+  for(const [x,a] of [...agg.entries()].sort((p,q)=>p[0]-q[0])){
+    blocks.push({sum:a.y,w:a.w,lo:x,hi:x});
     while(blocks.length>1&&blocks.at(-2).sum/blocks.at(-2).w>=blocks.at(-1).sum/blocks.at(-1).w){const q=blocks.pop(),p=blocks.at(-1);p.sum+=q.sum;p.w+=q.w;p.hi=q.hi;}
   }
   const xs=blocks.map(b=>(b.lo+b.hi)/2),vs=blocks.map(b=>b.sum/b.w);
@@ -75,7 +76,7 @@ export function fitIsotonic(races){
     let lo=0,hi=xs.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(xs[m]<=p)lo=m;else hi=m;}
     const t=(p-xs[lo])/(xs[hi]-xs[lo]||1);return Math.max(vs[lo]+t*(vs[hi]-vs[lo]),WF_POLICY.eps);
   };
-  return {blocks:blocks.length,apply:dist=>normalize(dist.map(x=>({...x,prob:f(x.prob)})))};
+  return {blocks:blocks.length,distinct_inputs:agg.size,map:f,apply:dist=>normalize(dist.map(x=>({...x,prob:f(x.prob)})))};
 }
 
 // --- metrics ---------------------------------------------------------------------------------------------------
@@ -92,18 +93,24 @@ export function ece(pairs){   // pairs: [prob, hit] over all combinations
   return {ece:n?bins.reduce((s,b)=>s+(b.n?b.n/n*Math.abs(b.p/b.n-b.y/b.n):0),0):null,
     bins:bins.map((b,i)=>({lower:E[i],upper:Math.min(1,E[i+1]),n:b.n,predicted:b.n?b.p/b.n:null,observed:b.n?b.y/b.n:null}))};
 }
+// Calibration of a selected set of tickets: mean predicted vs observed hit rate, with bins.
+export function calibrationSummary(pairs){
+  const n=pairs.length,p=pairs.reduce((s,x)=>s+x[0],0),y=pairs.reduce((s,x)=>s+x[1],0),e=ece(pairs);
+  return {tickets:n,mean_predicted:n?p/n:null,observed_hit_rate:n?y/n:null,hits:y,expected_hits:p,ratio_observed_to_predicted:p?y/p:null,ece:e.ece,bins:e.bins.filter(b=>b.n)};
+}
 function evOutcome(r,dist){
   const t=evTickets(dist,r.baseline_distribution,r.odds_snapshot_at,r.saved_at);
   if(t.status!=='shadow_estimate_uncalibrated')return null;
   const hit=t.items.some(x=>x.combo===r.outcome.result);
-  return {date:r.date,stadium:r.stadium,race:r.race,closed_at:String(r.closed_at),investment:t.investment,payout:hit?r.outcome.amount*100/100:0,hit:hit&&t.items.length>0,tickets:t.items.length};
+  return {date:r.date,stadium:r.stadium,race:r.race,closed_at:String(r.closed_at),investment:t.investment,payout:hit?r.outcome.amount:0,hit:hit&&t.items.length>0,tickets:t.items.length,
+    ticket_pairs:t.items.map(x=>[x.prob,Number(x.combo===r.outcome.result)])};
 }
 
 // --- walk-forward ------------------------------------------------------------------------------------------------
 export function walkForward(records,{policy=WF_POLICY}={}){
   const rs=records.filter(eligible).sort((a,b)=>a.date.localeCompare(b.date)||String(a.closed_at).localeCompare(String(b.closed_at)));
   const dates=[...new Set(rs.map(r=>r.date))];
-  const acc=Object.fromEntries(policy.methods.map(m=>[m,{races:0,log_loss:0,brier:0,top1:0,top6:0,pairs:[],ev:[]}]));
+  const acc=Object.fromEntries(policy.methods.map(m=>[m,{races:0,log_loss:0,brier:0,top1:0,top6:0,pairs:[],top_pairs:[],bought_pairs:[],ev:[]}]));
   const daily=[],fits=[];
   for(const date of dates){
     const prior=rs.filter(r=>r.date<date),test=rs.filter(r=>r.date===date);
@@ -118,7 +125,8 @@ export function walkForward(records,{policy=WF_POLICY}={}){
         const dist=cal[m].apply(r.baseline_distribution),x=raceMetrics(dist,r.outcome.result);
         A.races++;A.log_loss+=x.log_loss;A.brier+=x.brier;A.top1+=x.top1;A.top6+=x.top6;ll+=x.log_loss;
         for(const c of dist)A.pairs.push([c.prob,Number(c.combo===r.outcome.result)]);
-        const e=evOutcome(r,dist);if(e){A.ev.push(e);evs.push(e);}
+        const top=dist.reduce((a,b)=>b.prob>a.prob||(b.prob===a.prob&&b.combo<a.combo)?b:a);A.top_pairs.push([top.prob,Number(top.combo===r.outcome.result)]);
+        const e=evOutcome(r,dist);if(e){A.ev.push(e);evs.push(e);A.bought_pairs.push(...e.ticket_pairs);}
       }
       const inv=evs.reduce((s,e)=>s+e.investment,0),pay=evs.reduce((s,e)=>s+e.payout,0);
       day.methods[m]={log_loss:ll/test.length,ev_races:evs.length,bought:evs.filter(e=>e.investment>0).length,investment:inv,payout:pay};
@@ -129,12 +137,14 @@ export function walkForward(records,{policy=WF_POLICY}={}){
   for(const m of policy.methods){
     const A=acc[m],bought=A.ev.filter(e=>e.investment>0),inv=bought.reduce((s,e)=>s+e.investment,0),pay=bought.reduce((s,e)=>s+e.payout,0),risk=riskMetrics(bought);
     summary[m]={races:A.races,log_loss:A.races?A.log_loss/A.races:null,brier:A.races?A.brier/A.races:null,top1_hit_rate:A.races?A.top1/A.races:null,top6_hit_rate:A.races?A.top6/A.races:null,
-      ece:ece(A.pairs).ece,ece_bins:ece(A.pairs).bins,
+      ece_all_combinations:ece(A.pairs).ece,ece_bins:ece(A.pairs).bins,
+      // The all-combination ECE is near 0 even for a uniform 1/120 forecast; these two show calibration where it matters.
+      top_ticket:calibrationSummary(A.top_pairs),bought_tickets:calibrationSummary(A.bought_pairs),
       ev:{races_with_full_odds:A.ev.length,bought_races:bought.length,tickets:bought.reduce((s,e)=>s+e.tickets,0),hits:bought.filter(e=>e.hit).length,investment:inv,payout:pay,roi:inv?pay/inv:null,profit:pay-inv,max_drawdown:risk.max_drawdown,max_consecutive_misses:risk.max_consecutive_misses,worst_day_profit:risk.worst_day_profit}};
   }
   const tested=daily.filter(d=>d.status==='tested');
   return {policy,generated_from:{eligible_races:rs.length,dates,first_test_date:tested[0]?.date??null,tested_dates:tested.length,tested_races:tested.reduce((s,d)=>s+d.races,0)},summary,daily,fits,
-    interpretation:'Descriptive walk-forward on dates inside the pre-registered training window; does not select a method, change the frozen forward tests or production. Saved preclose odds move before close.'};
+    interpretation:'Exploratory walk-forward on dates inside the pre-registered training window; does not select a method, change the frozen forward tests or production. The all-combination ECE alone does not show usefulness (a uniform forecast also scores near 0). Few hits and large payouts drive ROI; superiority between methods is not established. Saved preclose odds move before close.'};
 }
 
 export function loadArchive(dir){
@@ -154,5 +164,5 @@ if(import.meta.url===`file://${process.argv[1]}`){
   const f=(x,d=4)=>x==null?'—':Number(x).toFixed(d);
   console.log(`eligible ${out.generated_from.eligible_races}, tested ${out.generated_from.tested_races} races on ${out.generated_from.tested_dates} dates from ${out.generated_from.first_test_date}`);
   for(const [m,s] of Object.entries(out.summary))
-    console.log(`${m.padEnd(19)} LL ${f(s.log_loss)} Brier ${f(s.brier)} ECE ${f(s.ece,5)} top1 ${f(s.top1_hit_rate,3)} top6 ${f(s.top6_hit_rate,3)} | EV bought ${s.ev.bought_races}/${s.ev.races_with_full_odds} hits ${s.ev.hits} inv ${s.ev.investment} pay ${s.ev.payout} ROI ${f(s.ev.roi,3)} maxDD ${s.ev.max_drawdown}`);
+    console.log(`${m.padEnd(19)} LL ${f(s.log_loss)} Brier ${f(s.brier)} ECEall ${f(s.ece_all_combinations,5)} top ${f(s.top_ticket.mean_predicted,3)}/${f(s.top_ticket.observed_hit_rate,3)} bought ${f(s.bought_tickets.mean_predicted,4)}/${f(s.bought_tickets.observed_hit_rate,4)} (${s.bought_tickets.hits}/${f(s.bought_tickets.expected_hits,1)}) top1 ${f(s.top1_hit_rate,3)} top6 ${f(s.top6_hit_rate,3)} | EV bought ${s.ev.bought_races}/${s.ev.races_with_full_odds} hits ${s.ev.hits} inv ${s.ev.investment} pay ${s.ev.payout} ROI ${f(s.ev.roi,3)} maxDD ${s.ev.max_drawdown}`);
 }

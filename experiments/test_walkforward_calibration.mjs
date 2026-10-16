@@ -43,4 +43,22 @@ function race(date,i,{sharpen=.5}={}){
  // Excluded / unsettled / invalid records are not used.
  const out3=walkForward([...rs,{...rs[0],excluded:{kind:'refund'}},{...rs[1],outcome:null},{...rs[2],baseline_distribution:rs[2].baseline_distribution.slice(1)}]);
  assert.equal(out3.generated_from.eligible_races,rs.length);}
-console.log('walk-forward calibration OK: temperature recovery, Platt/isotonic validity and monotonicity, metrics, warm-up, prior-dates-only fits (no leakage from later outcomes), eligibility filter');
+
+// Isotonic with tied probabilities: aggregated before PAV, so the order of races and of tied tickets does not matter.
+{const levels=[.001,.002,.004,.008,.016,.03];   // few distinct values -> many ties; races normalized to sum 1
+ const mk=(i)=>{const raw=combos.map((c,k)=>levels[(k*7+i*3)%levels.length]),s=raw.reduce((a,x)=>a+x,0);
+   return {date:'20261001',baseline_distribution:combos.map((c,k)=>({combo:c,prob:raw[k]/s})),outcome:{result:combos[(i*53+11)%120]}};};
+ const rs=[];for(let i=0;i<10;i++)rs.push(mk(i));
+ const shuffle=(a,seed)=>{const b=[...a];let x=seed;for(let i=b.length-1;i>0;i--){x=(x*1103515245+12345)%2147483648;const j=x%(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;};
+ const base=fitIsotonic(rs),probe=rs[0].baseline_distribution;
+ const variants=[[...rs].reverse(),shuffle(rs,3),rs.map(r=>({...r,baseline_distribution:[...r.baseline_distribution].reverse()})),shuffle(rs,9).map(r=>({...r,baseline_distribution:shuffle(r.baseline_distribution,5)}))];
+ for(const v of variants){const a=base.apply(probe),b=fitIsotonic(v).apply(probe);assert.ok(Math.max(...a.map((x,i)=>Math.abs(x.prob-b.find(y=>y.combo===x.combo).prob)))<1e-15,'order changed the isotonic fit');}
+ // Aggregated value of a tied probability = hits / count when it is its own block (no pooling needed).
+ const tied=new Map();for(const r of rs)for(const x of r.baseline_distribution){const t=tied.get(x.prob)||{y:0,w:0};t.y+=Number(x.combo===r.outcome.result);t.w++;tied.set(x.prob,t);}
+ assert.equal(base.distinct_inputs,tied.size);
+ const xs=[...tied.keys()].sort((a,b)=>a-b);let prev=-1;for(const x of xs){const v=base.map(x);assert.ok(Number.isFinite(v)&&v>=prev-1e-15,'monotone, finite');prev=v;}
+ const c=base.apply(probe);assert.equal(c.length,120);assert.ok(Math.abs(c.reduce((s,x)=>s+x.prob,0)-1)<1e-12);assert.ok(c.every(x=>Number.isFinite(x.prob)&&x.prob>0));}
+// A single tied group with mixed labels gets exactly hits/count (before the floor).
+{const rs=[0,1,2,3].map(i=>({baseline_distribution:combos.map(c=>({combo:c,prob:1/120})),outcome:{result:combos[i]}}));
+ const I=fitIsotonic(rs);assert.equal(I.blocks,1);assert.ok(Math.abs(I.map(1/120)-4/480)<1e-15);}
+console.log('walk-forward calibration OK: isotonic order-invariant with tied probabilities (aggregated before weighted PAV),  temperature recovery, Platt/isotonic validity and monotonicity, metrics, warm-up, prior-dates-only fits (no leakage from later outcomes), eligibility filter');
