@@ -3,8 +3,9 @@ import {riskMetrics} from './variant_risk.mjs';
 import {auditRecord} from './shadow_diagnostics.mjs';
 
 // Conservative EV / skip rules: prospective test, fixed on 2026-10-16 before any race it judges (dev/conservative-ev-plan.md).
-// "Conservative" here is a fixed scenario, NOT a statistical confidence bound: tickets outside the model's 10 most
-// likely combinations, or with model probability below 2%, are treated as having no usable edge (probability floor 0),
+// "Conservative" here is a fixed scenario, NOT a statistical confidence bound: each arm treats the tickets it excludes
+// as having no usable edge (probability floor 0, no renormalization). Arms are independent: top10 = model top 10;
+// top10_cap50 (primary) = top 10 AND odds < 50 (no 2% rule); min_prob_2pct = probability >= 2% only,
 // because the exploratory walk-forward (10/07-10/16) found EV-selected tickets hit far less often than predicted.
 // The observed ratio there (0.39) is NOT used as a correction factor. All arms use the unchanged shadow EV rule
 // (probability x 0.75 x saved odds >= 1.08, max 4 x 100 yen, odds at most 10 minutes old) on their allowed tickets;
