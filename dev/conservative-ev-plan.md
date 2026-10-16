@@ -1,4 +1,4 @@
-# 保守的EV・見送り基準の前向き検証（事前登録、2026-10-16 20:55 JST 固定）
+# 保守的EV・見送り基準の前向き検証（事前登録、2026-10-16 20:49 JST 固定。dev PR #30、merge ce5df790）
 
 コード：`experiments/conservative_ev.mjs`（policy `conservative-ev-prospective-v1`）。既存の凍結済み検証（prospective_calibration・odds_calibration・odds_cap・final_odds_ev）とは別枠。本番は変更しない。
 
