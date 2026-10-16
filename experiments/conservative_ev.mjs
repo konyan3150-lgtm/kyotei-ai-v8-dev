@@ -9,7 +9,7 @@ import {auditRecord} from './shadow_diagnostics.mjs';
 // The observed ratio there (0.39) is NOT used as a correction factor. All arms use the unchanged shadow EV rule
 // (probability x 0.75 x saved odds >= 1.08, max 4 x 100 yen, odds at most 10 minutes old) on their allowed tickets;
 // a race with no allowed ticket is a skip (profit 0). Separate from the frozen odds_cap / final_odds_ev / calibration tests.
-export const CONSERVATIVE_EV_POLICY=Object.freeze({version:'conservative-ev-prospective-v1',fixed_at:'2026-10-16T11:55:00Z',starts_at:'2026-10-16T15:00:00Z',
+export const CONSERVATIVE_EV_POLICY=Object.freeze({version:'conservative-ev-prospective-v1',fixed_at:'2026-10-16T11:49:00Z',starts_at:'2026-10-16T15:00:00Z',
   primary_arm:'top10_cap50',top_k:10,min_prob:0.02,odds_cap:50,ev_policy:EV_POLICY.version,discount:EV_POLICY.probabilityDiscount,min_ev:EV_POLICY.minEv,
   max_tickets:EV_POLICY.maxTickets,stake:EV_POLICY.stake,max_odds_age_ms:EV_POLICY.maxOddsAgeMs,
   review:Object.freeze({min_dates:10,min_primary_bought_races:300,report_by:'2026-11-15'})});
