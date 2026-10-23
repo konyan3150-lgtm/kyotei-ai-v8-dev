@@ -24,7 +24,7 @@ import {evTickets} from './ev_drift.mjs';
 import {riskMetrics} from './variant_risk.mjs';
 
 export const WF_POLICY=Object.freeze({version:'walkforward-calibration-v1',minPriorRaces:300,recentRaces:300,eps:1e-15,
-  methods:['raw','temperature','temperature_recent','platt','isotonic'],eceEdges:[0,.005,.01,.02,.05,.1,.2,.3,1.0000001]});
+  methods:['raw','temperature','temperature_recent','platt','isotonic'],maxDates:20,eceEdges:[0,.005,.01,.02,.05,.1,.2,.3,1.0000001]});
 
 const clamp=p=>Math.min(1-WF_POLICY.eps,Math.max(WF_POLICY.eps,p));
 const normalize=xs=>{const s=xs.reduce((a,x)=>a+x.prob,0);return xs.map(x=>({...x,prob:x.prob/s}));};
@@ -108,9 +108,11 @@ function evOutcome(r,dist){
 
 // --- walk-forward ------------------------------------------------------------------------------------------------
 export function walkForward(records,{policy=WF_POLICY}={}){
-  const rs=records.filter(eligible).sort((a,b)=>a.date.localeCompare(b.date)||String(a.closed_at).localeCompare(String(b.closed_at)));
-  const dates=[...new Set(rs.map(r=>r.date))];
-  const acc=Object.fromEntries(policy.methods.map(m=>[m,{races:0,log_loss:0,brier:0,top1:0,top6:0,pairs:[],top_pairs:[],bought_pairs:[],ev:[]}]));
+  const all=records.filter(eligible).sort((a,b)=>a.date.localeCompare(b.date)||String(a.closed_at).localeCompare(String(b.closed_at)));
+  // Only the first maxDates dates with eligible races (the training window of the pre-registered forward tests);
+  // later dates belong to those tests and are not used for exploration here.
+  const dates=[...new Set(all.map(r=>r.date))].slice(0,policy.maxDates),inWindow=new Set(dates),rs=all.filter(r=>inWindow.has(r.date));
+  const acc=Object.fromEntries(policy.methods.map(m=>[m,{races:0,log_loss:0,brier:0,top1:0,top6:0,pairs:[],top_pairs:[],bought_pairs:[],set_pairs:[],ev:[]}]));
   const daily=[],fits=[];
   for(const date of dates){
     const prior=rs.filter(r=>r.date<date),test=rs.filter(r=>r.date===date);
@@ -126,6 +128,8 @@ export function walkForward(records,{policy=WF_POLICY}={}){
         A.races++;A.log_loss+=x.log_loss;A.brier+=x.brier;A.top1+=x.top1;A.top6+=x.top6;ll+=x.log_loss;
         for(const c of dist)A.pairs.push([c.prob,Number(c.combo===r.outcome.result)]);
         const top=dist.reduce((a,b)=>b.prob>a.prob||(b.prob===a.prob&&b.combo<a.combo)?b:a);A.top_pairs.push([top.prob,Number(top.combo===r.outcome.result)]);
+        // The saved 6-pick recommendation as one set: P(any of the 6 hits) = sum of their probabilities (distinct outcomes).
+        const picks=new Set(r.baseline_picks);A.set_pairs.push([dist.filter(c=>picks.has(c.combo)).reduce((a,c)=>a+c.prob,0),Number(picks.has(r.outcome.result))]);
         const e=evOutcome(r,dist);if(e){A.ev.push(e);evs.push(e);A.bought_pairs.push(...e.ticket_pairs);}
       }
       const inv=evs.reduce((s,e)=>s+e.investment,0),pay=evs.reduce((s,e)=>s+e.payout,0);
@@ -139,11 +143,11 @@ export function walkForward(records,{policy=WF_POLICY}={}){
     summary[m]={races:A.races,log_loss:A.races?A.log_loss/A.races:null,brier:A.races?A.brier/A.races:null,top1_hit_rate:A.races?A.top1/A.races:null,top6_hit_rate:A.races?A.top6/A.races:null,
       ece_all_combinations:ece(A.pairs).ece,ece_bins:ece(A.pairs).bins,
       // The all-combination ECE is near 0 even for a uniform 1/120 forecast; these two show calibration where it matters.
-      top_ticket:calibrationSummary(A.top_pairs),bought_tickets:calibrationSummary(A.bought_pairs),
+      top_ticket:calibrationSummary(A.top_pairs),bought_tickets:calibrationSummary(A.bought_pairs),pick6_set:calibrationSummary(A.set_pairs),
       ev:{races_with_full_odds:A.ev.length,bought_races:bought.length,tickets:bought.reduce((s,e)=>s+e.tickets,0),hits:bought.filter(e=>e.hit).length,investment:inv,payout:pay,roi:inv?pay/inv:null,profit:pay-inv,max_drawdown:risk.max_drawdown,max_consecutive_misses:risk.max_consecutive_misses,worst_day_profit:risk.worst_day_profit}};
   }
   const tested=daily.filter(d=>d.status==='tested');
-  return {policy,generated_from:{eligible_races:rs.length,dates,first_test_date:tested[0]?.date??null,tested_dates:tested.length,tested_races:tested.reduce((s,d)=>s+d.races,0)},summary,daily,fits,
+  return {policy,generated_from:{eligible_races:rs.length,eligible_races_all_dates:all.length,dates,first_test_date:tested[0]?.date??null,tested_dates:tested.length,tested_races:tested.reduce((s,d)=>s+d.races,0)},summary,daily,fits,
     interpretation:'Exploratory walk-forward on dates inside the pre-registered training window; does not select a method, change the frozen forward tests or production. The all-combination ECE alone does not show usefulness (a uniform forecast also scores near 0). Few hits and large payouts drive ROI; superiority between methods is not established. Saved preclose odds move before close.'};
 }
 
