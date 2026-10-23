@@ -1,0 +1,54 @@
+name: V8 Nightly Read-only Verification
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 17 * * *' # 02:30 JST (next day)
+
+permissions:
+  contents: read
+
+jobs:
+  nightly-verification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify prediction and selection code syntax
+        run: |
+          node --check results.mjs
+          node --check selection-analysis.mjs
+          node --check overrides/server-sync.js
+          node --check overrides/value-record-state.js
+          node --check tests/mode-isolation.test.mjs
+          node --check tests/value-record-state.test.mjs
+          node --check tests/server-sync-records.test.mjs
+      - name: Verify saved-mode separation and synchronization
+        run: node --test tests/mode-isolation.test.mjs tests/value-record-state.test.mjs tests/server-sync-records.test.mjs
+      - name: Verify existing saved-prediction integrity
+        run: node --test tests/prediction-integrity.cjs tests/selection-analysis.mjs
+      - name: Write nightly report
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          mkdir -p nightly-report
+          {
+            echo "# V8 Nightly Verification"
+            echo
+            echo "- Run: ${RUN_URL}"
+            echo "- Status: ${JOB_STATUS}"
+            echo "- Scope: read-only; no production deploy or record mutation"
+            echo "- Checked: saved V8/EV mode isolation, sync, prediction integrity, JS syntax"
+            echo "- Note: no claim of improved ROI or hit rate from these checks"
+          } | tee nightly-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v8-nightly-verification
+          path: nightly-report/summary.md
+          retention-days: 14
