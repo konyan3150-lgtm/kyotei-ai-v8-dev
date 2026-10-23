@@ -8,7 +8,7 @@ import path from 'node:path';
 import {snapshots,validSnapshot} from './revision_history.mjs';
 import {loadArchive} from './walkforward_calibration.mjs';
 
-export const ORDER_POLICY=Object.freeze({version:'trifecta-ordering-v1',maxDates:20,minPriorRaces:300,range:[0.25,4],eps:1e-15});
+export const ORDER_POLICY=Object.freeze({version:'trifecta-ordering-v1',window:Object.freeze({from:'20261003',to:'20261022',dates:20}),minPriorRaces:300,range:[0.25,4],eps:1e-15});
 const lanes=['1','2','3','4','5','6'],combos=[];for(const a of lanes)for(const b of lanes)for(const c of lanes)if(a!==b&&a!==c&&b!==c)combos.push([a,b,c]);
 const rp=s=>Object.fromEntries(s.rank_probabilities.map(x=>[String(x.lane),x.p]));
 export function distA(P,[a,b,c]){
@@ -42,7 +42,10 @@ export function orderingReport(records){
     const s=v.at(-1);rs.push({date:r.date,result:r.outcome.result,P:rp(s),base:s.baseline_distribution,makeBets:s.baseline_picks,close:String(r.closed_at)});
   }
   rs.sort((a,b)=>a.date.localeCompare(b.date)||a.close.localeCompare(b.close));
-  const dates=[...new Set(rs.map(r=>r.date))].slice(0,ORDER_POLICY.maxDates),win=new Set(dates),R=rs.filter(r=>win.has(r.date));
+  // Fixed calendar window (not "the first 20 dates with valid records"), so missing or excluded dates cannot shift it.
+  const W=ORDER_POLICY.window,inWin=d=>d>=W.from&&d<=W.to,R=rs.filter(r=>inWin(r.date)),dates=[...new Set(R.map(r=>r.date))];
+  // Reproduction check on real data: A with (1,1,1) must equal the saved baseline_distribution.
+  let maxBaseDiff=0;for(const r of R){const d=distA(r.P,[1,1,1]),m=new Map(r.base.map(x=>[x.combo,x.prob]));for(const x of d)maxBaseDiff=Math.max(maxBaseDiff,Math.abs(x.prob-(m.get(x.combo)??Infinity)));}
   const names=['makeBets','base_top6','A_top6','B_top6'],acc=Object.fromEntries(['base','A','B'].map(k=>[k,{ll:0,set_prob:0}])),hits=Object.fromEntries(names.map(k=>[k,0]));
   const pair={},fits=[],daily={};let n=0;
   const cmp=(x,y,picksX,picksY,res)=>{const k=`${x}_vs_${y}`,p=pair[k]=pair[k]||{changed_tickets:0,races_changed:0,only_first:0,only_second:0};const ch=picksY.filter(t=>!picksX.includes(t)).length;
@@ -60,7 +63,7 @@ export function orderingReport(records){
       for(const [x,y] of [['makeBets','A_top6'],['makeBets','B_top6'],['base_top6','A_top6'],['base_top6','B_top6']])cmp(x,y,picks[x],picks[y],r.result);
     }
   }
-  return {policy:ORDER_POLICY,dates_window:dates,tested_races:n,tested_dates:Object.keys(daily).length,fits,
+  return {policy:ORDER_POLICY,dates_window:dates,window_races:R.length,max_abs_diff_A111_vs_saved_baseline:maxBaseDiff,tested_races:n,tested_dates:Object.keys(daily).length,fits,
     log_loss:Object.fromEntries(Object.entries(acc).map(([k,v])=>[k,n?v.ll/n:null])),
     pick6:Object.fromEntries(names.map(k=>[k,{hit_rate:n?hits[k]/n:null,hits:hits[k]}])),
     pick6_set_predicted:Object.fromEntries(Object.entries(acc).map(([k,v])=>[k,n?v.set_prob/n:null])),
@@ -71,5 +74,8 @@ export function orderingReport(records){
 if(import.meta.url===`file://${process.argv[1]}`){
   const root=path.resolve(import.meta.dirname,'..'),out=orderingReport(loadArchive(path.join(root,'dev/expert-shadow-repaired-archive')));
   fs.mkdirSync(path.join(root,'dev/trifecta-ordering'),{recursive:true});fs.writeFileSync(path.join(root,'dev/trifecta-ordering/report.json'),JSON.stringify(out,null,1)+'\n');
+  const W=ORDER_POLICY.window,expect=[];for(let d=Date.UTC(+W.from.slice(0,4),+W.from.slice(4,6)-1,+W.from.slice(6));;d+=864e5){const x=new Date(d).toISOString().slice(0,10).replace(/-/g,'');expect.push(x);if(x===W.to)break;}
+  if(expect.length!==W.dates||JSON.stringify(out.dates_window)!==JSON.stringify(expect))throw new Error(`window mismatch: ${out.dates_window.join(',')}`);
+  if(!(out.max_abs_diff_A111_vs_saved_baseline<1e-9))throw new Error(`A(1,1,1) differs from saved baseline: ${out.max_abs_diff_A111_vs_saved_baseline}`);
   const {daily,...rest}=out;console.log(JSON.stringify({...rest,fits:out.fits.map(f=>[f.date,+f.a.toFixed(3),+f.b.toFixed(3),+f.c.toFixed(3)])},null,0));
 }

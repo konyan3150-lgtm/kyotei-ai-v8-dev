@@ -20,8 +20,10 @@ const P={'1':[.5,.2,.1],'2':[.2,.3,.2],'3':[.1,.2,.2],'4':[.1,.1,.2],'5':[.05,.1
    return {cohort:'expert-shadow-official-v1',date,stadium:'1',race:String(i),closed_at:close,saved_at:new Date(Date.parse(close.replace(' ','T')+'+09:00')-600000).toISOString(),
      baseline_distribution:dist,candidate_distribution:dist,baseline_picks:dist.slice(0,6).map(x=>x.combo),candidate_picks:dist.slice(0,6).map(x=>x.combo),
      rank_probabilities:lanes.map(l=>({lane:l,p:[1/6,1/6,1/6]})),outcome:{result:res,amount:1000}};};
- const recs=[];for(const d of ['20261001','20261002','20261003'])for(let i=0;i<160;i++)recs.push(mk(d,i,i%2?'1-2-3':'4-5-6'));
+ const recs=[];for(const d of ['20261003','20261004','20261005'])for(let i=0;i<160;i++)recs.push(mk(d,i,i%2?'1-2-3':'4-5-6'));
  const r1=orderingReport(recs);assert.equal(r1.tested_dates,1);assert.equal(r1.fits[0].prior_races,320);
- const r2=orderingReport(recs.map(r=>r.date==='20261003'?{...r,outcome:{...r.outcome,result:'6-5-4'}}:r));assert.deepEqual(r2.fits,r1.fits);
- assert.equal(r1.production_changed,false);}
+ const r2=orderingReport(recs.map(r=>r.date==='20261005'?{...r,outcome:{...r.outcome,result:'6-5-4'}}:r));assert.deepEqual(r2.fits,r1.fits);
+ assert.equal(r1.production_changed,false);assert.ok(r1.max_abs_diff_A111_vs_saved_baseline<1e-12);
+ // Window is fixed by calendar: dates outside 10/03-10/22 are ignored even if earlier dates are missing.
+ const r3=orderingReport([...recs,...recs.map(r=>({...r,date:'20261023'})),...recs.map(r=>({...r,date:'20261002'}))]);assert.deepEqual(r3.dates_window,['20261003','20261004','20261005']);}
 console.log('trifecta ordering OK: A equals the rank product at (1,1,1) and reorders otherwise, Harville from p1 only, exponent recovery, walk-forward fits use earlier dates only');
