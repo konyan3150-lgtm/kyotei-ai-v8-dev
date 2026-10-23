@@ -11,6 +11,7 @@
    "platt",
    "isotonic"
   ],
+  "maxDates": 20,
   "eceEdges": [
    0,
    0.005,
@@ -24,7 +25,8 @@
   ]
  },
  "generated_from": {
-  "eligible_races": 1369,
+  "eligible_races": 1696,
+  "eligible_races_all_dates": 1759,
   "dates": [
    "20261003",
    "20261004",
@@ -39,69 +41,75 @@
    "20261013",
    "20261014",
    "20261015",
-   "20261016"
+   "20261016",
+   "20261017",
+   "20261018",
+   "20261019",
+   "20261020",
+   "20261021",
+   "20261022"
   ],
   "first_test_date": "20261007",
-  "tested_dates": 10,
-  "tested_races": 983
+  "tested_dates": 16,
+  "tested_races": 1310
  },
  "summary": {
   "raw": {
-   "races": 983,
-   "log_loss": 4.017557076456623,
-   "brier": 0.96744097659747,
-   "top1_hit_rate": 0.08646998982706001,
-   "top6_hit_rate": 0.35198372329603256,
-   "ece_all_combinations": 0.0012252540767027937,
+   "races": 1310,
+   "log_loss": 4.018160911111796,
+   "brier": 0.9672977809123413,
+   "top1_hit_rate": 0.08854961832061069,
+   "top6_hit_rate": 0.3450381679389313,
+   "ece_all_combinations": 0.0011280686187041165,
    "ece_bins": [
     {
      "lower": 0,
      "upper": 0.005,
-     "n": 73237,
-     "predicted": 0.0019241442112865681,
-     "observed": 0.0021710337670849435
+     "n": 97835,
+     "predicted": 0.0019152292180800198,
+     "observed": 0.0022180201359431697
     },
     {
      "lower": 0.005,
      "upper": 0.01,
-     "n": 19242,
-     "predicted": 0.007035146095380152,
-     "observed": 0.007951356407857811
+     "n": 25591,
+     "predicted": 0.007036706237215213,
+     "observed": 0.00765894259700676
     },
     {
      "lower": 0.01,
      "upper": 0.02,
-     "n": 11618,
-     "predicted": 0.014050669006319584,
-     "observed": 0.012911000172146669
+     "n": 15356,
+     "predicted": 0.014052842295551015,
+     "observed": 0.012633498306850743
     },
     {
      "lower": 0.02,
      "upper": 0.05,
-     "n": 10824,
-     "predicted": 0.03150635743981065,
-     "observed": 0.026053215077605323
+     "n": 14317,
+     "predicted": 0.03154778204018547,
+     "observed": 0.026891108472445344
     },
     {
      "lower": 0.05,
      "upper": 0.1,
-     "n": 2911,
-     "predicted": 0.0643448291576361,
-     "observed": 0.07454482995534181
+     "n": 3907,
+     "predicted": 0.06451581729339306,
+     "observed": 0.0732019452265165
     },
     {
      "lower": 0.1,
      "upper": 0.2,
-     "n": 128,
-     "predicted": 0.11826473522571819,
-     "observed": 0.171875
+     "n": 193,
+     "predicted": 0.11822646910433254,
+     "observed": 0.16580310880829016
     },
     {
      "lower": 0.2,
      "upper": 0.3,
-     "n": 0,
-     "predicted": null,
-     "observed": null
+     "n": 1,
+     "predicted": 0.20115167032648823,
+     "observed": 0
     },
     {
      "lower": 0.3,
@@ -112,13 +120,13 @@
     }
    ],
    "top_ticket": {
-    "tickets": 983,
-    "mean_predicted": 0.06814080837408107,
-    "observed_hit_rate": 0.08646998982706001,
-    "hits": 85,
-    "expected_hits": 66.9824146317217,
-    "ratio_observed_to_predicted": 1.2689897858615788,
-    "ece": 0.023809900009254717,
+    "tickets": 1310,
+    "mean_predicted": 0.06897666655429656,
+    "observed_hit_rate": 0.08854961832061069,
+    "hits": 116,
+    "expected_hits": 90.3594331861285,
+    "ratio_observed_to_predicted": 1.2837619262291666,
+    "ece": 0.02405619079375318,
     "bins": [
      {
       "lower": 0.01,
@@ -130,142 +138,188 @@
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 239,
-      "predicted": 0.040476466988762665,
-      "observed": 0.029288702928870293
+      "n": 314,
+      "predicted": 0.040495134817040764,
+      "observed": 0.03184713375796178
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 653,
-      "predicted": 0.07129525227079901,
-      "observed": 0.0903522205206738
+      "n": 868,
+      "predicted": 0.07172598784843333,
+      "observed": 0.0944700460829493
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 90,
-      "predicted": 0.1192537969831155,
-      "observed": 0.2111111111111111
+      "n": 126,
+      "predicted": 0.12035519183107742,
+      "observed": 0.19047619047619047
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 1,
+      "predicted": 0.20115167032648823,
+      "observed": 0
      }
     ]
    },
    "bought_tickets": {
-    "tickets": 2218,
-    "mean_predicted": 0.019763118858136735,
-    "observed_hit_rate": 0.007664562669071236,
-    "hits": 17,
-    "expected_hits": 43.83459762734728,
-    "ratio_observed_to_predicted": 0.3878215136026283,
-    "ece": 0.01209855618906557,
+    "tickets": 3322,
+    "mean_predicted": 0.019704260227736234,
+    "observed_hit_rate": 0.006622516556291391,
+    "hits": 22,
+    "expected_hits": 65.45755247653977,
+    "ratio_observed_to_predicted": 0.3360956706697043,
+    "ece": 0.013081743671444893,
     "bins": [
      {
       "lower": 0,
       "upper": 0.005,
-      "n": 278,
-      "predicted": 0.0034736413795325963,
+      "n": 423,
+      "predicted": 0.0035213406034088576,
       "observed": 0
      },
      {
       "lower": 0.005,
       "upper": 0.01,
-      "n": 544,
-      "predicted": 0.0074362371970059385,
-      "observed": 0.001838235294117647
+      "n": 831,
+      "predicted": 0.007426173135846404,
+      "observed": 0.0024067388688327317
      },
      {
       "lower": 0.01,
       "upper": 0.02,
-      "n": 565,
-      "predicted": 0.014523185818758845,
-      "observed": 0.005309734513274336
+      "n": 805,
+      "predicted": 0.01449092646670213,
+      "observed": 0.0037267080745341614
      },
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 688,
-      "predicted": 0.031153133416652132,
-      "observed": 0.01308139534883721
+      "n": 1058,
+      "predicted": 0.03128688706545677,
+      "observed": 0.00945179584120983
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 138,
-      "predicted": 0.06267156706714573,
-      "observed": 0.028985507246376812
+      "n": 199,
+      "predicted": 0.062126220056598944,
+      "observed": 0.035175879396984924
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 5,
-      "predicted": 0.10719605102892386,
+      "n": 6,
+      "predicted": 0.11117256886632654,
       "observed": 0
      }
     ]
    },
+   "pick6_set": {
+    "tickets": 1310,
+    "mean_predicted": 0.31007989426712773,
+    "observed_hit_rate": 0.3351145038167939,
+    "hits": 439,
+    "expected_hits": 406.20466148993734,
+    "ratio_observed_to_predicted": 1.0807359974397415,
+    "ece": 0.025618113715526858,
+    "bins": [
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 3,
+      "predicted": 0.09593781332489305,
+      "observed": 0
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 170,
+      "predicted": 0.17114342228625978,
+      "observed": 0.17058823529411765
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 443,
+      "predicted": 0.25258757215220046,
+      "observed": 0.25733634311512416
+     },
+     {
+      "lower": 0.3,
+      "upper": 1,
+      "n": 694,
+      "predicted": 0.38173799970875194,
+      "observed": 0.4265129682997118
+     }
+    ]
+   },
    "ev": {
-    "races_with_full_odds": 556,
-    "bought_races": 556,
-    "tickets": 2218,
-    "hits": 17,
-    "investment": 221800,
-    "payout": 147080,
-    "roi": 0.6631199278629396,
-    "profit": -74720,
-    "max_drawdown": 118700,
-    "max_consecutive_misses": 84,
+    "races_with_full_odds": 832,
+    "bought_races": 832,
+    "tickets": 3322,
+    "hits": 22,
+    "investment": 332200,
+    "payout": 190450,
+    "roi": 0.5732992173389524,
+    "profit": -141750,
+    "max_drawdown": 173480,
+    "max_consecutive_misses": 88,
     "worst_day_profit": -25990
    }
   },
   "temperature": {
-   "races": 983,
-   "log_loss": 4.017754092842928,
-   "brier": 0.9675198295076225,
-   "top1_hit_rate": 0.08646998982706001,
-   "top6_hit_rate": 0.35198372329603256,
-   "ece_all_combinations": 0.0011176135628350064,
+   "races": 1310,
+   "log_loss": 4.018037901762728,
+   "brier": 0.9673861443175369,
+   "top1_hit_rate": 0.08854961832061069,
+   "top6_hit_rate": 0.3450381679389313,
+   "ece_all_combinations": 0.0010092300492039645,
    "ece_bins": [
     {
      "lower": 0,
      "upper": 0.005,
-     "n": 72878,
-     "predicted": 0.001941567632165599,
-     "observed": 0.002168006805894783
+     "n": 97120,
+     "predicted": 0.0019395521379738589,
+     "observed": 0.0022240527182866556
     },
     {
      "lower": 0.005,
      "upper": 0.01,
-     "n": 19513,
-     "predicted": 0.007034731156232854,
-     "observed": 0.007840926561779326
+     "n": 26143,
+     "predicted": 0.007036123623697242,
+     "observed": 0.007458975634012929
     },
     {
      "lower": 0.01,
      "upper": 0.02,
-     "n": 11733,
-     "predicted": 0.014048961869055946,
-     "observed": 0.012869683797835166
+     "n": 15565,
+     "predicted": 0.014051758923372149,
+     "observed": 0.012656601349180854
     },
     {
      "lower": 0.02,
      "upper": 0.05,
-     "n": 10864,
-     "predicted": 0.031487516414430775,
-     "observed": 0.026693667157584682
+     "n": 14394,
+     "predicted": 0.031513815077472904,
+     "observed": 0.02751146310962901
     },
     {
      "lower": 0.05,
      "upper": 0.1,
-     "n": 2853,
-     "predicted": 0.06421809244957294,
-     "observed": 0.07360672975814932
+     "n": 3803,
+     "predicted": 0.06431797743160116,
+     "observed": 0.07310018406521168
     },
     {
      "lower": 0.1,
      "upper": 0.2,
-     "n": 119,
-     "predicted": 0.11850974249432103,
-     "observed": 0.17647058823529413
+     "n": 175,
+     "predicted": 0.11862037957629652,
+     "observed": 0.16
     },
     {
      "lower": 0.2,
@@ -283,13 +337,13 @@
     }
    ],
    "top_ticket": {
-    "tickets": 983,
-    "mean_predicted": 0.06741932917830805,
-    "observed_hit_rate": 0.08646998982706001,
-    "hits": 85,
-    "expected_hits": 66.27320058227681,
-    "ratio_observed_to_predicted": 1.2825697152572895,
-    "ece": 0.023225394071656146,
+    "tickets": 1310,
+    "mean_predicted": 0.06790069990902847,
+    "observed_hit_rate": 0.08854961832061069,
+    "hits": 116,
+    "expected_hits": 88.9499168808273,
+    "ratio_observed_to_predicted": 1.3041046475109546,
+    "ece": 0.022645525951440683,
     "bins": [
      {
       "lower": 0.01,
@@ -301,306 +355,384 @@
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 248,
-      "predicted": 0.04045175845099637,
-      "observed": 0.03225806451612903
+      "n": 329,
+      "predicted": 0.04038885275713363,
+      "observed": 0.0364741641337386
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 653,
-      "predicted": 0.07120277166180326,
-      "observed": 0.0903522205206738
+      "n": 865,
+      "predicted": 0.07135989679631455,
+      "observed": 0.09364161849710982
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 81,
-      "predicted": 0.12007295320693717,
-      "observed": 0.2222222222222222
+      "n": 115,
+      "predicted": 0.12100720185572104,
+      "observed": 0.2
      }
     ]
    },
    "bought_tickets": {
-    "tickets": 2218,
-    "mean_predicted": 0.019453632180610005,
-    "observed_hit_rate": 0.007213706041478809,
-    "hits": 16,
-    "expected_hits": 43.14815617659299,
-    "ratio_observed_to_predicted": 0.3708153816472853,
-    "ece": 0.012239926139131187,
+    "tickets": 3322,
+    "mean_predicted": 0.019158271660704496,
+    "observed_hit_rate": 0.006020469596628537,
+    "hits": 20,
+    "expected_hits": 63.64377845686034,
+    "ratio_observed_to_predicted": 0.3142490984182625,
+    "ece": 0.01313780206407598,
     "bins": [
      {
       "lower": 0,
       "upper": 0.005,
-      "n": 286,
-      "predicted": 0.0035251698834582726,
+      "n": 441,
+      "predicted": 0.00354737843256058,
       "observed": 0
      },
      {
       "lower": 0.005,
       "upper": 0.01,
-      "n": 548,
-      "predicted": 0.007434653109719115,
-      "observed": 0.0018248175182481751
+      "n": 854,
+      "predicted": 0.007438645564539441,
+      "observed": 0.00117096018735363
      },
      {
       "lower": 0.01,
       "upper": 0.02,
-      "n": 571,
-      "predicted": 0.014512225399251639,
-      "observed": 0.0035026269702276708
+      "n": 809,
+      "predicted": 0.014472872416746798,
+      "observed": 0.003708281829419036
      },
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 675,
-      "predicted": 0.031082198903119813,
-      "observed": 0.013333333333333334
+      "n": 1027,
+      "predicted": 0.031139513651676134,
+      "observed": 0.009737098344693282
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 133,
-      "predicted": 0.06215070432380758,
-      "observed": 0.03007518796992481
+      "n": 185,
+      "predicted": 0.06150090479123769,
+      "observed": 0.032432432432432434
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 6,
+      "predicted": 0.1100465940309975,
+      "observed": 0
+     }
+    ]
+   },
+   "pick6_set": {
+    "tickets": 1310,
+    "mean_predicted": 0.30626292037806496,
+    "observed_hit_rate": 0.3351145038167939,
+    "hits": 439,
+    "expected_hits": 401.2044256952651,
+    "ratio_observed_to_predicted": 1.0942052776193514,
+    "ece": 0.02928991790690772,
+    "bins": [
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 3,
+      "predicted": 0.09570302555229045,
+      "observed": 0
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 182,
+      "predicted": 0.1712787783456585,
+      "observed": 0.17582417582417584
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 446,
+      "predicted": 0.25240388080665155,
+      "observed": 0.2623318385650224
+     },
+     {
+      "lower": 0.3,
+      "upper": 1,
+      "n": 679,
+      "predicted": 0.3787517645359813,
+      "observed": 0.4270986745213549
+     }
+    ]
+   },
+   "ev": {
+    "races_with_full_odds": 832,
+    "bought_races": 832,
+    "tickets": 3322,
+    "hits": 20,
+    "investment": 332200,
+    "payout": 172320,
+    "roi": 0.5187236604455148,
+    "profit": -159880,
+    "max_drawdown": 191610,
+    "max_consecutive_misses": 95,
+    "worst_day_profit": -25990
+   }
+  },
+  "temperature_recent": {
+   "races": 1310,
+   "log_loss": 4.019787915934971,
+   "brier": 0.9677116304610345,
+   "top1_hit_rate": 0.08854961832061069,
+   "top6_hit_rate": 0.3450381679389313,
+   "ece_all_combinations": 0.0009338790993702981,
+   "ece_bins": [
+    {
+     "lower": 0,
+     "upper": 0.005,
+     "n": 95798,
+     "predicted": 0.0019872560926286853,
+     "observed": 0.0022129898327731268
+    },
+    {
+     "lower": 0.005,
+     "upper": 0.01,
+     "n": 27102,
+     "predicted": 0.007033236121690053,
+     "observed": 0.007231938602317172
+    },
+    {
+     "lower": 0.01,
+     "upper": 0.02,
+     "n": 16019,
+     "predicted": 0.014031637712497312,
+     "observed": 0.012672451463886635
+    },
+    {
+     "lower": 0.02,
+     "upper": 0.05,
+     "n": 14511,
+     "predicted": 0.031398945123975515,
+     "observed": 0.027840948246158088
+    },
+    {
+     "lower": 0.05,
+     "upper": 0.1,
+     "n": 3620,
+     "predicted": 0.06378007020125889,
+     "observed": 0.07375690607734807
+    },
+    {
+     "lower": 0.1,
+     "upper": 0.2,
+     "n": 150,
+     "predicted": 0.11815549419498986,
+     "observed": 0.18666666666666668
+    },
+    {
+     "lower": 0.2,
+     "upper": 0.3,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    },
+    {
+     "lower": 0.3,
+     "upper": 1,
+     "n": 0,
+     "predicted": null,
+     "observed": null
+    }
+   ],
+   "top_ticket": {
+    "tickets": 1310,
+    "mean_predicted": 0.06593007417856835,
+    "observed_hit_rate": 0.08854961832061069,
+    "hits": 116,
+    "expected_hits": 86.36839717392454,
+    "ratio_observed_to_predicted": 1.3430838570085395,
+    "ece": 0.025974656909120444,
+    "bins": [
+     {
+      "lower": 0.02,
+      "upper": 0.05,
+      "n": 355,
+      "predicted": 0.03999323623221429,
+      "observed": 0.03380281690140845
+     },
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 861,
+      "predicted": 0.07051887187077413,
+      "observed": 0.09407665505226481
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 94,
+      "predicted": 0.12185159181650823,
+      "observed": 0.24468085106382978
+     }
+    ]
+   },
+   "bought_tickets": {
+    "tickets": 3323,
+    "mean_predicted": 0.018234375851908582,
+    "observed_hit_rate": 0.005416792055371652,
+    "hits": 18,
+    "expected_hits": 60.59283095589222,
+    "ratio_observed_to_predicted": 0.29706484605584565,
+    "ece": 0.012817583796536941,
+    "bins": [
+     {
+      "lower": 0,
+      "upper": 0.005,
+      "n": 469,
+      "predicted": 0.003567643034464326,
+      "observed": 0
+     },
+     {
+      "lower": 0.005,
+      "upper": 0.01,
+      "n": 901,
+      "predicted": 0.0074416723385384706,
+      "observed": 0.0011098779134295228
+     },
+     {
+      "lower": 0.01,
+      "upper": 0.02,
+      "n": 821,
+      "predicted": 0.014467154707263955,
+      "observed": 0.0036540803897685747
+     },
+     {
+      "lower": 0.02,
+      "upper": 0.05,
+      "n": 964,
+      "predicted": 0.031012151173560928,
+      "observed": 0.01037344398340249
+     },
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 163,
+      "predicted": 0.060696742904707966,
+      "observed": 0.024539877300613498
      },
      {
       "lower": 0.1,
       "upper": 0.2,
       "n": 5,
-      "predicted": 0.10655180963057384,
+      "predicted": 0.10956855125229707,
       "observed": 0
      }
     ]
    },
-   "ev": {
-    "races_with_full_odds": 556,
-    "bought_races": 556,
-    "tickets": 2218,
-    "hits": 16,
-    "investment": 221800,
-    "payout": 133140,
-    "roi": 0.6002705139765555,
-    "profit": -88660,
-    "max_drawdown": 132640,
-    "max_consecutive_misses": 84,
-    "worst_day_profit": -25990
-   }
-  },
-  "temperature_recent": {
-   "races": 983,
-   "log_loss": 4.020125855860603,
-   "brier": 0.9678936349144676,
-   "top1_hit_rate": 0.08646998982706001,
-   "top6_hit_rate": 0.35198372329603256,
-   "ece_all_combinations": 0.0009870634960772204,
-   "ece_bins": [
-    {
-     "lower": 0,
-     "upper": 0.005,
-     "n": 71946,
-     "predicted": 0.0019872455448944645,
-     "observed": 0.002154393572957496
-    },
-    {
-     "lower": 0.005,
-     "upper": 0.01,
-     "n": 20193,
-     "predicted": 0.007031941772272505,
-     "observed": 0.007626405189917298
-    },
-    {
-     "lower": 0.01,
-     "upper": 0.02,
-     "n": 12050,
-     "predicted": 0.014029995631702619,
-     "observed": 0.012863070539419087
-    },
-    {
-     "lower": 0.02,
-     "upper": 0.05,
-     "n": 10941,
-     "predicted": 0.03136418587301124,
-     "observed": 0.027328397769856502
-    },
-    {
-     "lower": 0.05,
-     "upper": 0.1,
-     "n": 2724,
-     "predicted": 0.06362364316010359,
-     "observed": 0.07305433186490455
-    },
-    {
-     "lower": 0.1,
-     "upper": 0.2,
-     "n": 106,
-     "predicted": 0.1179417250260909,
-     "observed": 0.19811320754716982
-    },
-    {
-     "lower": 0.2,
-     "upper": 0.3,
-     "n": 0,
-     "predicted": null,
-     "observed": null
-    },
-    {
-     "lower": 0.3,
-     "upper": 1,
-     "n": 0,
-     "predicted": null,
-     "observed": null
-    }
-   ],
-   "top_ticket": {
-    "tickets": 983,
-    "mean_predicted": 0.06558194067089274,
-    "observed_hit_rate": 0.08646998982706001,
-    "hits": 85,
-    "expected_hits": 64.46704767948756,
-    "ratio_observed_to_predicted": 1.3185030656684735,
-    "ece": 0.02627590956694907,
+   "pick6_set": {
+    "tickets": 1310,
+    "mean_predicted": 0.2991446447347967,
+    "observed_hit_rate": 0.3351145038167939,
+    "hits": 439,
+    "expected_hits": 391.87948460258366,
+    "ratio_observed_to_predicted": 1.1202423634021124,
+    "ece": 0.03655581370367862,
     "bins": [
-     {
-      "lower": 0.02,
-      "upper": 0.05,
-      "n": 266,
-      "predicted": 0.04003057666127531,
-      "observed": 0.03007518796992481
-     },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 647,
-      "predicted": 0.07018009851307642,
-      "observed": 0.09119010819165378
-     },
-     {
-      "lower": 0.1,
-      "upper": 0.2,
-      "n": 70,
-      "predicted": 0.12017700785182632,
-      "observed": 0.2571428571428571
-     }
-    ]
-   },
-   "bought_tickets": {
-    "tickets": 2219,
-    "mean_predicted": 0.01846829614741742,
-    "observed_hit_rate": 0.006309148264984227,
-    "hits": 14,
-    "expected_hits": 40.981149151119254,
-    "ratio_observed_to_predicted": 0.3416204838076787,
-    "ece": 0.012159147882433212,
-    "bins": [
-     {
-      "lower": 0,
-      "upper": 0.005,
-      "n": 313,
-      "predicted": 0.0035581034319872445,
-      "observed": 0
-     },
-     {
-      "lower": 0.005,
-      "upper": 0.01,
-      "n": 575,
-      "predicted": 0.007439653532472667,
-      "observed": 0.0017391304347826088
-     },
-     {
-      "lower": 0.01,
-      "upper": 0.02,
-      "n": 581,
-      "predicted": 0.01449293890911674,
-      "observed": 0.0034423407917383822
-     },
-     {
-      "lower": 0.02,
-      "upper": 0.05,
-      "n": 626,
-      "predicted": 0.030941673545701383,
-      "observed": 0.01437699680511182
-     },
-     {
-      "lower": 0.05,
-      "upper": 0.1,
-      "n": 120,
-      "predicted": 0.06148040906497325,
-      "observed": 0.016666666666666666
-     },
-     {
-      "lower": 0.1,
-      "upper": 0.2,
       "n": 4,
-      "predicted": 0.105531940533207,
+      "predicted": 0.09595006930027898,
       "observed": 0
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 194,
+      "predicted": 0.17010239226234034,
+      "observed": 0.17525773195876287
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 473,
+      "predicted": 0.25195138521253924,
+      "observed": 0.2832980972515856
+     },
+     {
+      "lower": 0.3,
+      "upper": 1,
+      "n": 639,
+      "predicted": 0.3745270970594007,
+      "observed": 0.4241001564945227
      }
     ]
    },
    "ev": {
-    "races_with_full_odds": 556,
-    "bought_races": 556,
-    "tickets": 2219,
-    "hits": 14,
-    "investment": 221900,
-    "payout": 130380,
-    "roi": 0.5875619648490311,
-    "profit": -91520,
-    "max_drawdown": 135500,
+    "races_with_full_odds": 832,
+    "bought_races": 832,
+    "tickets": 3323,
+    "hits": 18,
+    "investment": 332300,
+    "payout": 169560,
+    "roi": 0.5102618116160096,
+    "profit": -162740,
+    "max_drawdown": 194470,
     "max_consecutive_misses": 156,
     "worst_day_profit": -25990
    }
   },
   "platt": {
-   "races": 983,
-   "log_loss": 4.017755914884087,
-   "brier": 0.9675039016471721,
-   "top1_hit_rate": 0.08646998982706001,
-   "top6_hit_rate": 0.35198372329603256,
-   "ece_all_combinations": 0.0011713576138897219,
+   "races": 1310,
+   "log_loss": 4.018055443902763,
+   "brier": 0.9673691293313073,
+   "top1_hit_rate": 0.08854961832061069,
+   "top6_hit_rate": 0.3450381679389313,
+   "ece_all_combinations": 0.0010450727468396127,
    "ece_bins": [
     {
      "lower": 0,
      "upper": 0.005,
-     "n": 72968,
-     "predicted": 0.001937588818930825,
-     "observed": 0.0021653327486021267
+     "n": 97266,
+     "predicted": 0.001935458047647534,
+     "observed": 0.002220714329776078
     },
     {
      "lower": 0.005,
      "upper": 0.01,
-     "n": 19446,
-     "predicted": 0.007035312306486703,
-     "observed": 0.007919366450683946
+     "n": 26030,
+     "predicted": 0.007037215500098634,
+     "observed": 0.007529773338455628
     },
     {
      "lower": 0.01,
      "upper": 0.02,
-     "n": 11705,
-     "predicted": 0.01404981879003334,
-     "observed": 0.012815036309269542
+     "n": 15528,
+     "predicted": 0.014053175029484943,
+     "observed": 0.012622359608449252
     },
     {
      "lower": 0.02,
      "upper": 0.05,
-     "n": 10850,
-     "predicted": 0.03148696250044943,
-     "observed": 0.026451612903225806
+     "n": 14371,
+     "predicted": 0.031516597038741385,
+     "observed": 0.027346739962424326
     },
     {
      "lower": 0.05,
      "upper": 0.1,
-     "n": 2869,
-     "predicted": 0.0642309119558998,
-     "observed": 0.07424189613105611
+     "n": 3826,
+     "predicted": 0.06434553848370962,
+     "observed": 0.07344485101934135
     },
     {
      "lower": 0.1,
      "upper": 0.2,
-     "n": 122,
-     "predicted": 0.11839489737396348,
-     "observed": 0.1721311475409836
+     "n": 179,
+     "predicted": 0.11864955267978805,
+     "observed": 0.1564245810055866
     },
     {
      "lower": 0.2,
@@ -618,13 +750,13 @@
     }
    ],
    "top_ticket": {
-    "tickets": 983,
-    "mean_predicted": 0.0676073752233615,
-    "observed_hit_rate": 0.08646998982706001,
-    "hits": 85,
-    "expected_hits": 66.45804984456434,
-    "ratio_observed_to_predicted": 1.279002320995012,
-    "ece": 0.024813829573094998,
+    "tickets": 1310,
+    "mean_predicted": 0.06812457270616762,
+    "observed_hit_rate": 0.08854961832061069,
+    "hits": 116,
+    "expected_hits": 89.24319024507959,
+    "ratio_observed_to_predicted": 1.2998190638573193,
+    "ece": 0.023696006195651154,
     "bins": [
      {
       "lower": 0.01,
@@ -636,149 +768,188 @@
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 245,
-      "predicted": 0.040429187166599406,
-      "observed": 0.02857142857142857
+      "n": 325,
+      "predicted": 0.040377255012460686,
+      "observed": 0.033846153846153845
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 653,
-      "predicted": 0.07117326592853801,
-      "observed": 0.09188361408882083
+      "n": 866,
+      "predicted": 0.07139439525824501,
+      "observed": 0.09468822170900693
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 84,
-      "predicted": 0.11972482185441262,
-      "observed": 0.21428571428571427
+      "n": 118,
+      "predicted": 0.12095902348091558,
+      "observed": 0.19491525423728814
      }
     ]
    },
    "bought_tickets": {
-    "tickets": 2218,
-    "mean_predicted": 0.019539224653473696,
-    "observed_hit_rate": 0.007213706041478809,
-    "hits": 16,
-    "expected_hits": 43.33800028140466,
-    "ratio_observed_to_predicted": 0.3691910078016505,
-    "ece": 0.012325518611994938,
+    "tickets": 3322,
+    "mean_predicted": 0.019261556922030854,
+    "observed_hit_rate": 0.006020469596628537,
+    "hits": 20,
+    "expected_hits": 63.986892094986494,
+    "ratio_observed_to_predicted": 0.31256401655374416,
+    "ece": 0.013241087325402346,
     "bins": [
      {
       "lower": 0,
       "upper": 0.005,
-      "n": 284,
-      "predicted": 0.003512251941416316,
+      "n": 436,
+      "predicted": 0.0035367701244200006,
       "observed": 0
      },
      {
       "lower": 0.005,
       "upper": 0.01,
-      "n": 546,
-      "predicted": 0.007434668321688429,
-      "observed": 0.0018315018315018315
+      "n": 851,
+      "predicted": 0.007434551158576045,
+      "observed": 0.0011750881316098707
      },
      {
       "lower": 0.01,
       "upper": 0.02,
-      "n": 572,
-      "predicted": 0.014501984098425014,
-      "observed": 0.0034965034965034965
+      "n": 811,
+      "predicted": 0.014468687475465872,
+      "observed": 0.0036991368680641184
      },
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 677,
-      "predicted": 0.03115403663943744,
-      "observed": 0.013293943870014771
+      "n": 1031,
+      "predicted": 0.031210244794035703,
+      "observed": 0.009699321047526674
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 134,
-      "predicted": 0.0623931737233901,
-      "observed": 0.029850746268656716
+      "n": 187,
+      "predicted": 0.06173199125386849,
+      "observed": 0.03208556149732621
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 5,
-      "predicted": 0.10681776765362519,
+      "n": 6,
+      "predicted": 0.11038449917737082,
       "observed": 0
      }
     ]
    },
+   "pick6_set": {
+    "tickets": 1310,
+    "mean_predicted": 0.3070110889741166,
+    "observed_hit_rate": 0.3351145038167939,
+    "hits": 439,
+    "expected_hits": 402.18452655609275,
+    "ratio_observed_to_predicted": 1.091538761471403,
+    "ece": 0.02854215964342827,
+    "bins": [
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 3,
+      "predicted": 0.09579261483065421,
+      "observed": 0
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 180,
+      "predicted": 0.1712984975762184,
+      "observed": 0.17777777777777778
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 447,
+      "predicted": 0.2526685046953959,
+      "observed": 0.26174496644295303
+     },
+     {
+      "lower": 0.3,
+      "upper": 1,
+      "n": 680,
+      "predicted": 0.37958911404270534,
+      "observed": 0.4264705882352941
+     }
+    ]
+   },
    "ev": {
-    "races_with_full_odds": 556,
-    "bought_races": 556,
-    "tickets": 2218,
-    "hits": 16,
-    "investment": 221800,
-    "payout": 133140,
-    "roi": 0.6002705139765555,
-    "profit": -88660,
-    "max_drawdown": 132640,
-    "max_consecutive_misses": 84,
+    "races_with_full_odds": 832,
+    "bought_races": 832,
+    "tickets": 3322,
+    "hits": 20,
+    "investment": 332200,
+    "payout": 172320,
+    "roi": 0.5187236604455148,
+    "profit": -159880,
+    "max_drawdown": 191610,
+    "max_consecutive_misses": 95,
     "worst_day_profit": -25990
    }
   },
   "isotonic": {
-   "races": 983,
-   "log_loss": 4.004914614639642,
-   "brier": 0.966249609833692,
-   "top1_hit_rate": 0.08646998982706001,
-   "top6_hit_rate": 0.35198372329603256,
-   "ece_all_combinations": 0.0005062922448836059,
+   "races": 1310,
+   "log_loss": 4.008805562277073,
+   "brier": 0.9663484019391098,
+   "top1_hit_rate": 0.08854961832061069,
+   "top6_hit_rate": 0.3450381679389313,
+   "ece_all_combinations": 0.0004196378172523962,
    "ece_bins": [
     {
      "lower": 0,
      "upper": 0.005,
-     "n": 68192,
-     "predicted": 0.0016777429564397792,
-     "observed": 0.0019503754106053497
+     "n": 90749,
+     "predicted": 0.0016961647791415002,
+     "observed": 0.0019834929310515816
     },
     {
      "lower": 0.005,
      "upper": 0.01,
-     "n": 22831,
-     "predicted": 0.0072432443812183046,
-     "observed": 0.007314616092155403
+     "n": 30503,
+     "predicted": 0.007179675405305343,
+     "observed": 0.007179621676556404
     },
     {
      "lower": 0.01,
      "upper": 0.02,
-     "n": 16704,
-     "predicted": 0.013671562584936965,
-     "observed": 0.013110632183908046
+     "n": 22523,
+     "predicted": 0.013680985580924655,
+     "observed": 0.01309772232828664
     },
     {
      "lower": 0.02,
      "upper": 0.05,
-     "n": 6334,
-     "predicted": 0.030699019938089822,
-     "observed": 0.027470792548152826
+     "n": 8247,
+     "predicted": 0.03092859839593838,
+     "observed": 0.028737722808293925
     },
     {
      "lower": 0.05,
      "upper": 0.1,
-     "n": 3579,
-     "predicted": 0.06708591490583485,
-     "observed": 0.06929309863090248
+     "n": 4734,
+     "predicted": 0.06714299850749257,
+     "observed": 0.06759611322348964
     },
     {
      "lower": 0.1,
      "upper": 0.2,
-     "n": 296,
-     "predicted": 0.11911903309339747,
-     "observed": 0.125
+     "n": 408,
+     "predicted": 0.11822611540975274,
+     "observed": 0.12990196078431374
     },
     {
      "lower": 0.2,
      "upper": 0.3,
-     "n": 24,
-     "predicted": 0.21015595402446996,
-     "observed": 0.20833333333333334
+     "n": 36,
+     "predicted": 0.21602512048719313,
+     "observed": 0.16666666666666666
     },
     {
      "lower": 0.3,
@@ -789,101 +960,101 @@
     }
    ],
    "top_ticket": {
-    "tickets": 983,
-    "mean_predicted": 0.08106260121158457,
-    "observed_hit_rate": 0.08646998982706001,
-    "hits": 85,
-    "expected_hits": 79.68453699098762,
-    "ratio_observed_to_predicted": 1.0667063298568649,
-    "ece": 0.009680299211867346,
+    "tickets": 1310,
+    "mean_predicted": 0.08148327196681397,
+    "observed_hit_rate": 0.08854961832061069,
+    "hits": 116,
+    "expected_hits": 106.7430862765263,
+    "ratio_observed_to_predicted": 1.0867214359859612,
+    "ece": 0.012252006904077626,
     "bins": [
      {
       "lower": 0.01,
       "upper": 0.02,
-      "n": 6,
-      "predicted": 0.01748772932789456,
+      "n": 10,
+      "predicted": 0.018093869869886828,
       "observed": 0
      },
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 135,
-      "predicted": 0.03689503787768762,
-      "observed": 0.022222222222222223
+      "n": 180,
+      "predicted": 0.03707072434010615,
+      "observed": 0.027777777777777776
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 626,
-      "predicted": 0.07505203678053278,
-      "observed": 0.07667731629392971
+      "n": 822,
+      "predicted": 0.07488179949156437,
+      "observed": 0.08150851581508516
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 197,
-      "predicted": 0.11980622542257613,
-      "observed": 0.15228426395939088
+      "n": 268,
+      "predicted": 0.11863298296278525,
+      "observed": 0.1455223880597015
      },
      {
       "lower": 0.2,
       "upper": 0.3,
-      "n": 19,
-      "predicted": 0.21128310887744328,
-      "observed": 0.21052631578947367
+      "n": 30,
+      "predicted": 0.21809795268386928,
+      "observed": 0.16666666666666666
      }
     ]
    },
    "bought_tickets": {
-    "tickets": 2207,
-    "mean_predicted": 0.02169413642209969,
-    "observed_hit_rate": 0.0095151789759855,
-    "hits": 21,
-    "expected_hits": 47.87895908357402,
-    "ratio_observed_to_predicted": 0.4386060265709606,
-    "ece": 0.013966407627746385,
+    "tickets": 3307,
+    "mean_predicted": 0.02118790719297998,
+    "observed_hit_rate": 0.008164499546416692,
+    "hits": 27,
+    "expected_hits": 70.0684090871848,
+    "ratio_observed_to_predicted": 0.38533770570421266,
+    "ece": 0.014216302279421566,
     "bins": [
      {
       "lower": 0,
       "upper": 0.005,
-      "n": 202,
-      "predicted": 0.0033879404512441647,
+      "n": 328,
+      "predicted": 0.0034570484892802156,
       "observed": 0
      },
      {
       "lower": 0.005,
       "upper": 0.01,
-      "n": 829,
-      "predicted": 0.007408212433748203,
-      "observed": 0.0012062726176115801
+      "n": 1253,
+      "predicted": 0.007376818407907748,
+      "observed": 0.0023942537909018356
      },
      {
       "lower": 0.01,
       "upper": 0.02,
-      "n": 570,
-      "predicted": 0.013425204335926973,
-      "observed": 0.0035087719298245615
+      "n": 831,
+      "predicted": 0.013391033839163681,
+      "observed": 0.0024067388688327317
      },
      {
       "lower": 0.02,
       "upper": 0.05,
-      "n": 278,
-      "predicted": 0.03478528542632707,
-      "observed": 0.014388489208633094
+      "n": 425,
+      "predicted": 0.03509677708269003,
+      "observed": 0.009411764705882352
      },
      {
       "lower": 0.05,
       "upper": 0.1,
-      "n": 303,
-      "predicted": 0.06669772676618382,
-      "observed": 0.033003300330033
+      "n": 438,
+      "predicted": 0.06650210406837358,
+      "observed": 0.02968036529680365
      },
      {
       "lower": 0.1,
       "upper": 0.2,
-      "n": 20,
-      "predicted": 0.12467756250628206,
-      "observed": 0.05
+      "n": 27,
+      "predicted": 0.12932570483658679,
+      "observed": 0.07407407407407407
      },
      {
       "lower": 0.2,
@@ -894,17 +1065,56 @@
      }
     ]
    },
+   "pick6_set": {
+    "tickets": 1310,
+    "mean_predicted": 0.3380122934183156,
+    "observed_hit_rate": 0.3351145038167939,
+    "hits": 439,
+    "expected_hits": 442.79610437799346,
+    "ratio_observed_to_predicted": 0.9914269697938605,
+    "ece": 0.006508290721522827,
+    "bins": [
+     {
+      "lower": 0.05,
+      "upper": 0.1,
+      "n": 7,
+      "predicted": 0.08869766137570011,
+      "observed": 0.2857142857142857
+     },
+     {
+      "lower": 0.1,
+      "upper": 0.2,
+      "n": 200,
+      "predicted": 0.15784695530777665,
+      "observed": 0.155
+     },
+     {
+      "lower": 0.2,
+      "upper": 0.3,
+      "n": 269,
+      "predicted": 0.252841033965685,
+      "observed": 0.25650557620817843
+     },
+     {
+      "lower": 0.3,
+      "upper": 1,
+      "n": 834,
+      "predicted": 0.41078128483218074,
+      "observed": 0.4040767386091127
+     }
+    ]
+   },
    "ev": {
-    "races_with_full_odds": 556,
-    "bought_races": 556,
-    "tickets": 2207,
-    "hits": 21,
-    "investment": 220700,
-    "payout": 115400,
-    "roi": 0.5228817399184413,
-    "profit": -105300,
-    "max_drawdown": 131500,
-    "max_consecutive_misses": 89,
+    "races_with_full_odds": 832,
+    "bought_races": 832,
+    "tickets": 3307,
+    "hits": 27,
+    "investment": 330700,
+    "payout": 156620,
+    "roi": 0.47360145146658605,
+    "profit": -174080,
+    "max_drawdown": 200280,
+    "max_consecutive_misses": 112,
     "worst_day_profit": -26930
    }
   }
@@ -1323,43 +1533,301 @@
   },
   {
    "date": "20261016",
-   "races": 45,
+   "races": 50,
    "status": "tested",
    "prior_races": 1324,
    "methods": {
     "raw": {
-     "log_loss": 4.262458087140863,
-     "ev_races": 40,
-     "bought": 40,
-     "investment": 16000,
+     "log_loss": 4.202164293576244,
+     "ev_races": 45,
+     "bought": 45,
+     "investment": 18000,
      "payout": 13050
     },
     "temperature": {
-     "log_loss": 4.2598782085157545,
-     "ev_races": 40,
-     "bought": 40,
-     "investment": 16000,
+     "log_loss": 4.200299060996768,
+     "ev_races": 45,
+     "bought": 45,
+     "investment": 18000,
      "payout": 13050
     },
     "temperature_recent": {
-     "log_loss": 4.256377928147061,
-     "ev_races": 40,
-     "bought": 40,
-     "investment": 16000,
+     "log_loss": 4.197929653864312,
+     "ev_races": 45,
+     "bought": 45,
+     "investment": 18000,
      "payout": 13050
     },
     "platt": {
-     "log_loss": 4.260249263965647,
-     "ev_races": 40,
-     "bought": 40,
-     "investment": 16000,
+     "log_loss": 4.200555224214754,
+     "ev_races": 45,
+     "bought": 45,
+     "investment": 18000,
      "payout": 13050
     },
     "isotonic": {
-     "log_loss": 4.299786975064818,
-     "ev_races": 40,
-     "bought": 40,
-     "investment": 16000,
+     "log_loss": 4.2277015692352276,
+     "ev_races": 45,
+     "bought": 45,
+     "investment": 18000,
+     "payout": 0
+    }
+   }
+  },
+  {
+   "date": "20261017",
+   "races": 67,
+   "status": "tested",
+   "prior_races": 1374,
+   "methods": {
+    "raw": {
+     "log_loss": 4.052698898706893,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 2720
+    },
+    "temperature": {
+     "log_loss": 4.051194936723205,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 2720
+    },
+    "temperature_recent": {
+     "log_loss": 4.050596283915396,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 2720
+    },
+    "platt": {
+     "log_loss": 4.051349672660405,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24800,
+     "payout": 2720
+    },
+    "isotonic": {
+     "log_loss": 4.054710874676811,
+     "ev_races": 62,
+     "bought": 62,
+     "investment": 24700,
+     "payout": 2720
+    }
+   }
+  },
+  {
+   "date": "20261018",
+   "races": 60,
+   "status": "tested",
+   "prior_races": 1441,
+   "methods": {
+    "raw": {
+     "log_loss": 4.018127866466396,
+     "ev_races": 59,
+     "bought": 59,
+     "investment": 23600,
+     "payout": 35210
+    },
+    "temperature": {
+     "log_loss": 4.0178871740724995,
+     "ev_races": 59,
+     "bought": 59,
+     "investment": 23600,
+     "payout": 35210
+    },
+    "temperature_recent": {
+     "log_loss": 4.018243312760566,
+     "ev_races": 59,
+     "bought": 59,
+     "investment": 23600,
+     "payout": 35210
+    },
+    "platt": {
+     "log_loss": 4.017795195033172,
+     "ev_races": 59,
+     "bought": 59,
+     "investment": 23600,
+     "payout": 35210
+    },
+    "isotonic": {
+     "log_loss": 4.0353212557063785,
+     "ev_races": 59,
+     "bought": 59,
+     "investment": 23400,
+     "payout": 32220
+    }
+   }
+  },
+  {
+   "date": "20261019",
+   "races": 42,
+   "status": "tested",
+   "prior_races": 1501,
+   "methods": {
+    "raw": {
+     "log_loss": 4.211477877204696,
+     "ev_races": 39,
+     "bought": 39,
+     "investment": 15600,
+     "payout": 4190
+    },
+    "temperature": {
+     "log_loss": 4.2067699743282345,
+     "ev_races": 39,
+     "bought": 39,
+     "investment": 15600,
+     "payout": 0
+    },
+    "temperature_recent": {
+     "log_loss": 4.203697549224168,
+     "ev_races": 39,
+     "bought": 39,
+     "investment": 15600,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 4.207312719291489,
+     "ev_races": 39,
+     "bought": 39,
+     "investment": 15600,
+     "payout": 0
+    },
+    "isotonic": {
+     "log_loss": 4.1965003474388825,
+     "ev_races": 39,
+     "bought": 39,
+     "investment": 15600,
+     "payout": 4190
+    }
+   }
+  },
+  {
+   "date": "20261020",
+   "races": 53,
+   "status": "tested",
+   "prior_races": 1543,
+   "methods": {
+    "raw": {
+     "log_loss": 4.066528650430969,
+     "ev_races": 41,
+     "bought": 41,
+     "investment": 16400,
+     "payout": 0
+    },
+    "temperature": {
+     "log_loss": 4.062344888930735,
+     "ev_races": 41,
+     "bought": 41,
+     "investment": 16400,
+     "payout": 0
+    },
+    "temperature_recent": {
+     "log_loss": 4.058574486567297,
+     "ev_races": 41,
+     "bought": 41,
+     "investment": 16400,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 4.062789707955418,
+     "ev_races": 41,
+     "bought": 41,
+     "investment": 16400,
+     "payout": 0
+    },
+    "isotonic": {
+     "log_loss": 4.026432166297772,
+     "ev_races": 41,
+     "bought": 41,
+     "investment": 16300,
+     "payout": 840
+    }
+   }
+  },
+  {
+   "date": "20261021",
+   "races": 43,
+   "status": "tested",
+   "prior_races": 1596,
+   "methods": {
+    "raw": {
+     "log_loss": 3.821193824436748,
+     "ev_races": 32,
+     "bought": 32,
+     "investment": 12800,
+     "payout": 1250
+    },
+    "temperature": {
+     "log_loss": 3.8273682835355,
+     "ev_races": 32,
+     "bought": 32,
+     "investment": 12800,
+     "payout": 1250
+    },
+    "temperature_recent": {
+     "log_loss": 3.8353461168018144,
+     "ev_races": 32,
+     "bought": 32,
+     "investment": 12800,
+     "payout": 1250
+    },
+    "platt": {
+     "log_loss": 3.826544522047186,
+     "ev_races": 32,
+     "bought": 32,
+     "investment": 12800,
+     "payout": 1250
+    },
+    "isotonic": {
+     "log_loss": 3.8813922833423753,
+     "ev_races": 32,
+     "bought": 32,
+     "investment": 12800,
+     "payout": 1250
+    }
+   }
+  },
+  {
+   "date": "20261022",
+   "races": 57,
+   "status": "tested",
+   "prior_races": 1639,
+   "methods": {
+    "raw": {
+     "log_loss": 3.9806432399045106,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 0
+    },
+    "temperature": {
+     "log_loss": 3.978740332385985,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 0
+    },
+    "temperature_recent": {
+     "log_loss": 3.977452631075697,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 0
+    },
+    "platt": {
+     "log_loss": 3.978903156125064,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
+     "payout": 0
+    },
+    "isotonic": {
+     "log_loss": 3.973173057415501,
+     "ev_races": 38,
+     "bought": 38,
+     "investment": 15200,
      "payout": 0
     }
    }
@@ -1475,6 +1943,72 @@
     "b": -0.05298590962085438
    },
    "isotonic_blocks": 41
+  },
+  {
+   "date": "20261017",
+   "prior_races": 1374,
+   "temperature": 1.0194859970546466,
+   "temperature_recent": 1.0297735361162863,
+   "platt": {
+    "a": 0.9835366475097016,
+    "b": -0.06556546155198893
+   },
+   "isotonic_blocks": 44
+  },
+  {
+   "date": "20261018",
+   "prior_races": 1441,
+   "temperature": 1.0221907854364414,
+   "temperature_recent": 1.0463674560957603,
+   "platt": {
+    "a": 0.9810826394952348,
+    "b": -0.07535607724139985
+   },
+   "isotonic_blocks": 49
+  },
+  {
+   "date": "20261019",
+   "prior_races": 1501,
+   "temperature": 1.0221228541521006,
+   "temperature_recent": 1.038840737216094,
+   "platt": {
+    "a": 0.9812167057368024,
+    "b": -0.074835313955089
+   },
+   "isotonic_blocks": 59
+  },
+  {
+   "date": "20261020",
+   "prior_races": 1543,
+   "temperature": 1.0269674186380686,
+   "temperature_recent": 1.0603541162834493,
+   "platt": {
+    "a": 0.9768591117228596,
+    "b": -0.09226278189643114
+   },
+   "isotonic_blocks": 55
+  },
+  {
+   "date": "20261021",
+   "prior_races": 1596,
+   "temperature": 1.03110021498265,
+   "temperature_recent": 1.0674666807584443,
+   "platt": {
+    "a": 0.9731826021352598,
+    "b": -0.10690787772178523
+   },
+   "isotonic_blocks": 48
+  },
+  {
+   "date": "20261022",
+   "prior_races": 1639,
+   "temperature": 1.0260178941139824,
+   "temperature_recent": 1.0783709233954473,
+   "platt": {
+    "a": 0.9777148722955723,
+    "b": -0.08879552275765189
+   },
+   "isotonic_blocks": 51
   }
  ],
  "interpretation": "Exploratory walk-forward on dates inside the pre-registered training window; does not select a method, change the frozen forward tests or production. The all-combination ECE alone does not show usefulness (a uniform forecast also scores near 0). Few hits and large payouts drive ROI; superiority between methods is not established. Saved preclose odds move before close."
