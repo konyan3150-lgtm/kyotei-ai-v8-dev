@@ -8,8 +8,9 @@
 //             error does not.
 // Detectors (parameters fixed here, not tuned on results):
 //   Page-Hinkley for an increase of the mean loss: alarm when m_t - min(m) > LAMBDA, m_t = sum(x_i - mean_i - DELTA).
-//   ADWIN-style split test: alarm when two sub-windows of the current window differ in mean by more than the
-//   variance-aware ADWIN2 bound (losses clipped to R), then the older part is dropped.
+//   Simplified ADWIN-type detector using the ADWIN2 bound formula (Bifet & Gavalda 2007): alarm when two sub-windows
+//   of the current window differ in mean by more than the variance-aware bound (losses clipped to R), then the older
+//   part is dropped. delta is a parameter of the bound, not the measured false-alarm rate of this implementation.
 // Per venue: the same detectors on the fixed stream of each venue with at least MIN_VENUE_RACES races.
 // A detection means "the error level changed in this stream", not "retrain"; races, venues and conditions change.
 import fs from 'node:fs';
@@ -69,6 +70,18 @@ function summarize(stream,policy){
     daily_mean_log_loss:Object.fromEntries(Object.entries(byDate).map(([d,v])=>[d,v.loss/v.races]))};
 }
 
+// Method comparison only on races present in both streams (the full streams cover different races and must not be
+// compared by their means): mean of adaptive - fixed log loss per race, and per date.
+export function pairedComparison(fixed,adaptive){
+  const key=x=>`${x.date}_${x.stadium}_${x.race}`,f=new Map(fixed.map(x=>[key(x),x.loss]));
+  const pairs=adaptive.filter(x=>f.has(key(x))).map(x=>({date:x.date,diff:x.loss-f.get(key(x))}));
+  const byDate={};for(const p of pairs){(byDate[p.date]=byDate[p.date]||{races:0,sum:0}).races++;byDate[p.date].sum+=p.diff;}
+  const n=pairs.length,mean=n?pairs.reduce((a,p)=>a+p.diff,0)/n:null,sd=n>1?Math.sqrt(pairs.reduce((a,p)=>a+(p.diff-mean)**2,0)/(n-1)):null;
+  const days=Object.values(byDate);
+  return {races:n,mean_diff_adaptive_minus_fixed:mean,se:sd!=null?sd/Math.sqrt(n):null,dates:days.length,dates_adaptive_better:days.filter(d=>d.sum<0).length,
+    daily_mean_diff:Object.fromEntries(Object.entries(byDate).map(([d,v])=>[d,v.sum/v.races])),note:'Negative = adaptive lower log loss. Same races only. Race-level SE ignores within-day correlation.'};
+}
+
 export function errorDriftReport(records,policy=ERROR_DRIFT_POLICY){
   const s=errorStreams(records,policy);
   const venues={};
@@ -76,8 +89,8 @@ export function errorDriftReport(records,policy=ERROR_DRIFT_POLICY){
     const st=s.fixed.filter(x=>x.stadium===v);if(st.length<policy.minVenueRaces)continue;
     const r=summarize(st,policy);venues[v]={races:r.races,mean_log_loss:r.mean_log_loss,page_hinkley_alarms:r.page_hinkley_alarms.length,adwin_alarms:r.adwin_alarms.length,adwin_worse:r.adwin_alarms.filter(a=>a.direction==='worse').length};
   }
-  return {policy,races:s.races,fixed:summarize(s.fixed,policy),adaptive:summarize(s.adaptive,policy),adaptive_temperatures:s.temps,venues,production_changed:false,
-    interpretation:'Descriptive. Alarms say the error level of a stream changed; venue/race mix and conditions also change. No automatic retraining, recalibration or bet change; retraining is only proposed for review when the fixed and adaptive streams both stay worse over a longer period.'};
+  return {policy,races:s.races,fixed:summarize(s.fixed,policy),adaptive:summarize(s.adaptive,policy),paired:pairedComparison(s.fixed,s.adaptive),adaptive_temperatures:s.temps,venues,production_changed:false,
+    interpretation:'Descriptive monitoring. The fixed and adaptive streams cover different races; compare methods only with the paired same-race table. No alarm means no alarm under these settings, not that there is no drift or that the model is safe; it does not contradict the PSI input-distribution alarm. Alarms say the error level of a stream changed; venue/race mix and conditions also change. No automatic retraining, recalibration or bet change.'};
 }
 
 if(import.meta.url===`file://${process.argv[1]}`){
@@ -86,6 +99,7 @@ if(import.meta.url===`file://${process.argv[1]}`){
   const dir=path.join(root,'dev/error-drift');fs.mkdirSync(dir,{recursive:true});
   fs.writeFileSync(path.join(dir,'report.json'),JSON.stringify(out,null,1)+'\n');
   const f=x=>x==null?'—':x.toFixed(4);
+  console.log(`paired (same ${out.paired.races} races): adaptive - fixed LL ${f(out.paired.mean_diff_adaptive_minus_fixed)} (SE ${f(out.paired.se)}), adaptive better on ${out.paired.dates_adaptive_better}/${out.paired.dates} dates`);
   for(const k of ['fixed','adaptive'])console.log(`${k}: races ${out[k].races}, mean LL ${f(out[k].mean_log_loss)}, PH alarms ${out[k].page_hinkley_alarms.map(a=>a.date).join(',')||'none'}, ADWIN ${out[k].adwin_alarms.map(a=>a.date+':'+a.direction).join(',')||'none'}`);
   console.log('venues with alarms:',Object.entries(out.venues).filter(([,v])=>v.page_hinkley_alarms||v.adwin_alarms).map(([k,v])=>`${k}(PH${v.page_hinkley_alarms}/AD${v.adwin_alarms})`).join(' ')||'none',`of ${Object.keys(out.venues).length}`);
 }

@@ -24,6 +24,12 @@ const normal=()=>{let u=0;for(let i=0;i<12;i++)u+=rnd();return u-6;};
  const rep=errorDriftReport([...recs,{...recs[0],excluded:{kind:'refund'}},{...recs[1],outcome:null}]);
  assert.equal(rep.races,720);assert.equal(rep.fixed.races,720);assert.equal(rep.adaptive.races,720-360);   // adaptive needs >= 300 earlier races
  assert.equal(rep.production_changed,false);assert.ok(Object.keys(rep.venues).length>0);
- assert.ok(Object.values(rep.fixed.daily_mean_log_loss).every(Number.isFinite));}
+ assert.ok(Object.values(rep.fixed.daily_mean_log_loss).every(Number.isFinite));
+ assert.equal(rep.paired.races,rep.adaptive.races);assert.ok(Number.isFinite(rep.paired.mean_diff_adaptive_minus_fixed));assert.equal(rep.paired.dates,3);}
+// Paired comparison uses only races in both streams.
+{const {pairedComparison}=await import('./error_drift.mjs');
+ const fx=[{date:'1',stadium:'1',race:'1',loss:4},{date:'1',stadium:'1',race:'2',loss:5},{date:'2',stadium:'1',race:'1',loss:3}];
+ const ad=[{date:'1',stadium:'1',race:'2',loss:4.5},{date:'2',stadium:'1',race:'1',loss:3.5},{date:'3',stadium:'1',race:'1',loss:9}];
+ const p=pairedComparison(fx,ad);assert.equal(p.races,2);assert.ok(Math.abs(p.mean_diff_adaptive_minus_fixed-0)<1e-12);assert.deepEqual(p.daily_mean_diff,{'1':-.5,'2':.5});assert.equal(p.dates_adaptive_better,1);}
 assert.ok(Object.isFrozen(ERROR_DRIFT_POLICY));
 console.log('error drift OK: no alarm on a stationary stream, Page-Hinkley and ADWIN detect a lasting increase after it happens, decreases are not PH alarms, report with fixed/adaptive/venue streams');
