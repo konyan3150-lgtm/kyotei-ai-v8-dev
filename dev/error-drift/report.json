@@ -72,6 +72,33 @@
    "20261023": 4.047441963363016
   }
  },
+ "paired": {
+  "races": 1373,
+  "mean_diff_adaptive_minus_fixed": 0.0013577757572757945,
+  "se": 0.0017410768046792079,
+  "dates": 17,
+  "dates_adaptive_better": 9,
+  "daily_mean_diff": {
+   "20261007": 0.0008190368419415393,
+   "20261008": 0.005657966038250315,
+   "20261009": -0.00010343247816753966,
+   "20261010": 0.0001403468012486701,
+   "20261011": 0.0010332049105205114,
+   "20261012": -0.002407469722044512,
+   "20261013": 0.015427086445202024,
+   "20261014": -0.017622955968004693,
+   "20261015": 0.03598833924744419,
+   "20261016": -0.004234639711929713,
+   "20261017": -0.0021026147914975303,
+   "20261018": 0.00011544629416859002,
+   "20261019": -0.0077803279805292265,
+   "20261020": -0.007954163863672538,
+   "20261021": 0.014152292365068505,
+   "20261022": -0.003190608828814306,
+   "20261023": -0.004240479422382179
+  },
+  "note": "Negative = adaptive lower log loss. Same races only. Race-level SE ignores within-day correlation."
+ },
  "adaptive_temperatures": [
   {
    "date": "20261007",
@@ -152,5 +179,5 @@
   }
  },
  "production_changed": false,
- "interpretation": "Descriptive. Alarms say the error level of a stream changed; venue/race mix and conditions also change. No automatic retraining, recalibration or bet change; retraining is only proposed for review when the fixed and adaptive streams both stay worse over a longer period."
+ "interpretation": "Descriptive monitoring. The fixed and adaptive streams cover different races; compare methods only with the paired same-race table. No alarm means no alarm under these settings, not that there is no drift or that the model is safe; it does not contradict the PSI input-distribution alarm. Alarms say the error level of a stream changed; venue/race mix and conditions also change. No automatic retraining, recalibration or bet change."
 }
