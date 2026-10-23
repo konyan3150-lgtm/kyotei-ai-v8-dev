@@ -41,4 +41,18 @@ assert.equal(JSON.stringify(r),before);
 assert.equal(rep.settled_races,2);assert.deepEqual(rep.categories,{compared:1,no_revision:1});
 assert.equal(rep.pairs['initial->final'].races,1);assert.equal(rep.pairs['initial->post_exhibition'].races,1);assert.equal(rep.pairs['post_exhibition->final'].races,1);
 assert.equal(rep.production_changed,false);
-console.log('revision history OK: stage definitions (initial / post-exhibition / final before close), classification without filling, same-race pairs, probability vs operational vs same-odds comparisons, stale odds kept unavailable');
+// Odds availability: reasons in a fixed order, four classes, both-ok subset.
+{const {oddsAvailability}=await import('./revision_history.mjs');
+ assert.equal(oddsAvailability({...s1,odds_snapshot_at:null}),'no_snapshot');
+ assert.equal(oddsAvailability({...s1,odds_snapshot_at:'2026-10-20T00:31:00Z'}),'future');
+ assert.equal(oddsAvailability({...s1,odds_snapshot_at:'2026-10-20T00:19:00Z'}),'stale_over_10min');
+ assert.equal(oddsAvailability({...s1,baseline_distribution:s1.baseline_distribution.map((x,i)=>i?x:{...x,odds:null})}),'incomplete_120');
+ assert.equal(oddsAvailability(s1),'ok');
+ const staleFinal={...s3,odds_snapshot_at:'2026-10-20T01:10:00Z'};
+ const rows=[{...r,race:'5',...staleFinal,revisions:[s2,s1]},r];
+ const p=revisionReport(rows).pairs['initial->final'];
+ assert.deepEqual(p.odds_availability.classes,{both_ok:1,from_only:1,to_only:0,neither:0});
+ assert.deepEqual(p.odds_availability.reasons.to,{stale_over_10min:1,ok:1});
+ assert.equal(p.odds_availability.later_unusable.races,1);assert.equal(p.odds_availability.later_unusable.odds_age_minutes_median,15);
+ assert.equal(p.odds_availability.both_ok_operational.ev.from.races,1);assert.ok(Number.isFinite(p.log_loss_diff.se_race_level));}
+console.log('revision history OK: odds availability classes and reasons, both-ok subset,  stage definitions (initial / post-exhibition / final before close), classification without filling, same-race pairs, probability vs operational vs same-odds comparisons, stale odds kept unavailable');
