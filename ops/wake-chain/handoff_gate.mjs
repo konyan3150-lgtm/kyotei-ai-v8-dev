@@ -5,15 +5,15 @@
 export const GATE=Object.freeze({lastHourJst:21,maxPerDay:3});
 const jstDate=ms=>new Date(ms+9*3600000).toISOString().slice(0,10);
 const jstHour=ms=>new Date(ms+9*3600000).getUTCHours();
-export function handoffGate({summary,runStartedAt,now,handoffsToday}){
+export function handoffGate({summary,runStartedAt,now,handoffsToday,gate=GATE}){
   if(!summary||typeof summary!=='object')return {handoff:false,reason:'no_loop_summary'};
   if(summary.reason!=='run_time_limit')return {handoff:false,reason:`loop_stopped_${summary.reason||'unknown'}`};
   if(!summary.ok||summary.journal_pending)return {handoff:false,reason:'loop_not_ok_or_journal_pending'};
   const started=Date.parse(runStartedAt);
   if(!Number.isFinite(started)||jstDate(started)!==jstDate(now))return {handoff:false,reason:'date_changed'};
-  if(jstHour(now)>=GATE.lastHourJst)return {handoff:false,reason:'too_late_in_day'};
+  if(jstHour(now)>=gate.lastHourJst)return {handoff:false,reason:'too_late_in_day'};
   if(!(handoffsToday>=0))return {handoff:false,reason:'handoff_count_unknown'};
-  if(handoffsToday>=GATE.maxPerDay)return {handoff:false,reason:'daily_handoff_limit'};
+  if(handoffsToday>=gate.maxPerDay)return {handoff:false,reason:'daily_handoff_limit'};
   return {handoff:true,reason:'run_time_limit'};
 }
 
@@ -29,7 +29,9 @@ if(import.meta.url===`file://${process.argv[1]}`){
     let handoffsToday=NaN;
     try{const today=new Date(now+9*3600000).toISOString().slice(0,10);
       handoffsToday=(await gh.runs(env.HANDOFF_WORKFLOW)).filter(r=>new Date(Date.parse(r.created_at)+9*3600000).toISOString().slice(0,10)===today).length;}catch(e){note('warning','handoff count failed',String(e?.message||e));}
-    const d=handoffGate({summary:loop,runStartedAt:env.RUN_STARTED_AT,now,handoffsToday});
+    // DEV tests may lift the hour limit (HANDOFF_TEST_LAST_HOUR_JST); the production workflow never sets it.
+    const gate=env.HANDOFF_TEST_LAST_HOUR_JST?{...GATE,lastHourJst:Number(env.HANDOFF_TEST_LAST_HOUR_JST)}:GATE;
+    const d=handoffGate({summary:loop,runStartedAt:env.RUN_STARTED_AT,now,handoffsToday,gate});
     if(!d.handoff){note('notice','no hand-over',JSON.stringify({...d,handoffs_today:handoffsToday}));process.exit(0);}
     await gh.dispatch(env.HANDOFF_WORKFLOW,{parent_run_id:String(env.GITHUB_RUN_ID)});
     note('notice','hand-over dispatched',JSON.stringify({...d,handoffs_today:handoffsToday,parent_run_id:env.GITHUB_RUN_ID,at:new Date().toISOString()}));

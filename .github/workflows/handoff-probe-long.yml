@@ -25,6 +25,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           HANDOFF_WORKFLOW: handoff-dev.yml
+          HANDOFF_TEST_LAST_HOUR_JST: "24"   # DEV only: allow the test at night
           LOOP_SUMMARY_FILE: ${{ runner.temp }}/loop-summary.json
         run: |
           echo "{\"reason\":\"run_time_limit\",\"ok\":true,\"journal_pending\":false}" > "$LOOP_SUMMARY_FILE"
