@@ -49,6 +49,29 @@ const parentRunning=()=>({id:100,status:'in_progress',created_at:new Date(jst(7)
 await assert.rejects(handoff({...world({}),self:{...self,targetWorkflow:'deploy.yml'}}),/not allowed/);
 await assert.rejects(handoff({...world({}),self:{...self,parentId:null}}),/parent run id required/);
 
+// 6) Another update already running (not the parent): stops at once as handed over, without waiting for an idle group.
+{const w=world({runs:{'update.yml':[{id:160,status:'in_progress',created_at:new Date(jst(12,15)).toISOString(),run_started_at:new Date(jst(12,15)).toISOString()},{...parentRunning(),status:'completed',conclusion:'success'}],'recover.yml':[]}});
+ const t0=w.t;const r=await handoff({...w,self});assert.equal(r.result,'already_running');assert.equal(r.target_run,160);assert.equal(w.dispatched.length,0);assert.ok(w.t-t0<MIN);}
+//    ... also when it appears while we wait for Recover.
+{const w=world({runs:{'update.yml':[{...parentRunning(),status:'completed',conclusion:'success'}],'recover.yml':[{id:210,status:'in_progress',created_at:'x'}]},
+  events:[{at:jst(12,25),do:r=>{r['update.yml'].unshift({id:170,status:'queued',created_at:new Date(jst(12,25)).toISOString()});}}]});
+ const r=await handoff({...w,self});assert.equal(r.result,'already_running');assert.equal(r.target_run,170);assert.equal(w.dispatched.length,0);}
+// 7) Parent not successful (e.g. journal save failed after the loop): no dispatch.
+for(const conclusion of ['failure','cancelled','timed_out']){
+ const w=world({runs:{'update.yml':[{...parentRunning(),status:'completed',conclusion}],'recover.yml':[]}});
+ const r=await handoff({...w,self});assert.equal(r.result,'parent_not_successful');assert.equal(r.parent_conclusion,conclusion);assert.equal(w.dispatched.length,0);}
+// 8) Overall deadline: Recover keeps the group busy ~19 min before each attempt and every dispatched run is cancelled
+//    ~14 min later. All waits share one budget: the waker gives up within totalMs - reserveMs (inside the job limit).
+{let busyUntil=jst(12,39);const w=world({runs:{'update.yml':[{...parentRunning(),status:'completed',conclusion:'success'}],'recover.yml':[{id:220,status:'in_progress',created_at:'x'}]},
+  onDispatch:(run,t,runs)=>{w3.push({at:t+14*MIN,do:()=>{run.status='completed';run.conclusion='cancelled';runs['recover.yml'][0].status='in_progress';busyUntil=t+14*MIN+19*MIN;}});}});
+ var w3=[];const start=w.t;
+ const orig=w.gh.runs,origRun=w.gh.run;const fire=()=>{for(const e of w3)if(!e.done&&w.t>=e.at){e.done=true;e.do();}if(w.t>=busyUntil)w.runs['recover.yml'][0].status='completed';};
+ w.gh.runs=async wf=>{fire();return orig(wf);};w.gh.run=async id=>{fire();return origRun(id);};
+ await assert.rejects(handoff({...w,self}),/not reached in time|no time left/);
+ assert.ok(w.t-start<=HANDOFF.totalMs-HANDOFF.reserveMs,`took ${(w.t-start)/MIN} min`);assert.ok(w.dispatched.length>=1&&w.dispatched.length<=HANDOFF.maxAttempts);}
+// The overall budget plus setup fits the waker job limit (60 min in the workflows).
+assert.ok(HANDOFF.totalMs+5*MIN<=60*MIN);
+
 // Gate: only a normal run-time-limit stop, same JST date, before 21:00 JST, at most 3 per day.
 const ok={reason:'run_time_limit',ok:true,journal_pending:false},start=new Date(jst(7)).toISOString();
 assert.deepEqual(handoffGate({summary:ok,runStartedAt:start,now:jst(12,19),handoffsToday:0}),{handoff:true,reason:'run_time_limit'});
@@ -61,4 +84,4 @@ assert.equal(handoffGate({summary:ok,runStartedAt:start,now:jst(21,5),handoffsTo
 assert.equal(handoffGate({summary:ok,runStartedAt:start,now:jst(12,19),handoffsToday:GATE.maxPerDay}).reason,'daily_handoff_limit');
 assert.equal(handoffGate({summary:ok,runStartedAt:start,now:jst(12,19),handoffsToday:NaN}).reason,'handoff_count_unknown');
 assert.equal(handoffGate({summary:null,runStartedAt:start,now:jst(12,19),handoffsToday:0}).reason,'no_loop_summary');
-console.log('handoff OK: waits for the parent and an idle group (pending Recover), dispatch accepted vs actually started, re-dispatch only after a cancel-before-start (max 3), already started elsewhere, bounded waits, 502 handling; gate only after a normal run-time-limit stop, same date, before 21:00, max 3/day');
+console.log('handoff OK: stops when another update already runs (also while waiting), no hand-over after an unsuccessful parent, one overall deadline inside the job limit, waits for the parent and an idle group (pending Recover), dispatch accepted vs actually started, re-dispatch only after a cancel-before-start (max 3), already started elsewhere, bounded waits, 502 handling; gate only after a normal run-time-limit stop, same date, before 21:00, max 3/day');
