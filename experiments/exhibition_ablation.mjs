@@ -61,7 +61,7 @@ export function ablationReport(records){
     pick6_top:Object.fromEntries(M.map(k=>[k,{hits:hits[k],hit_rate:rate(hits[k],n)}])),
     makebets:{reproduction:mbRepro,races:nMb,m1:{hits:hits.mb1,hit_rate:rate(hits.mb1,nMb)},m2:{hits:hits.mb2,hit_rate:rate(hits.mb2,nMb)}},
     pairs:Object.fromEntries(Object.entries(pairs).map(([k,p])=>[k,{...p,mcnemar_z_exploratory:z(p)}])),daily_vs_m1:{m2:dd('m2'),m3:dd('m3')},daily,production_changed:false,
-    interpretation:'Exploratory follow-up after PR #50, window 10/03-10/22 seen in earlier exploration (not an unused evaluation). ② removes only the exhibition-measurement factor; course entry, tilt and wind stay. ③ also rescales the original probabilities (alpha), so ①-③ differences are not exhibition-only effects. Per-value fetch times exist only for official_preview_at / original_exhibition_at; the program API fetch time is not recorded per race. No adoption.'};
+    interpretation:'Exploratory follow-up after PR #50, window 10/03-10/22 seen in earlier exploration (not an unused evaluation). ② is the comparison with the exhibition-measurement multiplier removed (not all exhibition-related information: course entry, tilt and wind stay). ③ also rescales the original probabilities (alpha), so ①-③ differences are not exhibition-only effects. Per-value fetch times exist only for official_preview_at / original_exhibition_at; the program API fetch time is not recorded per race. No adoption.'};
 }
 
 if(import.meta.url===`file://${process.argv[1]}`){
