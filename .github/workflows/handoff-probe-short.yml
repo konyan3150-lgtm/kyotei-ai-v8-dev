@@ -1,0 +1,13 @@
+name: DEV handoff probe (short, plays Recover)
+on:
+  workflow_dispatch:
+concurrency:
+  group: handoff-probe
+  cancel-in-progress: false
+permissions: {}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: echo "short probe $(TZ=Asia/Tokyo date -Iseconds)"; sleep 40

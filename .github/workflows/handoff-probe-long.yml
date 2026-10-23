@@ -1,0 +1,32 @@
+name: DEV handoff probe (long, plays Update)
+# Harmless stand-in for "Update live odds" in the hand-over test: same concurrency group as the short probe.
+on:
+  workflow_dispatch:
+    inputs:
+      seconds: {description: "How long to run", required: false, default: "90"}
+      handoff: {description: "Hand over at the end (simulates a run-time-limit stop)", required: false, default: "false"}
+concurrency:
+  group: handoff-probe
+  cancel-in-progress: false
+permissions:
+  contents: read
+  actions: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "24"}
+      - run: echo "long probe started $(TZ=Asia/Tokyo date -Iseconds)"; sleep "${{ inputs.seconds }}"
+      - name: Hand over (gate + dispatch, as in the update workflow)
+        if: always() && inputs.handoff == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HANDOFF_WORKFLOW: handoff-dev.yml
+          LOOP_SUMMARY_FILE: ${{ runner.temp }}/loop-summary.json
+        run: |
+          echo "{\"reason\":\"run_time_limit\",\"ok\":true,\"journal_pending\":false}" > "$LOOP_SUMMARY_FILE"
+          export RUN_STARTED_AT="$(date -u -Iseconds)"
+          node ops/wake-chain/handoff_gate.mjs

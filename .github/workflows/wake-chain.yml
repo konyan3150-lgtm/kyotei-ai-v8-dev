@@ -14,7 +14,7 @@ on:
       max_sleep_min: {description: "DEV test only: max sleep per run in minutes (default 330)", required: false, default: ""}
   push:
     branches: [main]
-    paths: ["ops/wake-chain/**", ".github/workflows/wake-chain.yml", ".github/workflows/wake-probe.yml"]
+    paths: ["ops/wake-chain/**", ".github/workflows/wake-chain.yml", ".github/workflows/wake-probe.yml", ".github/workflows/handoff-*.yml"]
 permissions:
   contents: read
   actions: write
@@ -28,6 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: "24"}
       - run: node ops/wake-chain/test.mjs
+      - run: node ops/wake-chain/test_handoff.mjs
   wake:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

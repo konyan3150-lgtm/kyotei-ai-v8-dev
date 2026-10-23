@@ -1,0 +1,30 @@
+name: DEV update hand-over waker
+# DEV test of ops/wake-chain/handoff.mjs: hands over from a finished long probe to a new long probe, waiting for
+# the parent and for an idle concurrency group. Own group, never cancelled by the probes.
+run-name: handoff from ${{ inputs.parent_run_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      parent_run_id: {description: "Run that handed over", required: true}
+permissions:
+  contents: read
+  actions: write
+jobs:
+  handoff:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "24"}
+      - run: node ops/wake-chain/test_handoff.mjs
+      - name: Hand over
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HANDOFF_TARGET: handoff-probe-long.yml
+          HANDOFF_ALLOWED: handoff-probe-long.yml
+          HANDOFF_GROUP: handoff-probe-long.yml,handoff-probe-short.yml
+          HANDOFF_PARENT: ${{ inputs.parent_run_id }}
+          HANDOFF_POLL_MS: "10000"
+        run: node ops/wake-chain/handoff.mjs

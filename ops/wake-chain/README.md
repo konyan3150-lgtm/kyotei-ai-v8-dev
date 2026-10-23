@@ -44,3 +44,18 @@ GitHub runners can themselves be delayed or fail; this removes the dependency on
 
 ## DEV tests
 `node ops/wake-chain/test.mjs` (simulated GitHub and clock), plus real runs against `wake-probe.yml` in Actions.
+
+## Midday hand-over (DEV prototype, `handoff.mjs` / `handoff_gate.mjs`)
+Problem (10/20-10/23): the 07:00 update loop stops at its 5.5 h limit around 12:19 JST; its pending successor in the
+shared concurrency group was cancelled at the same second a Recover run was created (10/20 01:52:30/01:52:28Z,
+10/21 01:39:16/15, 10/22 01:34:09/08, 10/23 01:34:42/41 — timing match, cause not proven), and no update ran until a
+late `schedule` start (~2 h without odds updates).
+- Gate (end of the update run): only a normal stop at the run time limit with ok and no pending journal, the same JST
+  date as the run start, before 21:00 JST, and at most 3 hand-overs per JST day. Never after failures, night/racing-hours
+  stops or control-code stops. A failed gate/dispatch is an error annotation, the update run keeps its result.
+- Waker (own concurrency group): waits until the parent run has completed and until no run of the shared group is
+  queued/running (e.g. a pending Recover), stops if another update is active or started within 10 minutes, dispatches,
+  confirms the dispatch created a run (accepted) and then that the run actually started; a run cancelled before
+  starting is re-dispatched after the group is idle again, at most 3 times. All waits are bounded.
+- DEV verification uses harmless probes in their own group (`handoff-probe-long.yml` plays Update,
+  `handoff-probe-short.yml` plays Recover).
