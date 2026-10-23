@@ -59,3 +59,14 @@ late `schedule` start (~2 h without odds updates).
   starting is re-dispatched after the group is idle again, at most 3 times. All waits are bounded.
 - DEV verification uses harmless probes in their own group (`handoff-probe-long.yml` plays Update,
   `handoff-probe-short.yml` plays Recover).
+
+### DEV verification of the hand-over (2026-10-23, Actions, harmless probes)
+- 22:18 JST: gate refused ("too_late_in_day", 21:00 limit) — run 39959814041
+- 22:23 JST (hour limit lifted for the test only): parent 39960531260 handed over; the waker 39960807761 waited for the parent
+  and for the pending short probe (Recover role, ran 13:23:39–13:24:21Z), then stopped with "recent_run" because a long
+  probe from the first test had started within 10 minutes (deduplication working)
+- 22:34 JST, clean run: parent 39962370352 (13:34:42–13:36:46Z) dispatched the waker 39962648058 at 13:36:42Z while still
+  running; the short probe 39962433955, queued at 13:35:09Z, ran after the parent until 13:37:31Z; the group was idle at
+  13:37:40Z; dispatch 13:37:40.5Z; the new long probe 39962783960 actually started 13:37:41Z ("started")
+- Not covered live (unit tests only): cancel-before-start and re-dispatch, dispatch 5xx, bounded-wait failures, journal
+  pending / failures (the gate refuses those)
