@@ -12,6 +12,7 @@ import {captureVariants,collectRevision,evaluateVariants} from './preclose_varia
 import {oddsCapCapture,oddsCapReport} from './odds_cap.mjs';
 import {finalOddsCapture,finalOddsReport} from './final_odds_ev.mjs';
 import {conservativeEvCapture,conservativeEvReport} from './conservative_ev.mjs';
+import {marketPick6Capture,marketPick6Report} from './market_pick6.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
@@ -155,7 +156,7 @@ export async function run() {
     const rows=engine.predictionRows(ctx,race,sid,n,date);if(rows.length!==6){observeCapture(inputObservations.records,k,observation,'invalid_model_rows');continue;}
     const rec=snapshot({race,rows,expert:assess(race,rows),makeBets:engine.makeBets,date,stadium:sid,number:n,now:new Date(),
       odds:String(odds.date)===date?odds.races?.[String(Number(sid))]?.[String(Number(n))]:null});
-    if(rec){rec.learning_inputs=captureLearningInputs({race,rows,date,stadium:sid,capturedAt:rec.saved_at,recent});rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;const capped=oddsCapCapture(rec);if(capped)rec.odds_cap_shadow=capped;const finalOdds=finalOddsCapture(rec);if(finalOdds)rec.final_odds_shadow=finalOdds;const conservative=conservativeEvCapture(rec);if(conservative)rec.conservative_ev_shadow=conservative;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v3-learning-inputs';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
+    if(rec){rec.learning_inputs=captureLearningInputs({race,rows,date,stadium:sid,capturedAt:rec.saved_at,recent});rec.cohort=COHORT;const calibrated=captureOddsCalibration(rec,calibrationPrepared.model);if(calibrated)rec.odds_calibration_shadow=calibrated;const capped=oddsCapCapture(rec);if(capped)rec.odds_cap_shadow=capped;const finalOdds=finalOddsCapture(rec);if(finalOdds)rec.final_odds_shadow=finalOdds;const conservative=conservativeEvCapture(rec);if(conservative)rec.conservative_ev_shadow=conservative;const pick6=marketPick6Capture(rec,calibrationPrepared.model);if(pick6)rec.market_pick6_shadow=pick6;rec.variants=captureVariants({race,rows,makeBets:engine.makeBets,capturedAt:rec.saved_at});rec.cohort=COHORT;rec.input_provenance=verified.proof;rec.official_preview_at=supplemented?previewRecord.fetched_at:null;rec.original_exhibition_at=race.original_exhibition_captured_at||null;rec.collector_version='shadow-data-v3-learning-inputs';const accepted=collectRevision(current.records,k,rec,revisionRejections);observeCapture(inputObservations.records,k,observation,accepted?'captured':'revision_rejected');}
     else observeCapture(inputObservations.records,k,observation,'snapshot_rejected');
   }
   let fallbackAttempts=0;
@@ -202,6 +203,7 @@ export async function run() {
   report.odds_cap=oddsCapReport(all);
   report.final_odds_ev=finalOddsReport(all);
   report.conservative_ev=conservativeEvReport(all);
+  report.market_pick6=marketPick6Report(all,calibrationPrepared.model);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
   report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};
