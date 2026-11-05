@@ -130,14 +130,14 @@
         "gap": 0.25
       }
     },
-    "captured": 2605,
+    "captured": 2607,
     "invalid": 0,
     "settled": 2414,
-    "pending": 0,
+    "pending": 2,
     "excluded": 191,
     "st_eligible": 860,
-    "st_missing": 1745,
-    "confident_captures": 1299,
+    "st_missing": 1747,
+    "confident_captures": 1301,
     "arms": {
       "st": {
         "st_0": {
@@ -2412,8 +2412,8 @@
       "course-stats": "cb8c6b53eb2c0890416967ba3abcf8cab6b45170184a521c5abf28e7ab012416",
       "venue-stats": "e8737dbe5b882e95c92198e60fa1e83e1d38cf0753af537f986e9d7cb66dfe3e",
       "technique-stats": "1c8fa9f7d199be9b7c013eb6ceaeec45025f9341eb4ab3fbe6ee0553a1693fec",
-      "odds": "be601f3dde18708424c4a4585f23b5417f6fc2f2fb5da7a6c63965a6e7c8a7ea",
-      "official-previews": "01c5781f17099d17877727f86a079754f299a3afe6b19dade0237f85972c3012"
+      "odds": "aaf336777cb509a2c5ccbbfbe4e9ef0efa312769e44ed79c7ec0ee29de686778",
+      "official-previews": "600593ebbb2c81217b4bc58e0d8cfb8dae32e512c371012868d2941b35b9717f"
     }
   },
   "policy": {
@@ -2470,11 +2470,11 @@
         "warning": false
       },
       "expert_class": {
-        "psi": 0.06496709196825447,
+        "psi": 0.06557438730785663,
         "warning": false
       },
       "venue": {
-        "psi": 2.868861159945091,
+        "psi": 2.7856532318499183,
         "warning": true
       }
     },
@@ -2484,7 +2484,7 @@
     "races_with_revisions": 930,
     "preserved_previous_snapshots": 1131,
     "change_reasons": {
-      "first_capture": 2606,
+      "first_capture": 2608,
       "model_scores_changed": 878,
       "odds_changed": 1046,
       "exhibition_changed": 790,
@@ -2499,8 +2499,8 @@
   },
   "diagnostics": {
     "integrity": {
-      "saved": 2415,
-      "valid": 2415,
+      "saved": 2417,
+      "valid": 2417,
       "invalid": 0,
       "errors": []
     },
@@ -4089,12 +4089,12 @@
     },
     "promotion": "No automatic production promotion. Future chronological holdout evaluation is still required."
   },
-  "saved": 2606,
+  "saved": 2608,
   "excluded": 191,
   "settled": 2415,
   "cancelled": 0,
   "invalid": 0,
-  "pending": 0,
+  "pending": 2,
   "arms": {
     "baseline": {
       "races": 2415,
@@ -4118,20 +4118,20 @@
   "paired_hit_difference": 4,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-11-05T23:06:40.379Z",
-    "eligible_preclose_races": 0,
-    "captured_preclose_races": 0,
+    "checked_at": "2026-11-05T23:55:15.368Z",
+    "eligible_preclose_races": 2,
+    "captured_preclose_races": 2,
     "missing_preclose_records": [],
     "stale_preclose_records": [],
     "overdue_results": [],
-    "original_exhibition_status": "HTTP_404",
+    "original_exhibition_status": "no_preclose_values",
     "program_status": "available",
     "status": "ok",
     "limitation": "A report is refreshed only when the workflow runs; this alone cannot detect a completely stopped scheduler. No external notifications are sent.",
     "revision_rejections": []
   },
   "collection_daily": {
-    "checked_at": "2026-11-05T23:06:40.381Z",
+    "checked_at": "2026-11-05T23:55:15.369Z",
     "days": {
       "20261003": {
         "saved": 134,
@@ -4610,18 +4610,27 @@
         "unrecorded": []
       },
       "20261106": {
-        "saved": 0,
-        "preclose_saved": 0,
+        "saved": 2,
+        "preclose_saved": 2,
         "settled": 0,
-        "pending": 0,
+        "pending": 2,
         "overdue": 0,
         "cancelled": 0,
         "excluded": 0,
         "invalid_time": 0,
-        "closed_program_races": 0,
+        "closed_program_races": 2,
         "recorded_closed_races": 0,
-        "unrecorded_closed_races": 0,
-        "unrecorded": []
+        "unrecorded_closed_races": 2,
+        "unrecorded": [
+          {
+            "stadium": 10,
+            "race": 1
+          },
+          {
+            "stadium": 23,
+            "race": 1
+          }
+        ]
       }
     },
     "limitation": "Unrecorded closed races are coverage gaps, not proof of collector failure. Historical program denominators are unknown. Cancelled and excluded records are separate. No predictions reconstructed."
@@ -4629,9 +4638,9 @@
   "st_diagnostics": {
     "counts": {
       "eligible": 860,
-      "negative_st": 1209,
+      "negative_st": 1210,
       "out_of_range": 0,
-      "missing_or_unparseable": 536
+      "missing_or_unparseable": 537
     },
     "days": {
       "20261003": {
@@ -4837,6 +4846,12 @@
         "negative_st": 10,
         "out_of_range": 0,
         "missing_or_unparseable": 18
+      },
+      "20261106": {
+        "eligible": 0,
+        "negative_st": 1,
+        "out_of_range": 0,
+        "missing_or_unparseable": 1
       }
     },
     "invalid": 0,
@@ -4847,7 +4862,7 @@
     "policy": "recent-player-preclose-v1",
     "counts": {
       "not_captured": 692,
-      "captured": 1914,
+      "captured": 1916,
       "recent_history_unavailable": 0,
       "identity_missing_or_conflicting": 0,
       "invalid_capture": 0
@@ -4880,10 +4895,10 @@
       ]
     },
     "counts": {
-      "records": 2606,
+      "records": 2608,
       "eligible_races": 1807,
       "invalid_or_other_cohort": 0,
-      "not_settled_or_excluded": 191,
+      "not_settled_or_excluded": 193,
       "invalid_outcome": 0,
       "odds_missing_stale_or_postclose": 602,
       "odds_incomplete": 6,
@@ -5432,9 +5447,9 @@
       "max_odds_age_ms": 600000
     },
     "counts": {
-      "records": 2606,
+      "records": 2608,
       "invalid_or_other_cohort": 0,
-      "not_settled_or_excluded": 191,
+      "not_settled_or_excluded": 193,
       "invalid_outcome": 0,
       "odds_missing_stale_or_postclose": 602,
       "odds_incomplete": 6,
@@ -8760,7 +8775,7 @@
     ],
     "test_races": 35,
     "excluded": {
-      "not_settled_or_refund": 4,
+      "not_settled_or_refund": 6,
       "invalid_capture": 0
     },
     "ready_for_review": false,
@@ -9557,7 +9572,7 @@
     },
     "excluded": {
       "invalid_capture": 0,
-      "pending": 0,
+      "pending": 2,
       "excluded": 191,
       "invalid_money": 0
     },
@@ -9565,18 +9580,32 @@
   },
   "collection_gaps": {
     "reasons": {
-      "not_observed_unknown": 0,
+      "not_observed_unknown": 2,
       "invalid_model_rows": 0,
       "snapshot_rejected": 0,
       "revision_rejected": 0,
       "observed_without_capture": 0
     },
-    "races": [],
+    "races": [
+      {
+        "key": "20261106_10_1",
+        "reason": "not_observed_unknown",
+        "last_observed_at": null
+      },
+      {
+        "key": "20261106_23_1",
+        "reason": "not_observed_unknown",
+        "last_observed_at": null
+      }
+    ],
     "limitation": "Only observed attempts establish a failure reason. No observation cannot distinguish collection start time, missed scheduling, or unavailable input. Historical predictions are never reconstructed."
   },
   "input_observations": {
     "date": "20261106",
-    "observed_races": 0,
-    "official_preview_status": {}
+    "observed_races": 2,
+    "official_preview_status": {
+      "no_record": 1,
+      "preclose_record": 1
+    }
   }
 }
