@@ -13,6 +13,7 @@ import {oddsCapCapture,oddsCapReport} from './odds_cap.mjs';
 import {finalOddsCapture,finalOddsReport} from './final_odds_ev.mjs';
 import {conservativeEvCapture,conservativeEvReport} from './conservative_ev.mjs';
 import {marketPick6Capture,marketPick6Report} from './market_pick6.mjs';
+import {raceSelectionReport} from './race_selection.mjs';
 import {COHORT,verifiedInput,verifyStore,checkedOutcome,reopenUnconfirmed} from './prospective_input.mjs';
 import path from 'node:path';
 import {gunzipSync} from 'node:zlib';
@@ -204,6 +205,7 @@ export async function run() {
   report.final_odds_ev=finalOddsReport(all);
   report.conservative_ev=conservativeEvReport(all);
   report.market_pick6=marketPick6Report(all,calibrationPrepared.model);
+  report.race_selection=raceSelectionReport(all);
   report.selection_diagnostics=analyzeShadowSelections(Object.fromEntries(Object.entries(all).filter(([,r])=>!auditRecord(r).length)));
   report.collection_gaps=gapDiagnostics(report.collection_daily,inputObservations.records);
   report.input_observations={date,observed_races:Object.keys(inputObservations.records).length,official_preview_status:Object.values(inputObservations.records).reduce((s,o)=>(s[o.official_preview_status]=(s[o.official_preview_status]||0)+1,s),{})};
