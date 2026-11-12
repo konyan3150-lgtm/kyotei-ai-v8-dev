@@ -2854,7 +2854,7 @@
       "venue-stats": "e8737dbe5b882e95c92198e60fa1e83e1d38cf0753af537f986e9d7cb66dfe3e",
       "technique-stats": "1c8fa9f7d199be9b7c013eb6ceaeec45025f9341eb4ab3fbe6ee0553a1693fec",
       "odds": "6695d08a13fdeb44526a320334b586dfd9759aec8116b4c3cfb2d032d22ee7a9",
-      "official-previews": "68478aae32ed062793f9de9d942dd6664ab423f5c323c1611f181cfd9f97b348"
+      "official-previews": "c54f248292d28b2ea8614ad56e8558c7d0fdfc755e828de7ff02e061a04abc32"
     }
   },
   "policy": {
@@ -4720,7 +4720,7 @@
   "paired_hit_difference": 5,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-11-12T12:34:42.445Z",
+    "checked_at": "2026-11-12T14:46:37.555Z",
     "eligible_preclose_races": 0,
     "captured_preclose_races": 0,
     "missing_preclose_records": [],
@@ -4733,7 +4733,7 @@
     "revision_rejections": []
   },
   "collection_daily": {
-    "checked_at": "2026-11-12T12:34:42.447Z",
+    "checked_at": "2026-11-12T14:46:37.557Z",
     "days": {
       "20261003": {
         "saved": 134,
@@ -10787,6 +10787,133 @@
       }
     },
     "interpretation": "Pre-registered (dev/market-pick6-plan.md). Primary metric: ROI per arm; main contrasts blend75-makeBets and blend75-market. Same races, same saved pre-close odds, official payouts. Bootstrap shares are shares of date resamples, not probabilities of future results. Earlier races (including the 632 exploratory races) are not included. No adoption."
+  },
+  "race_selection": {
+    "policy": {
+      "version": "race-selection-prospective-v1",
+      "starts_at": "2026-11-12T15:00:00Z",
+      "stake": 100,
+      "picks": 6,
+      "max_odds_age_ms": 600000,
+      "thresholds": {
+        "conc40_min_pick_prob": 0.2867,
+        "lane1_min_first_prob": 0.7701
+      },
+      "arms": [
+        "all",
+        "conc40",
+        "lane1"
+      ],
+      "primary": "conc40",
+      "review": {
+        "min_dates": 14,
+        "min_primary_races": 400,
+        "report_by": "2026-12-13"
+      },
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 20261113
+      }
+    },
+    "status": "collecting_future",
+    "test_dates": [],
+    "test_races": 0,
+    "excluded": {
+      "not_eligible": 0,
+      "not_settled_or_refund": 0
+    },
+    "ready_for_review": false,
+    "production_changed": false,
+    "arms": {
+      "all": {
+        "bought_races": 0,
+        "skipped_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "investment": 0,
+        "payout": 0,
+        "profit": 0,
+        "roi": null,
+        "roi_without_top1": null,
+        "roi_without_top2": null,
+        "largest_payout": 0,
+        "risk": {
+          "profit": 0,
+          "max_consecutive_misses": 0,
+          "max_drawdown": 0,
+          "worst_day_profit": null,
+          "daily_profit": {},
+          "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
+          "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
+        }
+      },
+      "conc40": {
+        "bought_races": 0,
+        "skipped_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "investment": 0,
+        "payout": 0,
+        "profit": 0,
+        "roi": null,
+        "roi_without_top1": null,
+        "roi_without_top2": null,
+        "largest_payout": 0,
+        "risk": {
+          "profit": 0,
+          "max_consecutive_misses": 0,
+          "max_drawdown": 0,
+          "worst_day_profit": null,
+          "daily_profit": {},
+          "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
+          "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
+        }
+      },
+      "lane1": {
+        "bought_races": 0,
+        "skipped_races": 0,
+        "hits": 0,
+        "hit_rate": null,
+        "investment": 0,
+        "payout": 0,
+        "profit": 0,
+        "roi": null,
+        "roi_without_top1": null,
+        "roi_without_top2": null,
+        "largest_payout": 0,
+        "risk": {
+          "profit": 0,
+          "max_consecutive_misses": 0,
+          "max_drawdown": 0,
+          "worst_day_profit": null,
+          "daily_profit": {},
+          "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
+          "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
+        }
+      }
+    },
+    "versus_all": {
+      "conc40": {
+        "roi_difference": null,
+        "hit_rate_difference": null,
+        "days_roi_higher": 0,
+        "days_hit_rate_higher": 0,
+        "days_with_purchases": 0,
+        "date_bootstrap_share_roi_difference_le_0": null,
+        "date_bootstrap_share_hit_rate_difference_le_0": null
+      },
+      "lane1": {
+        "roi_difference": null,
+        "hit_rate_difference": null,
+        "days_roi_higher": 0,
+        "days_hit_rate_higher": 0,
+        "days_with_purchases": 0,
+        "date_bootstrap_share_roi_difference_le_0": null,
+        "date_bootstrap_share_hit_rate_difference_le_0": null
+      }
+    },
+    "daily": {},
+    "interpretation": "Pre-registered (dev/race-selection-plan.md). Fixed thresholds from data saved on or before 2026-11-04; evaluation only on races saved from 2026-11-13 00:00 JST. Skipping reduces investment, so profit differences are not ROI improvements. Bootstrap shares are shares of date resamples, not probabilities. No adoption."
   },
   "selection_diagnostics": {
     "kind": "shadow_baseline_confidence_conditions",
