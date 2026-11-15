@@ -19,8 +19,9 @@ export function bootstrapRoiBelow1(events,unit,{resamples,seed}=REVIEW_POLICY.bo
 }
 const top6=d=>[...d].sort((a,b)=>b.prob-a.prob||a.combo.localeCompare(b.combo)).slice(0,6).map(x=>x.combo);
 
-export function forwardReview(records,model){
-  const R=records.filter(r=>r.date<=REVIEW_POLICY.cutoff_date);
+// cutoff defaults to the 11/04 review; later reviews pass their own cutoff (same method).
+export function forwardReview(records,model,cutoff=REVIEW_POLICY.cutoff_date){
+  const R=records.filter(r=>r.date<=cutoff);
   // conservative_ev
   const cev=conservativeEvReport(R),valid=Object.values(R).filter(r=>r.conservative_ev_shadow&&cev.test_dates.includes(r.date));
   const evs=arm=>R.filter(r=>r.conservative_ev_shadow).map(r=>{const s=r.conservative_ev_shadow.arms[arm],w=s.items.find(x=>x.combo===r.outcome?.result);return {date:r.date,key:`${r.date}_${r.stadium}_${r.race}`,investment:s.investment,payout:w?r.outcome.amount*w.stake/100:0};});
@@ -41,7 +42,7 @@ export function forwardReview(records,model){
   }
   const dd=Object.values(daily).map(x=>x.calibrated_top6-x.base_top6);
   const ocEvents=arm=>ocRaces.map(r=>{const m=arm==='raw'?r.outcome.value_metrics.baseline:r.outcome.odds_calibration;return {date:r.date,investment:m.investment,payout:m.payout};}).filter(e=>e.investment>0);
-  return {policy:REVIEW_POLICY,production_changed:false,
+  return {policy:{...REVIEW_POLICY,cutoff_date:cutoff},production_changed:false,
     conservative_ev:{status:cev.status,test_dates:cev.test_dates,test_races:cev.test_races,arms:cev.arms,bootstrap:boot},
     odds_calibration:{status:oc.status,selected:oc.selected,model_fitted_at:oc.model_fitted_at,test_dates:oc.test_dates,test_races:oc.test_races,arms:oc.arms,
       calibrated_ev_expected_vs_actual_hits:{expected:expCal,actual:hitCal},
@@ -53,8 +54,9 @@ export function forwardReview(records,model){
 
 if(import.meta.url===`file://${process.argv[1]}`){
   const root=path.resolve(import.meta.dirname,'..'),model=JSON.parse(fs.readFileSync(path.join(root,'dev/probability-calibration/odds-aware-v1.json'),'utf8'));
-  const out=forwardReview(loadArchive(path.join(root,'dev/expert-shadow-repaired-archive')),model.model||model);
-  fs.mkdirSync(path.join(root,'dev/forward-review'),{recursive:true});fs.writeFileSync(path.join(root,'dev/forward-review/2026-11-04.json'),JSON.stringify(out,null,1)+'\n');
+  const cutoff=process.argv[2]||REVIEW_POLICY.cutoff_date,name=process.argv[3]||'2026-11-04';
+  const out=forwardReview(loadArchive(path.join(root,'dev/expert-shadow-repaired-archive')),model.model||model,cutoff);
+  fs.mkdirSync(path.join(root,'dev/forward-review'),{recursive:true});fs.writeFileSync(path.join(root,`dev/forward-review/${name}.json`),JSON.stringify(out,null,1)+'\n');
   const f=x=>x==null?'—':(+x).toFixed(3);const c=out.conservative_ev,o=out.odds_calibration;
   console.log('CEV',c.status,c.test_dates.length,'dates',c.test_races,'races');
   for(const [k,a] of Object.entries(c.arms))console.log(k,a.bought_races,a.tickets,a.hits,f(a.expected_hits),a.investment,a.payout,f(a.roi),f(a.roi_without_top1),f(a.roi_without_top2),a.largest_payout,a.profit_minus_reference,a.risk?.max_drawdown,'boot race',f(c.bootstrap[k].race.share_roi_below_1),'date',f(c.bootstrap[k].date.share_roi_below_1));
