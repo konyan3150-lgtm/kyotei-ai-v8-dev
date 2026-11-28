@@ -75,10 +75,11 @@
       "20261124",
       "20261125",
       "20261126",
-      "20261127"
+      "20261127",
+      "20261128"
     ],
     "train_races": 1696,
-    "test_races": 1775,
+    "test_races": 1777,
     "production_changed": false,
     "interpretation": "Fit one temperature on first20 settled dates only; later dates evaluate only. No recalibration from test results, no EV purchase-rule change or automatic promotion.",
     "selected_temperature": 1,
@@ -127,14 +128,14 @@
       }
     ],
     "test_raw": {
-      "races": 1775,
-      "log_loss": 3.928317441627899,
-      "brier": 0.9650383283570756
+      "races": 1777,
+      "log_loss": 3.9298439926261883,
+      "brier": 0.9650866104234703
     },
     "test_calibrated": {
-      "races": 1775,
-      "log_loss": 3.928317441627899,
-      "brier": 0.9650383283570756
+      "races": 1777,
+      "log_loss": 3.9298439926261883,
+      "brier": 0.9650866104234703
     }
   },
   "variants": {
@@ -152,13 +153,13 @@
         "gap": 0.25
       }
     },
-    "captured": 3755,
+    "captured": 3757,
     "invalid": 0,
-    "settled": 3470,
+    "settled": 3472,
     "pending": 2,
     "excluded": 278,
     "st_eligible": 1153,
-    "st_missing": 2602,
+    "st_missing": 2604,
     "confident_captures": 1938,
     "arms": {
       "st": {
@@ -461,14 +462,14 @@
       },
       "budget": {
         "six_equal": {
-          "races": 3470,
+          "races": 3472,
           "hits": 1238,
-          "investment": 2082000,
+          "investment": 2083200,
           "payout": 1648550,
-          "hit_rate": 0.3567723342939481,
-          "roi": 0.7918107588856869,
+          "hit_rate": 0.3565668202764977,
+          "roi": 0.7913546466973886,
           "risk": {
-            "profit": -433450,
+            "profit": -434650,
             "max_consecutive_misses": 16,
             "max_drawdown": 455340,
             "worst_day_profit": -32420,
@@ -528,21 +529,22 @@
               "20261124": -3310,
               "20261125": -14790,
               "20261126": 21040,
-              "20261127": -2380
+              "20261127": -2380,
+              "20261128": -1200
             },
             "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
             "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
           }
         },
         "three_equal": {
-          "races": 3470,
+          "races": 3472,
           "hits": 762,
-          "investment": 2082000,
+          "investment": 2083200,
           "payout": 1674300,
-          "hit_rate": 0.2195965417867435,
-          "roi": 0.804178674351585,
+          "hit_rate": 0.21947004608294932,
+          "roi": 0.8037154377880185,
           "risk": {
-            "profit": -407700,
+            "profit": -408900,
             "max_consecutive_misses": 29,
             "max_drawdown": 413140,
             "worst_day_profit": -35680,
@@ -602,21 +604,22 @@
               "20261124": 7400,
               "20261125": -21420,
               "20261126": 2600,
-              "20261127": -11880
+              "20261127": -11880,
+              "20261128": -1200
             },
             "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
             "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
           }
         },
         "two_equal": {
-          "races": 3470,
+          "races": 3472,
           "hits": 555,
-          "investment": 2082000,
+          "investment": 2083200,
           "payout": 1691070,
-          "hit_rate": 0.15994236311239193,
-          "roi": 0.8122334293948127,
+          "hit_rate": 0.15985023041474655,
+          "roi": 0.8117655529953917,
           "risk": {
-            "profit": -390930,
+            "profit": -392130,
             "max_consecutive_misses": 48,
             "max_drawdown": 415680,
             "worst_day_profit": -38490,
@@ -676,21 +679,22 @@
               "20261124": 6990,
               "20261125": -19890,
               "20261126": -2460,
-              "20261127": -10230
+              "20261127": -10230,
+              "20261128": -1200
             },
             "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
             "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
           }
         },
         "confident_three_weighted": {
-          "races": 3470,
+          "races": 3472,
           "hits": 928,
-          "investment": 2082000,
+          "investment": 2083200,
           "payout": 1647000,
-          "hit_rate": 0.2674351585014409,
-          "roi": 0.7910662824207493,
+          "hit_rate": 0.2672811059907834,
+          "roi": 0.790610599078341,
           "risk": {
-            "profit": -435000,
+            "profit": -436200,
             "max_consecutive_misses": 22,
             "max_drawdown": 446500,
             "worst_day_profit": -33750,
@@ -750,7 +754,8 @@
               "20261124": 4470,
               "20261125": -17970,
               "20261126": 1180,
-              "20261127": -2610
+              "20261127": -2610,
+              "20261128": -1200
             },
             "ordering": "close time, stadium, race; simultaneous races use deterministic venue order",
             "scope": "Observed settled shadow purchases only; excludes cancellation and excluded races. No guarantee of future loss limits."
@@ -3782,6 +3787,35 @@
             "payout": 31590
           }
         }
+      },
+      "20261128": {
+        "st": {},
+        "budget": {
+          "six_equal": {
+            "races": 2,
+            "hits": 0,
+            "investment": 1200,
+            "payout": 0
+          },
+          "three_equal": {
+            "races": 2,
+            "hits": 0,
+            "investment": 1200,
+            "payout": 0
+          },
+          "two_equal": {
+            "races": 2,
+            "hits": 0,
+            "investment": 1200,
+            "payout": 0
+          },
+          "confident_three_weighted": {
+            "races": 2,
+            "hits": 0,
+            "investment": 1200,
+            "payout": 0
+          }
+        }
       }
     },
     "interpretation": "Exploratory fixed-policy prospective comparison. All arms spend 600 yen per included race; ST arms share the same six-ST eligibility. No automatic best-arm selection or production promotion."
@@ -3856,11 +3890,11 @@
         "warning": false
       },
       "expert_class": {
-        "psi": 0.26562842342736204,
+        "psi": 0.28576756228075856,
         "warning": true
       },
       "venue": {
-        "psi": 2.7663509710966867,
+        "psi": 2.8065571077344798,
         "warning": true
       }
     },
@@ -3870,7 +3904,7 @@
     "races_with_revisions": 1161,
     "preserved_previous_snapshots": 1376,
     "change_reasons": {
-      "first_capture": 3756,
+      "first_capture": 3758,
       "model_scores_changed": 1081,
       "odds_changed": 1250,
       "exhibition_changed": 942,
@@ -3885,24 +3919,24 @@
   },
   "diagnostics": {
     "integrity": {
-      "saved": 3478,
-      "valid": 3478,
+      "saved": 3480,
+      "valid": 3480,
       "invalid": 0,
       "errors": []
     },
     "reliability": {
       "baseline": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 3471,
-        "ece": 0.018087574820410054,
+        "races": 3473,
+        "ece": 0.01810393325471142,
         "status": "descriptive",
         "bins": [
           {
             "lower": 0,
             "upper": 0.05,
-            "races": 850,
-            "predicted_probability": 0.04036574699391618,
-            "observed_hit_rate": 0.03411764705882353
+            "races": 852,
+            "predicted_probability": 0.040380132554927485,
+            "observed_hit_rate": 0.03403755868544601
           },
           {
             "lower": 0.05,
@@ -3943,16 +3977,16 @@
       },
       "candidate": {
         "event": "highest-score trifecta combination hits; one observation per race",
-        "races": 3471,
-        "ece": 0.017522996519865528,
+        "races": 3473,
+        "ece": 0.017540068793023972,
         "status": "descriptive",
         "bins": [
           {
             "lower": 0,
             "upper": 0.05,
-            "races": 855,
-            "predicted_probability": 0.04014755532200003,
-            "observed_hit_rate": 0.03391812865497076
+            "races": 857,
+            "predicted_probability": 0.04016394142127075,
+            "observed_hit_rate": 0.0338389731621937
           },
           {
             "lower": 0.05,
@@ -5280,6 +5314,29 @@
             "brier": 0.9639698205153004
           }
         }
+      },
+      "20261128": {
+        "races": 2,
+        "arms": {
+          "baseline": {
+            "races": 2,
+            "hit_rate": 0,
+            "investment": 1200,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 5.284658003607806,
+            "brier": 1.007936944348823
+          },
+          "candidate": {
+            "races": 2,
+            "hit_rate": 0,
+            "investment": 1200,
+            "payout": 0,
+            "roi": 0,
+            "log_loss": 5.301778256644068,
+            "brier": 1.0085514363989372
+          }
+        }
       }
     },
     "by_stadium": {
@@ -5583,25 +5640,25 @@
         }
       },
       "14": {
-        "races": 166,
+        "races": 167,
         "arms": {
           "baseline": {
-            "races": 166,
-            "hit_rate": 0.3132530120481928,
-            "investment": 99600,
+            "races": 167,
+            "hit_rate": 0.31137724550898205,
+            "investment": 100200,
             "payout": 64500,
-            "roi": 0.6475903614457831,
-            "log_loss": 4.069918444655764,
-            "brier": 0.9713238294110732
+            "roi": 0.6437125748502994,
+            "log_loss": 4.073321422082265,
+            "brier": 0.9715031155900054
           },
           "candidate": {
-            "races": 166,
-            "hit_rate": 0.3132530120481928,
-            "investment": 99600,
+            "races": 167,
+            "hit_rate": 0.31137724550898205,
+            "investment": 100200,
             "payout": 64500,
-            "roi": 0.6475903614457831,
-            "log_loss": 4.0696570443894595,
-            "brier": 0.971264800821547
+            "roi": 0.6437125748502994,
+            "log_loss": 4.073182506899445,
+            "brier": 0.9714495600144001
           }
         }
       },
@@ -5675,25 +5732,25 @@
         }
       },
       "18": {
-        "races": 174,
+        "races": 175,
         "arms": {
           "baseline": {
-            "races": 174,
-            "hit_rate": 0.39080459770114945,
-            "investment": 104400,
+            "races": 175,
+            "hit_rate": 0.38857142857142857,
+            "investment": 105000,
             "payout": 90270,
-            "roi": 0.8646551724137931,
-            "log_loss": 3.911152759295294,
-            "brier": 0.966502597549594
+            "roi": 0.8597142857142858,
+            "log_loss": 3.922695316855516,
+            "brier": 0.9667774928059102
           },
           "candidate": {
-            "races": 174,
-            "hit_rate": 0.39080459770114945,
-            "investment": 104400,
+            "races": 175,
+            "hit_rate": 0.38857142857142857,
+            "investment": 105000,
             "payout": 90270,
-            "roi": 0.8646551724137931,
-            "log_loss": 3.9112924827669433,
-            "brier": 0.9664783762981923
+            "roi": 0.8597142857142858,
+            "log_loss": 3.9229145098924527,
+            "brier": 0.9667555472151733
           }
         }
       },
@@ -5884,25 +5941,25 @@
         }
       },
       "normal": {
-        "races": 1968,
+        "races": 1970,
         "arms": {
           "baseline": {
-            "races": 1968,
-            "hit_rate": 0.3323170731707317,
-            "investment": 1180800,
+            "races": 1970,
+            "hit_rate": 0.3319796954314721,
+            "investment": 1182000,
             "payout": 935160,
-            "roi": 0.7919715447154472,
-            "log_loss": 4.058091207177581,
-            "brier": 0.9702995671631872
+            "roi": 0.7911675126903553,
+            "log_loss": 4.05933645265619,
+            "brier": 0.970337777698401
           },
           "candidate": {
-            "races": 1968,
-            "hit_rate": 0.33434959349593496,
-            "investment": 1180800,
+            "races": 1970,
+            "hit_rate": 0.33401015228426395,
+            "investment": 1182000,
             "payout": 941830,
-            "roi": 0.7976202574525745,
-            "log_loss": 4.0579501948222845,
-            "brier": 0.9702794662804026
+            "roi": 0.7968104906937394,
+            "log_loss": 4.059212964428196,
+            "brier": 0.9703183210724011
           }
         }
       },
@@ -5956,61 +6013,61 @@
     "paired_intervals": {
       "status": "descriptive_interval",
       "method": "1000 paired bootstrap samples of whole date blocks; 95% percentile interval",
-      "dates": 56,
-      "races": 3471,
+      "dates": 57,
+      "races": 3473,
       "direction": "candidate minus baseline; negative log loss/Brier is better, positive hit rate/ROI is better",
       "intervals": {
         "hit_rate": {
-          "lower": 0.000550964187327807,
-          "upper": 0.0032845625559868585
+          "lower": 0.0005514199062586211,
+          "upper": 0.003194888178913724
         },
         "log_loss": {
-          "lower": -0.0009674169108384589,
-          "upper": 0.000024329384027410583
+          "lower": -0.0009718603265991277,
+          "upper": -0.000012303496955023974
         },
         "brier": {
-          "lower": -0.00007281079080789787,
-          "upper": -0.00002371187995031665
+          "lower": -0.00007383347140454966,
+          "upper": -0.000024257562994511872
         },
         "roi": {
-          "lower": 0.0011201629327902696,
-          "upper": 0.007911727859689632
+          "lower": 0.0011437908496731986,
+          "upper": 0.00801056338028161
         }
       },
       "limitation": "Exploratory monitoring only; intervals do not adjust for repeated inspection or candidate selection."
     },
     "promotion": "No automatic production promotion. Future chronological holdout evaluation is still required."
   },
-  "saved": 3756,
+  "saved": 3758,
   "excluded": 278,
-  "settled": 3471,
+  "settled": 3473,
   "cancelled": 5,
   "invalid": 0,
   "pending": 2,
   "arms": {
     "baseline": {
-      "races": 3471,
+      "races": 3473,
       "hits": 1238,
-      "investment": 2082600,
+      "investment": 2083800,
       "payout": 1648550,
-      "roi": 0.791582637088255,
-      "log_loss": 3.9654129231875177,
-      "brier": 0.9659546564210874
+      "roi": 0.7911267875995777,
+      "log_loss": 3.9661726381776825,
+      "brier": 0.965978832803424
     },
     "candidate": {
-      "races": 3471,
+      "races": 3473,
       "hits": 1244,
-      "investment": 2082600,
+      "investment": 2083800,
       "payout": 1657310,
-      "roi": 0.79578891769903,
-      "log_loss": 3.964930699734972,
-      "brier": 0.965905520202838
+      "roi": 0.7953306459353104,
+      "log_loss": 3.9657005514809605,
+      "brier": 0.9659300787494527
     }
   },
   "paired_hit_difference": 6,
   "interpretation": "Prospective paired shadow evaluation. No historical reconstruction or production promotion.",
   "health": {
-    "checked_at": "2026-11-28T00:13:34.086Z",
+    "checked_at": "2026-11-28T00:46:42.027Z",
     "eligible_preclose_races": 2,
     "captured_preclose_races": 2,
     "missing_preclose_records": [],
@@ -6023,7 +6080,7 @@
     "revision_rejections": []
   },
   "collection_daily": {
-    "checked_at": "2026-11-28T00:13:34.088Z",
+    "checked_at": "2026-11-28T00:46:42.028Z",
     "days": {
       "20261003": {
         "saved": 134,
@@ -6810,17 +6867,17 @@
         "unrecorded": []
       },
       "20261128": {
-        "saved": 2,
-        "preclose_saved": 2,
-        "settled": 0,
+        "saved": 4,
+        "preclose_saved": 4,
+        "settled": 2,
         "pending": 2,
         "overdue": 0,
         "cancelled": 0,
         "excluded": 0,
         "invalid_time": 0,
-        "closed_program_races": 5,
-        "recorded_closed_races": 0,
-        "unrecorded_closed_races": 5,
+        "closed_program_races": 9,
+        "recorded_closed_races": 2,
+        "unrecorded_closed_races": 7,
         "unrecorded": [
           {
             "stadium": 14,
@@ -6835,12 +6892,20 @@
             "race": 1
           },
           {
+            "stadium": 18,
+            "race": 3
+          },
+          {
             "stadium": 23,
             "race": 1
           },
           {
             "stadium": 23,
             "race": 2
+          },
+          {
+            "stadium": 23,
+            "race": 3
           }
         ]
       }
@@ -6850,9 +6915,9 @@
   "st_diagnostics": {
     "counts": {
       "eligible": 1153,
-      "negative_st": 1686,
+      "negative_st": 1687,
       "out_of_range": 0,
-      "missing_or_unparseable": 916
+      "missing_or_unparseable": 917
     },
     "days": {
       "20261003": {
@@ -7193,9 +7258,9 @@
       },
       "20261128": {
         "eligible": 0,
-        "negative_st": 0,
+        "negative_st": 1,
         "out_of_range": 0,
-        "missing_or_unparseable": 2
+        "missing_or_unparseable": 3
       }
     },
     "invalid": 0,
@@ -7206,7 +7271,7 @@
     "policy": "recent-player-preclose-v1",
     "counts": {
       "not_captured": 692,
-      "captured": 3064,
+      "captured": 3066,
       "recent_history_unavailable": 0,
       "identity_missing_or_conflicting": 0,
       "invalid_capture": 0
@@ -7239,12 +7304,12 @@
       ]
     },
     "counts": {
-      "records": 3756,
+      "records": 3758,
       "eligible_races": 2843,
       "invalid_or_other_cohort": 0,
       "not_settled_or_excluded": 285,
       "invalid_outcome": 0,
-      "odds_missing_stale_or_postclose": 617,
+      "odds_missing_stale_or_postclose": 619,
       "odds_incomplete": 11,
       "ev_unavailable_or_inconsistent": 0
     },
@@ -7791,11 +7856,11 @@
       "max_odds_age_ms": 600000
     },
     "counts": {
-      "records": 3756,
+      "records": 3758,
       "invalid_or_other_cohort": 0,
       "not_settled_or_excluded": 285,
       "invalid_outcome": 0,
-      "odds_missing_stale_or_postclose": 617,
+      "odds_missing_stale_or_postclose": 619,
       "odds_incomplete": 11,
       "eligible_races": 2843,
       "ev_unavailable_or_inconsistent": 0
@@ -13522,7 +13587,7 @@
     ],
     "test_races": 711,
     "excluded": {
-      "not_eligible": 29,
+      "not_eligible": 31,
       "not_settled_or_refund": 58
     },
     "ready_for_review": false,
@@ -14060,14 +14125,14 @@
   "selection_diagnostics": {
     "kind": "shadow_baseline_confidence_conditions",
     "summary": {
-      "races": 3471,
-      "dates": 56,
+      "races": 3473,
+      "dates": 57,
       "hits": 1238,
-      "investment": 2082600,
+      "investment": 2083800,
       "payout": 1648550,
-      "profit": -434050,
-      "hit_rate": 0.3566695476807836,
-      "roi": 0.791582637088255,
+      "profit": -435250,
+      "hit_rate": 0.3564641520299453,
+      "roi": 0.7911267875995777,
       "max_payout_share": 0.005538200236571532,
       "interpretation": "descriptive_only"
     },
@@ -14088,14 +14153,14 @@
         },
         {
           "key": "confidence_yes",
-          "races": 1795,
-          "dates": 56,
+          "races": 1797,
+          "dates": 57,
           "hits": 790,
-          "investment": 1077000,
+          "investment": 1078200,
           "payout": 887970,
-          "profit": -189030,
-          "hit_rate": 0.4401114206128134,
-          "roi": 0.8244846796657381,
+          "profit": -190230,
+          "hit_rate": 0.43962159154145797,
+          "roi": 0.8235670562047858,
           "max_payout_share": 0.01027061725058279,
           "interpretation": "descriptive_only"
         },
@@ -14285,14 +14350,14 @@
         },
         {
           "key": "14",
-          "races": 166,
-          "dates": 33,
+          "races": 167,
+          "dates": 34,
           "hits": 52,
-          "investment": 99600,
+          "investment": 100200,
           "payout": 64500,
-          "profit": -35100,
-          "hit_rate": 0.3132530120481928,
-          "roi": 0.6475903614457831,
+          "profit": -35700,
+          "hit_rate": 0.31137724550898205,
+          "roi": 0.6437125748502994,
           "max_payout_share": 0.057829457364341086,
           "interpretation": "descriptive_only"
         },
@@ -14337,14 +14402,14 @@
         },
         {
           "key": "18",
-          "races": 174,
-          "dates": 32,
+          "races": 175,
+          "dates": 33,
           "hits": 68,
-          "investment": 104400,
+          "investment": 105000,
           "payout": 90270,
-          "profit": -14130,
-          "hit_rate": 0.39080459770114945,
-          "roi": 0.8646551724137931,
+          "profit": -14730,
+          "hit_rate": 0.38857142857142857,
+          "roi": 0.8597142857142858,
           "max_payout_share": 0.07001218566522655,
           "interpretation": "descriptive_only"
         },
@@ -14430,14 +14495,14 @@
       "top": [
         {
           "key": "top_high",
-          "races": 1275,
-          "dates": 56,
+          "races": 1277,
+          "dates": 57,
           "hits": 548,
-          "investment": 765000,
+          "investment": 766200,
           "payout": 639370,
-          "profit": -125630,
-          "hit_rate": 0.42980392156862746,
-          "roi": 0.8357777777777777,
+          "profit": -126830,
+          "hit_rate": 0.4291307752545027,
+          "roi": 0.834468807099974,
           "max_payout_share": 0.014264041165522311,
           "interpretation": "descriptive_only"
         },
@@ -14497,14 +14562,14 @@
       "gap": [
         {
           "key": "gap_high",
-          "races": 2570,
-          "dates": 56,
+          "races": 2572,
+          "dates": 57,
           "hits": 1059,
-          "investment": 1542000,
+          "investment": 1543200,
           "payout": 1287880,
-          "profit": -254120,
-          "hit_rate": 0.4120622568093385,
-          "roi": 0.835201037613489,
+          "profit": -255320,
+          "hit_rate": 0.41174183514774493,
+          "roi": 0.8345515811301192,
           "max_payout_share": 0.007081405099854023,
           "interpretation": "descriptive_only"
         },
@@ -14551,14 +14616,14 @@
       "coverage": [
         {
           "key": "unknown",
-          "races": 3471,
-          "dates": 56,
+          "races": 3473,
+          "dates": 57,
           "hits": 1238,
-          "investment": 2082600,
+          "investment": 2083800,
           "payout": 1648550,
-          "profit": -434050,
-          "hit_rate": 0.3566695476807836,
-          "roi": 0.791582637088255,
+          "profit": -435250,
+          "hit_rate": 0.3564641520299453,
+          "roi": 0.7911267875995777,
           "max_payout_share": 0.005538200236571532,
           "interpretation": "descriptive_only"
         }
@@ -14592,27 +14657,27 @@
         },
         {
           "key": "wind_low",
-          "races": 1940,
-          "dates": 56,
+          "races": 1941,
+          "dates": 57,
           "hits": 708,
-          "investment": 1164000,
+          "investment": 1164600,
           "payout": 925800,
-          "profit": -238200,
-          "hit_rate": 0.3649484536082474,
-          "roi": 0.795360824742268,
+          "profit": -238800,
+          "hit_rate": 0.36476043276661513,
+          "roi": 0.7949510561566203,
           "max_payout_share": 0.00985093972780298,
           "interpretation": "descriptive_only"
         },
         {
           "key": "wind_mid",
-          "races": 1295,
-          "dates": 56,
+          "races": 1296,
+          "dates": 57,
           "hits": 460,
-          "investment": 777000,
+          "investment": 777600,
           "payout": 629670,
-          "profit": -147330,
-          "hit_rate": 0.3552123552123552,
-          "roi": 0.8103861003861004,
+          "profit": -147930,
+          "hit_rate": 0.3549382716049383,
+          "roi": 0.8097608024691358,
           "max_payout_share": 0.014499658551304652,
           "interpretation": "descriptive_only"
         }
@@ -14620,14 +14685,14 @@
       "st": [
         {
           "key": "incomplete",
-          "races": 828,
-          "dates": 56,
+          "races": 830,
+          "dates": 57,
           "hits": 286,
-          "investment": 496800,
+          "investment": 498000,
           "payout": 370200,
-          "profit": -126600,
-          "hit_rate": 0.34541062801932365,
-          "roi": 0.7451690821256038,
+          "profit": -127800,
+          "hit_rate": 0.344578313253012,
+          "roi": 0.7433734939759036,
           "max_payout_share": 0.017990275526742303,
           "interpretation": "descriptive_only"
         },
@@ -14661,14 +14726,14 @@
       "timing": [
         {
           "key": "preclose",
-          "races": 3471,
-          "dates": 56,
+          "races": 3473,
+          "dates": 57,
           "hits": 1238,
-          "investment": 2082600,
+          "investment": 2083800,
           "payout": 1648550,
-          "profit": -434050,
-          "hit_rate": 0.3566695476807836,
-          "roi": 0.791582637088255,
+          "profit": -435250,
+          "hit_rate": 0.3564641520299453,
+          "roi": 0.7911267875995777,
           "max_payout_share": 0.005538200236571532,
           "interpretation": "descriptive_only"
         }
@@ -14684,7 +14749,7 @@
   },
   "collection_gaps": {
     "reasons": {
-      "not_observed_unknown": 5,
+      "not_observed_unknown": 7,
       "invalid_model_rows": 0,
       "snapshot_rejected": 0,
       "revision_rejected": 0,
@@ -14707,6 +14772,11 @@
         "last_observed_at": null
       },
       {
+        "key": "20261128_18_3",
+        "reason": "not_observed_unknown",
+        "last_observed_at": null
+      },
+      {
         "key": "20261128_23_1",
         "reason": "not_observed_unknown",
         "last_observed_at": null
@@ -14715,15 +14785,20 @@
         "key": "20261128_23_2",
         "reason": "not_observed_unknown",
         "last_observed_at": null
+      },
+      {
+        "key": "20261128_23_3",
+        "reason": "not_observed_unknown",
+        "last_observed_at": null
       }
     ],
     "limitation": "Only observed attempts establish a failure reason. No observation cannot distinguish collection start time, missed scheduling, or unavailable input. Historical predictions are never reconstructed."
   },
   "input_observations": {
     "date": "20261128",
-    "observed_races": 2,
+    "observed_races": 4,
     "official_preview_status": {
-      "no_record": 2
+      "no_record": 4
     }
   }
 }
